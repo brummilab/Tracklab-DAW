@@ -29,7 +29,6 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 ## Wartet auf den PO
 
-- **Entscheidungsrunde 3 (M1):** F40 Projekt-Endung, F41 Autosave/Backups, F42 Programmnamen (Defaults vorhanden).
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key,
   F28b EBU-Quellen (optional).
 
