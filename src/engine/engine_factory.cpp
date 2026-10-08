@@ -54,8 +54,8 @@ public:
 
     // Nobody can answer: the question is declined at once (deterministic, never hangs). Declining is the safe
     // answer to "overwrite?", "discard?" and "delete?" alike.
-    void showOkCancelAlertBoxAsync(const juce::String&, const juce::String&, const juce::String&,
-                                   const juce::String&, std::function<void(bool)> callback) override
+    void showOkCancelAlertBoxAsync(const juce::String&, const juce::String&, const juce::String&, const juce::String&,
+                                   std::function<void(bool)> callback) override
     {
         if (callback)
             callback(false);
