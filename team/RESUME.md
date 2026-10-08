@@ -42,7 +42,7 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | M1-01 Gerüst (test-writer) |
+| in Arbeit | M1-01 Gerüst (implementer) |
 | Review | – |
 | Backlog | M1-02 … M1-09 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
 | Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 |
