@@ -23,10 +23,12 @@ inline constexpr std::string_view duplicateId = "duplicate_id";           ///< i
 inline constexpr std::string_view toolNameCollision = "tool_name_collision";  ///< another id maps to the same tool name
 inline constexpr std::string_view invalidSchema = "invalid_schema";           ///< schema outside the allowed subset
 inline constexpr std::string_view missingHandler = "missing_handler";         ///< Command::handler is empty
+inline constexpr std::string_view invalidFlags = "invalid_flags";  ///< readOnly together with undoable/destructive
 // Execution (CommandRegistry::execute)
 inline constexpr std::string_view unknownCommand = "unknown_command";  ///< no command with this id
 inline constexpr std::string_view invalidParams = "invalid_params";    ///< params violate paramsSchema
 inline constexpr std::string_view invalidResult = "invalid_result";    ///< handler result violates resultSchema
+inline constexpr std::string_view handlerFailed = "handler_failed";    ///< the handler threw a std::exception
 inline constexpr std::string_view notOnMessageThread = "not_on_message_thread";  ///< called from another thread
 }  // namespace error_code
 

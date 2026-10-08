@@ -48,8 +48,8 @@ struct ParamCase
 
 constexpr ParamCase kParamCases[] = {
     {"wrong type", R"({"name": 5})", "/name", ""},
-    {"missing required property", R"({"gain_db": 1})", "", "name"},
-    {"additional property", R"({"name": "a", "bogus": 1})", "", "bogus"},
+    {"missing required property", R"({"gain_db": 1})", "/name", "name"},
+    {"additional property", R"({"name": "a", "bogus": 1})", "/bogus", "bogus"},
     {"enum violation", R"({"name": "a", "mode": "surround"})", "/mode", ""},
     {"above maximum", R"({"name": "a", "gain_db": 99})", "/gain_db", ""},
     {"below minimum", R"({"name": "a", "gain_db": -99})", "/gain_db", ""},
@@ -58,7 +58,7 @@ constexpr ParamCase kParamCases[] = {
     {"wrong type inside an array", R"({"name": "a", "tags": ["x", 3]})", "/tags/1", ""},
     {"wrong type in a nested object", R"({"name": "a", "opts": {"level": "high"}})", "/opts/level", ""},
     {"range violation in a nested object", R"({"name": "a", "opts": {"level": 11}})", "/opts/level", ""},
-    {"additional property in a nested object", R"({"name": "a", "opts": {"extra": 1}})", "/opts", "extra"},
+    {"additional property in a nested object", R"({"name": "a", "opts": {"extra": 1}})", "/opts/extra", "extra"},
 };
 
 }  // namespace
@@ -192,8 +192,8 @@ TEST_SUITE("core")
         };
         const ResultCase cases[] = {
             {"wrong type", R"({"value": "seven"})", "/value"},
-            {"missing required property", R"({})", ""},
-            {"additional property", R"({"value": 1, "debug": true})", ""},
+            {"missing required property", R"({})", "/value"},
+            {"additional property", R"({"value": 1, "debug": true})", "/debug"},
             {"not an object", R"([1])", ""},
             {"null", "null", ""},
         };
