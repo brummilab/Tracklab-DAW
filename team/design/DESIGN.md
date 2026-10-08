@@ -37,7 +37,7 @@ Entwurf: `docs/adr/ADR-001-tech-stack.md`. Belege: `team/research/*/NOTIZEN.md`.
 | GUI | native JUCE-Komponenten + Design-Tokens; Windows Direct2D, Linux Software-Renderer (X11/XWayland) |
 | HTTP | **libcurl direkt** (curl_multi im Worker-Thread) für SSE (E21) |
 | JSON | nlohmann/json + Schema-Validierung |
-| Tests | Spike entscheidet zwischen doctest (wie Tracktion) und Catch2; CTest |
+| Tests | doctest 2.4.11 aus dem Tracktion-Pin + CTest (Spike M0-06) |
 | MP3 | Dekoder JUCE `MP3AudioFormat` (`JUCE_USE_MP3AUDIOFORMAT=1`, `JUCE_USE_WINDOWS_MEDIA_FORMAT=0`); Encoder per späterem ADR (LAME extern/LibLame/FFmpeg) |
 | Keychain | Windows Credential Manager; libsecret |
 

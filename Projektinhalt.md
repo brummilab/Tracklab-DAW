@@ -43,7 +43,9 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
   erschienen, Tracktion Engine `develop` 3.5.0 bringt LUFS-Messung und Render-Queue, MCP-Spec 2026-07-28, AGPLv3
   bestätigt, Namenstreffer 2Simple „Tracklab“. Brief-Vorschläge für Engine-Spike (M0-06) und Gate (M0-07).
 - 08.10.2026: Entscheidungsrunden 1 und 2 mit „Defaults ok“ entschieden (E1–E38), Lizenz AGPLv3, Design Rev 2,
-  ADR-001-Entwurf (JUCE 9 + Tracktion 3.5 unter Spike-Vorbehalt). Engine-Spike M0-06 gestartet.
+  ADR-001-Entwurf (JUCE 9 + Tracktion 3.5 unter Spike-Vorbehalt).
+- 08.10.2026: Engine-Spike M0-06 gemerged – JUCE 9.0.3 + Tracktion `develop` bauen zusammen; Import WAV/MP3, Render +
+  Lautheit, 12-Kanal-Aufnahme, VST3 laufen headless (57/57 Tests, Linux). Windows-CI ausstehend.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.

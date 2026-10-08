@@ -1,7 +1,7 @@
 # ADR-001: Tech-Stack und Lizenz
 
-- **Status:** Vorgeschlagen – angenommen unter Vorbehalt des Engine-Spikes (E3). Endgültige Bestätigung durch den PO nach
-  `team/research/engine-spike/BERICHT.md` (M0-06).
+- **Status:** Vorgeschlagen – Spike M0-06 unter Linux erfolgreich (57/57 Tests, `team/research/engine-spike/BERICHT.md`);
+  Windows/MSVC folgt aus dem ersten CI-Lauf. Danach Bestätigung durch den PO.
 - **Datum:** 08.10.2026
 - **Entscheidungen:** E2, E3, E21, E24, E26, E30, E36 (`team/ENTSCHEIDUNGEN.md`)
 - **Belege:** `team/research/engine-spike/`, `lizenz-und-name/`, `audio-backends-linux/`, `plugin-hosting-clap-lv2/`,
@@ -23,6 +23,7 @@ Workflow A (Live-Mitschnitt → Songs → Lautheit → Export) muss zuerst funkt
 | Plugins | VST3 (MIT-SDK in JUCE); LV2 (JUCE); CLAP eigener Adapter (clap/clap-helpers, MIT) | – |
 | HTTP | libcurl direkt | – |
 | JSON | nlohmann/json (MIT) | – |
+| Tests | doctest (aus dem Tracktion-Pin, MIT) + CTest | 2.4.11 |
 | Lizenz Tracklab | **AGPL-3.0-only** | – |
 
 **Lizenzfolge:** AGPLv3 §13 erlaubt die Kombination der AGPL-Teile (JUCE) mit GPLv3-Teilen (Tracktion); das Gesamtwerk
@@ -34,6 +35,13 @@ wird unter AGPLv3 weitergegeben. Closed Source bräuchte kommerzielle Lizenzen v
 | Ardour-Fork | Vollständige DAW (GPLv2+), aber GTK-GUI, eigene Architektur, kein Command-Registry-Ansatz; Umbau größer als Neubau auf einer Engine. Kein Sandboxing (bewusst abgelehnt). |
 | Rust-Stack | Kein reifes Engine-Äquivalent zu Tracktion; Plugin-Hosting und GUI selbst bauen; Auftrag: nicht für v1. |
 | JUCE ohne Tracktion | Volle Kontrolle, aber Edit-Modell, Render, Aufnahme, PDC, Clips selbst bauen – Monate Mehraufwand. Bleibt Rückfall, falls der Spike scheitert. |
+
+## Spike-Ergebnis (M0-06, Linux)
+- Tracktion `develop` baut mit JUCE 9.0.3 ohne Rückfall; Build kalt ~5 min (GCC Release, 4 Kerne), warm ~1 min.
+- Import WAV/MP3, Offline-Render (`RenderSpecification`) mit Lautheit (`LoudnessMeter`, ±0,1 LU/dB), 12 Eingänge über
+  Hosted Device (0 fehlende Blöcke, −138 dB), eigenes VST3 (±0,01 dB) – alles headless ohne Display.
+- Befunde: Tracktions Aufnahmepfad allokiert im Callback (RTSan-Strategie in M0-07); MP3 ohne Gapless (M2-01);
+  WindowsMedia-Workaround nötig.
 
 ## Risiken
 - Tracktion `develop` ist ungetaggt; Kompatibilität mit JUCE 9.0.3 unbelegt → erste Prüfung im Spike.

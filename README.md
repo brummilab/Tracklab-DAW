@@ -32,7 +32,9 @@ Details: [`docs/auftrag/Claude-Code-Prompt.md`](docs/auftrag/Claude-Code-Prompt.
   (`team/ENTSCHEIDUNGEN.md`), Design Rev 2.
 - Tech-Stack (ADR-001, Entwurf: [`docs/adr/ADR-001-tech-stack.md`](docs/adr/ADR-001-tech-stack.md)): C++20/CMake,
   JUCE 9, Tracktion Engine 3.5 – unter Vorbehalt des Engine-Spikes.
-- **Jetzt:** Engine-Spike (JUCE + Tracktion Engine) mit CI-Build für Windows und Linux, danach Gate auf CMake.
+- Engine-Spike (`spike/engine/`) unter Linux erfolgreich: JUCE 9.0.3 + Tracktion Engine bauen zusammen, Import,
+  Render mit Lautheitsmessung, 12-Kanal-Aufnahme und VST3 laufen (57 Tests). Windows prüft die CI.
+- **Jetzt:** Windows-CI des Spikes, dann ADR-001 bestätigen und Gate auf CMake umbauen (M0-07).
 
 Aktueller Arbeitsstand: [`team/RESUME.md`](team/RESUME.md).
 
@@ -47,6 +49,7 @@ in den GitHub-Actions-Läufen (Workflow `gate`). Den jeweils aktuellen Link trä
 | Pfad | Inhalt |
 |---|---|
 | `assets/branding/` | Logo, App-Icon (SVG, PNG, ICO), Farb-Tokens |
+| `spike/engine/` | Engine-Spike (M0-06): JUCE + Tracktion als Submodule, CLI, Test-VST3, Tests |
 | `src/`, `tests/` | Code und Tests (ab M1) |
 | `docs/` | Auftrag, Echtzeit-Regeln, Command-Referenz, Testprotokolle |
 | `team/` | Prozess (Agent-Team-Vorlage): Resume, To-do für den PO, Entscheidungen, Design, Plan, Board, Recherche, Reviews |

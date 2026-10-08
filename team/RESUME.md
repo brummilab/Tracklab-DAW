@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status:** M0-06 Engine-Spike in Arbeit
+**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status:** M0-06 erledigt (Linux grün) – warte auf ersten CI-Lauf (Windows)
 
 ## Zuletzt erledigt
 
@@ -12,6 +12,9 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
   Tracklab-Ergänzungen, Agents `researcher`, `test-writer`, `implementer`, `implementer-rt`, `reviewer`, `cleanup`
   (Modelle/Effort nach Auftrag §3.4), Board als Dateien, `plan/PLAN.md`, `CLAUDE.md` mit Vorlagen-Abschnitt.
   Hook erlaubt jetzt `git merge --ff-only` im eigenen Worktree (F14, Default A).
+- **M0-06 Engine-Spike** gemerged (`33c5eff`): JUCE 9.0.3 + Tracktion `develop` bauen zusammen; 57/57 Tests grün
+  (GCC/Clang); Bericht `team/research/engine-spike/BERICHT.md`; Review 2 Runden (`team/reviews/M0-06.md`).
+  Folgekarten M2-01 (MP3 gapless), M4-01 (Latenz-Blockversatz), O-01 (CI-Pakete, Upstream-Issue).
 - Entscheidungsrunden 1+2: „Defaults ok“ → E1–E38; Lizenz AGPLv3 (`LICENSE`); Design Rev 2; ADR-001-Entwurf
   (`docs/adr/ADR-001-tech-stack.md`); Präfixregel E15 in `team/README.md`.
 - M0-04 Recherche: 10 Themen mit `NOTIZEN.md` (Quellen, Stand 08.10.2026). Wichtigste Befunde: **JUCE 9.0.3 ist
@@ -27,20 +30,20 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 ## Nächster Schritt (Lead)
 
-1. M0-06: test-writer (Gerüst + Tests rot) → implementer-rt (grün) → reviewer → Gate → Merge → CI (Windows) prüfen →
-   Bericht `team/research/engine-spike/BERICHT.md` → ADR-001 dem PO zur Bestätigung vorlegen (M0-05).
-2. M0-07 Gate auf CMake nach dem Spike.
-3. M0-08: `daw-features` Teil 1 erledigt (`NOTIZEN.md`); Reaper-Preset und Rest nach F11. `vault-kontext` entfällt (E0b).
+1. Ersten CI-Lauf `spike-engine` auf `main` prüfen (Windows/MSVC, MP3-Plattformvergleich, ccache-Werte). Bei Fehlern:
+   Nacharbeit-Karte an implementer-rt.
+2. Danach ADR-001 dem PO zur Bestätigung vorlegen (M0-05) und M0-07 (Gate auf CMake, RTSan-Strategie) starten.
+3. M0-08: Reaper-Preset nach F11.
 
 ## Offene Karten
 
 | Spalte | Karten |
 |---|---|
 | in Arbeit | – |
-| Review | M0-06 Engine-Spike (Runde 1: Nacharbeit, implementer-rt bessert nach) |
-| Backlog | M0-05 ADR-001 · M0-07 Gate CMake (Struktur-Vorschlag steht) · M0-08 Rest-Recherche (daw-features) |
-| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 |
+| Review | – |
+| Backlog | M0-05 ADR-001 · M0-07 Gate CMake (Struktur-Vorschlag steht) · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 |
+| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-06 |
 
 ## Builds
 
-Noch keine.
+Spike-Artefakte (`spike_cli`, `SpikeGain.vst3`) ab dem ersten Lauf von Workflow `spike-engine` auf `main` (GitHub Actions).
