@@ -6,7 +6,8 @@ project(TracklabEngineSpike VERSION 0.1.0 LANGUAGES C CXX)
 
 option(SPIKE_WERROR "Treat warnings in spike/engine/src as errors" ON)
 
-include(cmake/Deps.cmake)
+# JUCE, Tracktion and the shared module library (tracklab_juce_tracktion) come from cmake/TracklabDeps.cmake,
+# included by the root CMakeLists.txt: Tracktion is compiled once for the spike and for src/.
 
 # Warning flags for our own sources only (never for JUCE/Tracktion module code).
 add_library(spike_warnings INTERFACE)
@@ -31,15 +32,13 @@ if(NOT MSVC)
   target_link_libraries(spike_config_flags INTERFACE juce::juce_recommended_config_flags)
 endif()
 
-target_link_libraries(spike_modules PRIVATE spike_config_flags)
-
 #==============================================================================
 # spike_core: everything in src/ except the CLI main() and the plugin.
 file(GLOB SPIKE_CORE_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 list(FILTER SPIKE_CORE_SOURCES EXCLUDE REGEX "/spike_cli\\.cpp$")
 add_library(spike_core STATIC ${SPIKE_CORE_SOURCES})
 target_include_directories(spike_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(spike_core PUBLIC spike_modules_api PRIVATE spike_warnings spike_config_flags)
+target_link_libraries(spike_core PUBLIC tracklab_juce_tracktion_api PRIVATE spike_warnings spike_config_flags)
 
 add_executable(spike_cli src/spike_cli.cpp)
 target_link_libraries(spike_cli PRIVATE spike_core spike_warnings)
@@ -65,7 +64,7 @@ target_compile_definitions(SpikeGain PUBLIC JUCE_VST3_CAN_REPLACE_VST2=0)
 target_link_libraries(SpikeGain
   PRIVATE
     juce::juce_audio_utils
-    spike_defs
+    tracklab_defs
   PUBLIC
     spike_config_flags)
 # The plugin target also compiles the JUCE module code, so warnings (-Werror) apply per source file.
@@ -82,7 +81,7 @@ file(GLOB SPIKE_TEST_SOURCES CONFIGURE_DEPENDS
 add_executable(spike_tests ${SPIKE_TEST_SOURCES})
 target_include_directories(spike_tests PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/tests"
-  "${SPIKE_TRACKTION_DIR}/modules/3rd_party/doctest")
+  "${TRACKLAB_TRACKTION_DIR}/modules/3rd_party/doctest")
 target_link_libraries(spike_tests PRIVATE spike_core spike_config_flags)
 add_dependencies(spike_tests spike_cli SpikeGain_VST3)
 
