@@ -36,8 +36,8 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | M0-06 Engine-Spike (Tests fertig auf `m0-06-tests`; implementer-rt läuft) |
-| Review | – |
+| in Arbeit | – |
+| Review | M0-06 Engine-Spike (Runde 1: Nacharbeit, implementer-rt bessert nach) |
 | Backlog | M0-05 ADR-001 · M0-07 Gate CMake (Struktur-Vorschlag steht) · M0-08 Rest-Recherche (daw-features) |
 | Erledigt | M0-01 · M0-02 · M0-03 · M0-04 |
 
