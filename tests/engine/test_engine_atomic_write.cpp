@@ -5,6 +5,7 @@
 // that ignores them) the test is skipped. It lives in its own suite so that the skip hides nothing else.
 #include "engine/engine_factory.h"
 
+#include "engine_test_options.h"
 #include "test_support.h"
 
 namespace
@@ -14,7 +15,7 @@ using namespace tracklab::engine;
 
 EngineOptions fileOptions(const juce::File& dir)
 {
-    EngineOptions options;
+    auto options = tracklab_test::testOptions();
     options.storage = SettingsStorage::file;
     options.settingsDirectory = dir;
     return options;
