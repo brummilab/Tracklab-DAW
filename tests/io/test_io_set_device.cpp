@@ -194,6 +194,65 @@ TEST_SUITE("io")
         CHECK(result.at("buffer_size").get<int>() > 0);
     }
 
+    //==========================================================================
+    // Active channels that are not given (Lead decision 5, M1-06): a new device gets all its channels, an unchanged
+    // device keeps the channels it had.
+    TEST_CASE("io.set_device without channels activates all channels of a new device")
+    {
+        const ScopedTempDir temp;
+        const Session session(temp.dir());
+
+        const auto result = session.setDevice(Json{{"type", fake::kSeparateType},
+                                                   {"input_device", fake::kMicInterface},
+                                                   {"output_device", fake::kSpeakers},
+                                                   {"sample_rate", 48000},
+                                                   {"buffer_size", 128}});
+
+        CHECK(result.at("active_input_channels") == Json::array({0, 1, 2, 3}));  // mic interface: 4 channels
+        CHECK(result.at("active_output_channels") == Json::array({0, 1}));
+        const auto& open = session.backend->opens.back();
+        CHECK(maskIs(open.inputChannels, {0, 1, 2, 3}));
+        CHECK(maskIs(open.outputChannels, {0, 1}));
+    }
+
+    TEST_CASE("io.set_device with only a type activates all channels of the default devices")
+    {
+        const ScopedTempDir temp;
+        const Session session(temp.dir());
+        session.setDevice(micAndSpeakersParams());  // channels 0 and 2 in, 0 and 1 out
+
+        const auto result = session.setDevice(Json{{"type", fake::kDuplexType}});
+
+        CHECK(result.at("active_input_channels") == Json::array({0, 1, 2, 3, 4, 5, 6, 7}));
+        CHECK(result.at("active_output_channels") == Json::array({0, 1, 2, 3, 4, 5, 6, 7}));
+    }
+
+    TEST_CASE("io.set_device keeps the channels of the side whose device stays, the new side gets all channels")
+    {
+        const ScopedTempDir temp;
+        const Session session(temp.dir());
+        session.setDevice(micAndSpeakersParams());  // mic: channels 0 and 2
+
+        const auto result =
+            session.setDevice(Json{{"output_device", fake::kHeadphones}, {"sample_rate", 48000}, {"buffer_size", 256}});
+
+        CHECK(result.at("active_input_channels") == Json::array({0, 2}));   // same input device: as it was
+        CHECK(result.at("active_output_channels") == Json::array({0, 1}));  // new output device: all
+    }
+
+    TEST_CASE("io.set_device gives all channels to a device that was added to an output-only setup")
+    {
+        const ScopedTempDir temp;
+        const Session session(temp.dir());
+        session.setDevice(micAndSpeakersParams());
+        session.setDevice(Json{{"input_device", ""}});
+
+        const auto result = session.setDevice(Json{{"input_device", fake::kLineInterface}});
+
+        CHECK(result.at("active_input_channels") == Json::array({0, 1}));  // line interface: 2 channels
+        CHECK(result.at("active_output_channels") == Json::array({0, 1}));
+    }
+
     TEST_CASE("the running fake device reaches the audio callback of the device manager")
     {
         // The device manager forwards the device's callback to its own callbacks: audio can flow once a device is set.
