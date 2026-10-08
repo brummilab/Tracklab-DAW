@@ -32,7 +32,7 @@ CLANG_TIDY="${CLANG_TIDY:-clang-tidy}"
 # The spike tests treat a missing lame/ffmpeg as a failure when this is set (exit code 77 would mean "skipped").
 export SPIKE_REQUIRE_TOOLS=1
 # Only the two pinned submodules; Tracktion's own nested JUCE submodule is never initialised.
-SUBMODULES="spike/engine/third_party/JUCE spike/engine/third_party/tracktion_engine"
+SUBMODULES="third_party/JUCE third_party/tracktion_engine"
 
 fail=0
 ok()   { printf '  [OK]   %s\n' "$1"; }

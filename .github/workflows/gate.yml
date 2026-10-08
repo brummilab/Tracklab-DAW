@@ -30,7 +30,7 @@ env:
   # A missing lame/ffmpeg is a failure in CI, never a silent skip (gate.sh sets it as well).
   SPIKE_REQUIRE_TOOLS: "1"
   # Only the two pinned submodules; Tracktion's own nested JUCE submodule is never initialised.
-  SPIKE_SUBMODULES: spike/engine/third_party/JUCE spike/engine/third_party/tracktion_engine
+  TRACKLAB_SUBMODULES: third_party/JUCE third_party/tracktion_engine
   # apt must never wait for input or a stalled mirror: no debconf/needrestart prompts, short network timeouts with
   # retries (a job once hung for more than 25 minutes in the apt step); the apt steps also have a timeout-minutes.
   APT_GET: sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30
@@ -100,7 +100,7 @@ jobs:
         run: echo "GATE_BUILD_DIR=$RUNNER_TEMP/gate-build" >> "$GITHUB_ENV"
 
       - name: Submodules (JUCE 9.0.3, Tracktion develop; not recursive)
-        run: git submodule update --init --depth 1 -- $SPIKE_SUBMODULES
+        run: git submodule update --init --depth 1 -- $TRACKLAB_SUBMODULES
 
       - name: Install build dependencies (apt)
         timeout-minutes: 10
@@ -196,7 +196,7 @@ jobs:
       - name: Build directory (outside the checkout)
         run: echo "GATE_BUILD_DIR=$RUNNER_TEMP/gate-build" >> "$GITHUB_ENV"
       - name: Submodules (JUCE 9.0.3, Tracktion develop; not recursive)
-        run: git submodule update --init --depth 1 -- $SPIKE_SUBMODULES
+        run: git submodule update --init --depth 1 -- $TRACKLAB_SUBMODULES
       - name: Install build dependencies (apt)
         timeout-minutes: 10
         run: |
@@ -245,7 +245,7 @@ jobs:
 
       - name: Submodules (JUCE 9.0.3, Tracktion develop; not recursive)
         shell: bash
-        run: git submodule update --init --depth 1 -- $SPIKE_SUBMODULES
+        run: git submodule update --init --depth 1 -- $TRACKLAB_SUBMODULES
 
       - name: Install lame and ffmpeg (choco)
         shell: pwsh
