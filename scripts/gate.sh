@@ -204,7 +204,7 @@ stage_tidy() {
   [ -n "$files" ] || { skip "keine C++-Quellen"; return; }
   # Only our headers are reported (system headers are never reported), one clang-tidy process per core.
   # shellcheck disable=SC2016
-  if timed "clang-tidy" bash -c 'printf "%s\n" "$1" | xargs -P "$(nproc)" -n 1 "$2" -p "$3" --quiet --header-filter="$4"' \
+  if timed "clang-tidy" bash -c 'printf "%s\n" "$1" | xargs -P "$(nproc)" -n 1 "$2" -p "$3" --quiet --header-filter="$4" 2> >(grep -Ev "^[0-9]+ warnings? generated\.$" >&2)' \
        _ "$files" "$CLANG_TIDY" "$bd" "^$(pwd)/(spike/engine/)?(src|tests)/"; then
     ok "clang-tidy: $(echo "$files" | wc -l) Quellen ohne Befund"
   else
@@ -215,7 +215,10 @@ stage_tidy() {
 # Prints "<clang> <clang++> <major>" of the first Clang >= 20, empty if there is none.
 find_rtsan_clang() {
   local c major cxx
-  for c in "${GATE_CLANG:-}" clang-22 clang-21 clang-20 clang; do
+  local candidates="clang-22 clang-21 clang-20 clang"
+  # A pinned GATE_CLANG is the only candidate: the suppressions are verified for one version.
+  [ -n "${GATE_CLANG:-}" ] && candidates="$GATE_CLANG"
+  for c in $candidates; do
     [ -n "$c" ] && command -v "$c" >/dev/null || continue
     major=$(echo | "$c" -dM -E -x c - 2>/dev/null | awk '/__clang_major__/ {print $3}')
     if [ -n "$major" ] && [ "$major" -ge 20 ]; then

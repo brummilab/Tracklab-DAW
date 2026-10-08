@@ -18,3 +18,37 @@
 #ifndef SPIKE_NONBLOCKING
 #define SPIKE_NONBLOCKING
 #endif
+
+// Run-time only variant for the border to third-party code (functions that call into code we cannot annotate):
+// RealtimeSanitizer treats everything between construction and destruction like the body of a nonblocking function.
+// Declared by hand because the public sanitizer header of Clang 20 only offers __rtsan_disable.
+#if defined(__has_feature)
+#if __has_feature(realtime_sanitizer)
+#define SPIKE_RTSAN_ACTIVE 1
+#endif
+#endif
+
+#ifdef SPIKE_RTSAN_ACTIVE
+extern "C"
+{
+    void __rtsan_realtime_enter(void);
+    void __rtsan_realtime_exit(void);
+}
+#endif
+
+namespace spike
+{
+class RealtimeScope
+{
+public:
+#ifdef SPIKE_RTSAN_ACTIVE
+    RealtimeScope() noexcept { __rtsan_realtime_enter(); }
+    ~RealtimeScope() { __rtsan_realtime_exit(); }
+#else
+    RealtimeScope() = default;
+    ~RealtimeScope() = default;
+#endif
+    RealtimeScope(const RealtimeScope&) = delete;
+    RealtimeScope& operator=(const RealtimeScope&) = delete;
+};
+}  // namespace spike

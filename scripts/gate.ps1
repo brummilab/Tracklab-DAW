@@ -91,8 +91,10 @@ function Invoke-StageStatic {
   if (-not (Get-Command $cf -ErrorAction SilentlyContinue)) { Bad "$cf nicht installiert" }
   elseif ($src.Count -eq 0) { Skip 'noch kein C++-Code' }
   else {
-    & $cf --dry-run --Werror @src 2>&1 | Select-Object -First 40
-    if ($LASTEXITCODE -eq 0) { Ok "$($src.Count) Dateien formatiert" } else { Bad 'clang-format-Abweichungen (lokal beheben: clang-format -i <Datei>)' }
+    # Judge by the output (like gate.sh): $LASTEXITCODE is not reliable behind a pipeline.
+    $out = @(& $cf --dry-run --Werror @src 2>&1)
+    if ($out.Count -eq 0) { Ok "$($src.Count) Dateien formatiert" }
+    else { $out | Select-Object -First 40 | Out-Host; Bad 'clang-format-Abweichungen (lokal beheben: clang-format -i <Datei>)' }
   }
 }
 

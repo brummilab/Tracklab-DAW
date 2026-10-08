@@ -47,9 +47,13 @@ public:
     }
 
     /** Feeds `numFrames` frames: the input signals from frame `startFrame` on, or silence if `silent`.
-        Runs on the "audio thread" of the simulated device: no allocation, no locks, no IO in this function. */
-    void feed(std::int64_t startFrame, int numFrames, bool silent) noexcept SPIKE_NONBLOCKING
+        Simulates the hardware callback of the audio device, so this is the border to third-party code: it calls
+        Tracktion, which is known to allocate and lock in the record path (scripts/rtsan.supp). It is therefore NOT
+        marked [[clang::nonblocking]] (the compiler would reject the call into Tracktion); RealtimeSanitizer checks
+        it at run time through the RealtimeScope instead. */
+    void feed(std::int64_t startFrame, int numFrames, bool silent)
     {
+        [[maybe_unused]] RealtimeScope realtimeScope;
         float* const* channels = block.getArrayOfWritePointers();
         for (int c = 0; c < kRecordNumInputs; ++c)
         {

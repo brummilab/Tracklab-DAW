@@ -16,6 +16,11 @@ if(SPIKE_WERROR)
     target_compile_options(spike_warnings INTERFACE /W4 /WX /external:W0)
   else()
     target_compile_options(spike_warnings INTERFACE -Wall -Wextra -Werror)
+    # Clang >= 20 verifies [[clang::nonblocking]] functions at compile time: every call from such a function must go
+    # to another verified (or nonblocking) function. Own sources only; calls into JUCE/Tracktion headers are reported
+    # as well, which is the point (docs/realtime.md).
+    target_compile_options(spike_warnings INTERFACE
+      "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_GREATER_EQUAL:$<CXX_COMPILER_VERSION>,20>>:-Wfunction-effects>")
   endif()
 endif()
 

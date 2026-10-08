@@ -7,16 +7,18 @@
 # How a pattern works: `call-stack-contains:<pattern>` suppresses a report if ANY frame of its stack matches. The
 # patterns therefore name the innermost Tracktion function of each known finding (the site) and no namespace as a
 # whole. Limit: a finding that is reported below one of these functions is suppressed as well. This matters for the
-# few entry points (HostedAudioDevice::processBlock, DeviceManager::audioDeviceIOCallbackInternal): an own plug-in
-# that Tracktion calls from the record path would be covered by them. Own callbacks are therefore also tested
-# on their own (vst3 suite, negative test), without a Tracktion frame in their stack.
+# few entry points (HostedAudioDevice::processBlock, DeviceManager::audioDeviceIOCallbackInternal): they cover the
+# WHOLE Tracktion path below them. Before own nodes or plug-ins run inside the Tracktion graph under RTSan, replace
+# these entries by entries for the innermost sites. Until then own callbacks are also tested on their own
+# (vst3 suite, negative test), without a Tracktion frame in their stack.
 #
 # Origin: engine spike M0-06, team/research/engine-spike/BERICHT.md section 7 (Tracktion's record path allocates and
 # locks in the audio callback: 12 inputs, 5 s -> several hundred findings, 20 distinct sites). Every line is a TODO
 # for the recording card (M4-01): fix upstream or in our fork, then delete the line. Do not add entries without
 # a comment of the same kind (what happens, why it is unavoidable for now).
 #
-# Found with: RTSAN_OPTIONS=halt_on_error=false over ctest of the preset linux-clang-rtsan (Clang 20.1).
+# Found and verified with Clang 20.1.2 only (RTSAN_OPTIONS=halt_on_error=false over ctest of the preset
+# linux-clang-rtsan); the gate job pins clang-20.
 
 # --- Device layer: CriticalSection / shared mutex around device state, buffers resized per block size -------------
 # HostedAudioDevice::processBlock: CriticalSection around the hosted callback and a HeapBlock allocation when the

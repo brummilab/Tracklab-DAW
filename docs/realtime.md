@@ -22,9 +22,12 @@ Gilt für jeden Code, der vom Audio-Thread erreichbar ist. Der reviewer prüft d
   (`-fsanitize=realtime`, Clang ≥ 20.1, nur Linux – für Windows ist RTSan nicht belegt) führt alle Engine-Tests aus.
   Jeder Befund beendet den Test (`halt_on_error`) und blockiert das Gate. Lokal ohne Clang ≥ 20 wird die Stufe
   übersprungen, in CI (`GATE_REQUIRE_RTSAN=1`) ist ein fehlender Clang ein Fehler.
-- `-Wfunction-effects` (Clang ≥ 20, in `-Werror` enthalten) prüft die annotierten Funktionen zur Übersetzungszeit.
-  Aufrufe in Systemheader und in JUCE/Tracktion (als SYSTEM-Includes eingebunden) meldet es nicht; das fängt RTSan zur
-  Laufzeit.
+- `-Wfunction-effects` ist für eigene Quellen aktiv (CMake `spike_warnings`, nur Clang ≥ 20, mit `-Werror`). Es prüft jede
+  `nonblocking`-Funktion zur Übersetzungszeit; Aufrufe in JUCE-/Tracktion-Header werden ebenfalls gemeldet.
+- **Regel:** `[[clang::nonblocking]]` steht nur auf Funktionen, deren gesamte Aufrufkette eigener, geprüfter Code ist.
+  Grenzfunktionen zu Fremdcode (z. B. `HostedDeviceDriver::feed`, simuliert den Hardware-Callback und ruft Tracktion)
+  bekommen die Annotation nicht, sondern einen `spike::RealtimeScope`: RealtimeSanitizer prüft sie zur Laufzeit, der
+  Compiler nicht.
 
 ### RealtimeSanitizer: Regeln für Ausnahmen
 - **Eigener Code hat keine Ausnahme.** Ein Befund in `spike::`, in unseren Plugins oder später in `src/` ist ein
@@ -33,9 +36,11 @@ Gilt für jeden Code, der vom Audio-Thread erreichbar ist. Der reviewer prüft d
   je Eintrag mit Kommentar (was passiert, warum es vorerst unvermeidbar ist). Keine Namespace-Pauschalen
   (`tracktion::`, `juce::`): Der Stack enthält auch die Aufrufer, eine Pauschale würde unsere eigenen Callbacks
   verdecken, die Tracktion oder der JUCE-Plugin-Wrapper aufruft.
-- **Grenze:** Ein neuer Befund unterhalb einer unterdrückten Tracktion-Funktion (vor allem der Einstiegspunkte
-  `HostedAudioDevice::processBlock`, `DeviceManager::audioDeviceIOCallbackInternal`) wird mit unterdrückt. Eigene
-  Callbacks werden deshalb zusätzlich ohne Tracktion im Stack geprüft (Plugin-Suite, Negativtest).
+- **Grenze:** Ein Eintrag auf einen Einstiegspunkt (`HostedAudioDevice::processBlock`,
+  `DeviceManager::audioDeviceIOCallbackInternal`) deckt den **ganzen** Tracktion-Pfad darunter ab, auch neue Befunde.
+  Solange diese Einträge stehen, dürfen keine eigenen Nodes oder Plugins im Tracktion-Graph laufen, die RTSan prüfen
+  soll: Die Einstiegspunkt-Suppressions müssen vorher durch Suppressions auf die innersten Fundstellen abgelöst werden.
+  Eigene Callbacks werden bis dahin ohne Tracktion im Stack geprüft (Plugin-Suite, Negativtest).
 - Die Liste ist die Mängelliste von Tracktions Aufnahmepfad (Locks und Allokation im Callback, Spike-Bericht Abschnitt 7).
   Sie wird mit der Aufnahmekarte (M4-01) abgebaut; neue Einträge brauchen eine Begründung im Review.
 - Neue Fundstellen finden: `RTSAN_OPTIONS=halt_on_error=false:detect_leaks=0` über `ctest` im Preset
