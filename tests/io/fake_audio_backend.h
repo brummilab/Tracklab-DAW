@@ -246,9 +246,11 @@ public:
         const DeviceSpec* out = nullptr;
         if (separateIO)
         {
-            if (inputDeviceName.isNotEmpty() && (in = find(inputs, inputDeviceName)) == nullptr)
-                return nullptr;
-            if (outputDeviceName.isNotEmpty() && (out = find(outputs, outputDeviceName)) == nullptr)
+            if (inputDeviceName.isNotEmpty())
+                in = find(inputs, inputDeviceName);
+            if (outputDeviceName.isNotEmpty())
+                out = find(outputs, outputDeviceName);
+            if ((inputDeviceName.isNotEmpty() && in == nullptr) || (outputDeviceName.isNotEmpty() && out == nullptr))
                 return nullptr;
         }
         else

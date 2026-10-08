@@ -323,6 +323,7 @@ Json setDeviceHandler(te::Engine& engine, const Json& params)
 
     auto* current = manager.getCurrentAudioDevice();
     const juce::String openType = current != nullptr ? current->getTypeName() : juce::String();
+    const bool hadDevice = current != nullptr;  // `current` dangles once the manager replaces the device
     const auto before = manager.getAudioDeviceSetup();
 
     // ---- 1. Work out the complete new setup. Nothing is changed before all of it has been checked.
@@ -447,12 +448,11 @@ Json setDeviceHandler(te::Engine& engine, const Json& params)
     {
         // Leave the application as it was: the same type and, if there was one, the same device.
         juce::String restored = "the previous device was not restored";
-        if (current != nullptr)
+        if (hadDevice)
         {
             if (manager.getCurrentAudioDeviceType() != openType)
                 manager.setCurrentAudioDeviceType(openType, true);
-            auto previous = before;
-            if (manager.setAudioDeviceSetup(previous, true).isEmpty())
+            if (manager.setAudioDeviceSetup(before, true).isEmpty())
                 restored = "the previous device is open again";
         }
         fail("cannot open " + deviceText + ": " + error.trim() + " (" + restored + ")");

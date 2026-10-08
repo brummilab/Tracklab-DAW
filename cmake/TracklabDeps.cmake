@@ -46,7 +46,8 @@ target_compile_definitions(tracklab_defs INTERFACE
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   target_compile_definitions(tracklab_defs INTERFACE JUCE_ALSA=1 JUCE_JACK=1)
 elseif(WIN32)
-  target_compile_definitions(tracklab_defs INTERFACE JUCE_ASIO=1 JUCE_WASAPI=1)
+  # JUCE_ASIO_USE_EXTERNAL_SDK=0: the SDK bundled in JUCE (GPLv3 option), never a separately downloaded copy.
+  target_compile_definitions(tracklab_defs INTERFACE JUCE_ASIO=1 JUCE_ASIO_USE_EXTERNAL_SDK=0 JUCE_WASAPI=1)
 endif()
 
 # JUCE's recommended config flags add /Zi on MSVC (its directory scope does not see CMP0141 NEW), which would
