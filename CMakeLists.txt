@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
-# Root build of Tracklab (M0-07). Until M1 adds the real application under src/, the C++ project that the gate
-# builds and tests is the engine spike. Build through CMakePresets.json (or scripts/gate.sh / gate.ps1).
+# Root build of Tracklab: src/ (modules, M1-01), tests/ (tracklab_tests) and the engine spike (reference, M0).
+# Build through CMakePresets.json (or scripts/gate.sh / gate.ps1).
 
 # MSVC: embed debug info in the object files (/Z7) so that sccache can cache MSVC builds (CMP0141),
 # static runtime so that the executables and the VST3 plugin need no redistributable. Both variables have to be
@@ -47,4 +47,9 @@ endif()
 
 include(CTest)
 
+# JUCE + Tracktion, compiled once (tracklab_juce_tracktion), shared by src/, tests/ and the spike.
+include(cmake/TracklabDeps.cmake)
+
+add_subdirectory(src)
+add_subdirectory(tests)
 add_subdirectory(spike/engine)

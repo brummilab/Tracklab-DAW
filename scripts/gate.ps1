@@ -25,7 +25,7 @@ $env:SPIKE_REQUIRE_TOOLS = '1'
 # Configurations of the build stage ("debug release" by default).
 $Configs = if ($env:GATE_CONFIGS) { $env:GATE_CONFIGS -split '\s+' | Where-Object { $_ } } else { @('debug', 'release') }
 # Only the two pinned submodules; Tracktion's own nested JUCE submodule is never initialised.
-$Submodules = @('spike/engine/third_party/JUCE', 'spike/engine/third_party/tracktion_engine')
+$Submodules = @('third_party/JUCE', 'third_party/tracktion_engine')
 
 # Runs a native command (streams its output, which is what a CI log wants) and prints how long it took.
 # Returns $true if the exit code was 0.
