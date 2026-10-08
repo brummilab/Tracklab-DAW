@@ -1,0 +1,103 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "linux-gcc",
+      "hidden": true,
+      "inherits": "base",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" },
+      "cacheVariables": { "CMAKE_C_COMPILER": "gcc", "CMAKE_CXX_COMPILER": "g++" }
+    },
+    {
+      "name": "linux-clang",
+      "hidden": true,
+      "inherits": "base",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" },
+      "cacheVariables": { "CMAKE_C_COMPILER": "clang", "CMAKE_CXX_COMPILER": "clang++" }
+    },
+    {
+      "name": "linux-gcc-debug",
+      "displayName": "Linux GCC Debug",
+      "inherits": "linux-gcc",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "linux-gcc-release",
+      "displayName": "Linux GCC Release",
+      "inherits": "linux-gcc",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "linux-clang-debug",
+      "displayName": "Linux Clang Debug",
+      "inherits": "linux-clang",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "linux-clang-release",
+      "displayName": "Linux Clang Release",
+      "inherits": "linux-clang",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "linux-clang-rtsan",
+      "displayName": "Linux Clang >= 20 RealtimeSanitizer",
+      "description": "Needs Clang >= 20 (scripts/gate.sh rtsan selects it and passes the compiler paths)",
+      "inherits": "linux-clang",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "TRACKLAB_RTSAN": "ON" }
+    },
+    {
+      "name": "windows-msvc",
+      "hidden": true,
+      "inherits": "base",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
+      "cacheVariables": { "CMAKE_C_COMPILER": "cl", "CMAKE_CXX_COMPILER": "cl" }
+    },
+    {
+      "name": "windows-msvc-debug",
+      "displayName": "Windows MSVC Debug",
+      "inherits": "windows-msvc",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "windows-msvc-release",
+      "displayName": "Windows MSVC Release",
+      "inherits": "windows-msvc",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "linux-gcc-debug", "configurePreset": "linux-gcc-debug" },
+    { "name": "linux-gcc-release", "configurePreset": "linux-gcc-release" },
+    { "name": "linux-clang-debug", "configurePreset": "linux-clang-debug" },
+    { "name": "linux-clang-release", "configurePreset": "linux-clang-release" },
+    { "name": "linux-clang-rtsan", "configurePreset": "linux-clang-rtsan" },
+    { "name": "windows-msvc-debug", "configurePreset": "windows-msvc-debug" },
+    { "name": "windows-msvc-release", "configurePreset": "windows-msvc-release" }
+  ],
+  "testPresets": [
+    {
+      "name": "default",
+      "hidden": true,
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error" }
+    },
+    { "name": "linux-gcc-debug", "configurePreset": "linux-gcc-debug", "inherits": "default" },
+    { "name": "linux-gcc-release", "configurePreset": "linux-gcc-release", "inherits": "default" },
+    { "name": "linux-clang-debug", "configurePreset": "linux-clang-debug", "inherits": "default" },
+    { "name": "linux-clang-release", "configurePreset": "linux-clang-release", "inherits": "default" },
+    { "name": "linux-clang-rtsan", "configurePreset": "linux-clang-rtsan", "inherits": "default" },
+    { "name": "windows-msvc-debug", "configurePreset": "windows-msvc-debug", "inherits": "default" },
+    { "name": "windows-msvc-release", "configurePreset": "windows-msvc-release", "inherits": "default" }
+  ]
+}

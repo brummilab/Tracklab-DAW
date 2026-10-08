@@ -1,33 +1,11 @@
 cmake_minimum_required(VERSION 3.25)
 
-# MSVC: embed debug info in the object files (/Z7) so that sccache can cache MSVC builds (CMP0141),
-# static runtime so that spike_cli.exe and SpikeGain.vst3 need no redistributable.
-if(POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-endif()
-set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
+# The compiler settings (C++20, MSVC debug info and runtime, ccache, RTSan) live in the root CMakeLists.txt:
+# build through the root project (CMakePresets.json), not from this directory.
 project(TracklabEngineSpike VERSION 0.1.0 LANGUAGES C CXX)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
-endif()
 
 option(SPIKE_WERROR "Treat warnings in spike/engine/src as errors" ON)
 
-# Use ccache automatically if present and no launcher was requested (CI passes sccache/ccache itself).
-find_program(SPIKE_CCACHE ccache)
-if(SPIKE_CCACHE AND NOT CMAKE_CXX_COMPILER_LAUNCHER AND NOT MSVC)
-  set(CMAKE_C_COMPILER_LAUNCHER "${SPIKE_CCACHE}")
-  set(CMAKE_CXX_COMPILER_LAUNCHER "${SPIKE_CCACHE}")
-endif()
-
-include(CTest)
 include(cmake/Deps.cmake)
 
 # Warning flags for our own sources only (never for JUCE/Tracktion module code).
