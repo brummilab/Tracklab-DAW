@@ -124,7 +124,7 @@ durch dich (Prüfaufgabe).
 
 ---
 
-## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026)
+## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026) – F16–F27
 
 Details jeweils in `team/research/<thema>/NOTIZEN.md`.
 
@@ -193,6 +193,20 @@ Registerabfragen waren aus der Cloud nicht möglich.
 - **Empfehlung:** privat weiter „Tracklab“; vor jeder Veröffentlichung Registerrecherche (EUIPO/TMview, DPMA, USPTO,
   Klassen 9/41/42) durch dich, Plan-B-Namen bereithalten.
 - **Default:** privat weiter, Prüfung vor Veröffentlichung.
+- **Antwort:**
+
+### F26 – Tracktion-Engine-Stand (`engine-spike`)
+Letzter Release-Tag ist `v3.2.0` (Mai 2025). Der Entwicklungszweig `develop` steht auf **3.5.0 ohne Tag** und bringt genau
+das, was Workflow A braucht: Mehrkanal beliebig, Render-Queue, LUFS-Normalisierung, Lautheitsmesser (R128, LRA, True Peak).
+- **A (Empfehlung):** festen `develop`-Commit pinnen (`bb38617` oder neuer), Upgrade nur per Karte.
+- B: Tag `v3.2.0` (stabil, aber ohne die v3.5-Funktionen).
+- **Default:** A, Spike prüft parallel, ob B reicht.
+- **Antwort:**
+
+### F27 – Lautheitsmessung: Engine oder eigene Implementierung (`engine-spike`)
+- **Empfehlung:** im Spike die Engine-Messung gegen analytisch bekannte Signale prüfen, in M2 gegen die EBU-Testsignale
+  validieren; nur bei Abweichung eigene Implementierung.
+- **Default:** wie empfohlen.
 - **Antwort:**
 
 ---
