@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status:** M0-07 gemerged – warte auf ersten CI-Lauf des neuen Gates · danach M0-Abschluss
+**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status:** M0-07 gemerged; erster CI-Lauf: alles grün außer rtsan-linux (ubuntu-26.04: libstdc++ 15 bricht Tracktion) → CI-Fix läuft
 
 ## Zuletzt erledigt
 
@@ -34,8 +34,9 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 ## Nächster Schritt (Lead)
 
-1. Ersten CI-Lauf von `gate.yml` auf `main` prüfen (static, build-test-linux ×4, rtsan-linux auf ubuntu-26.04,
-   build-test-windows, mp3-compare). Bei Fehlern Nacharbeit.
+1. CI-Fix M0-07: rtsan-linux auf ubuntu-24.04 + clang-20 (Implementer, Branch `m0-07-ci-fix`), apt-Hänger im Job
+   `linux-clang release` prüfen → kurzer Review → Merge → CI grün belegen. **Risiko:** Tracktion `develop` baut nicht mit
+   libstdc++ 15 (Ubuntu 26.04 = Basis Mint 23) → vor Mint-23-Support klären (Upstream/Pin-Update).
 2. M0-Abschluss: Rückblick `team/RUECKBLICK-M0.md`, PLAN M0 ✅, M1 planen (Design-Abschnitte, Briefs M1-xx).
 3. M0-08: Reaper-Preset nach F11.
 
