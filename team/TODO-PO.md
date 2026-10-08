@@ -66,6 +66,7 @@ nlohmann/json; Alternativen Ardour-Fork, Rust-Stack, JUCE ohne Tracktion (`DESIG
 - **Empfehlung:** Inno Setup (einfaches Skriptformat, verbreitet; endgültig nach `research/ci-packaging/`).
 - **Alternative:** NSIS.
 - **Default:** Inno Setup.
+- **Recherche 08.10.2026:** Inno Setup 6.7.1 ist auf dem Runner `windows-2025` vorinstalliert (`team/research/ci-packaging/NOTIZEN.md`).
 - **Antwort:**
 
 ### F7 – Release-Schema und wann ein Stand „live“ ist (deckt Vorlagen-Frage E1 ab)
@@ -124,7 +125,7 @@ durch dich (Prüfaufgabe).
 
 ---
 
-## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026) – F16–F28
+## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026) – F16–F30
 
 Details jeweils in `team/research/<thema>/NOTIZEN.md`.
 
@@ -217,6 +218,20 @@ tech.ebu.ch und itu.int sind in Cloud-Sessions gesperrt; die Lizenz der EBU-Test
 - **Empfehlung Testsignale:** CI lädt das Set herunter und prüft SHA-256 (falls die Terms es erlauben); Rückfall: eigene
   Signale nach Tech-3341-Beschreibung erzeugen.
 - **Default:** Rückfall (eigene Signale), bis die Terms geklärt sind.
+- **Antwort:**
+
+### F29 – Code-Signing Windows (`ci-packaging`)
+Ohne Signatur warnt Windows SmartScreen beim Installer.
+- **Empfehlung:** vorerst nicht signieren (nur Band-Builds); nach F2 und falls das Repo öffentlich wird: SignPath
+  Foundation (kostenlos für Open Source). Gekaufte Zertifikate kosten ca. 80–1.500 USD/Jahr; Microsoft Artifact Signing
+  geht in Österreich nur für Organisationen.
+- **Default:** vorerst keine Signatur.
+- **Antwort:**
+
+### F30 – Plattformumfang und RTSan (`ci-packaging`)
+- **Empfehlung:** nur x64 (kein ARM); RealtimeSanitizer nur unter Linux (Clang ≥ 20), Windows nur MSVC-Build; als
+  RTSan-Basis schon in M0 den Runner `ubuntu-26.04` nutzen.
+- **Default:** wie empfohlen.
 - **Antwort:**
 
 ---
