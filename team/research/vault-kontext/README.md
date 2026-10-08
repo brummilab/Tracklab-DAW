@@ -13,3 +13,5 @@ verbunden; der Vault war damit nicht erreichbar (R2 nicht erfüllbar → `TODO-P
 
 ## Kurzfassung
 – (folgt)
+
+> **Entfällt (E0b, 08.10.2026):** Der Vault wird per Obsidian Git Sync aktuell gehalten; kein Zugriff aus Cloud-Sessions nötig.

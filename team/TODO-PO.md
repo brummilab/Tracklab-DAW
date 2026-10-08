@@ -10,25 +10,6 @@ Infos und Zugänge ohne Default.
 
 ## Offen
 
-### F0b – Vault-Zugriff und Vault-Sync für Cloud-Sessions
-In dieser Cloud-Session ist kein Obsidian-MCP-Server verbunden; den Vault konnte ich weder lesen (R2)
-noch die Abschnitte *Status*/*Offene Punkte* patchen (R5). `Projektinhalt.md` im Repo ist deshalb
-aus dem Auftrag aufgebaut. Der Auftrag (`docs/auftrag/Claude-Code-Prompt.md`) liegt im Repo.
-- **Bitte:** (a) Obsidian-MCP-Server für Cloud-Sessions verfügbar machen **oder** künftig lokal am
-  Laptop arbeiten; (b) Vault-Sync nach Vorbild: ein anderes eigenes Projekt einrichten – maßgeblich ist deine Notiz
-  `Vault-Sync-Notiz (Git-Hook)`. Für den lokalen Clone auf dem Laptop:
-  ```powershell
-  cd C:\temp
-  git clone https://github.com/brummilab/Tracklab-DAW.git
-  cd Tracklab-DAW
-  git config vault.note "<Vault>/Tracklab/Projektinhalt.md"
-  ```
-  Danach post-merge-Hook und geplanten Pull genau wie in meinen anderen Projekten anlegen (kein repo-lokales
-  `core.hooksPath`, R6).
-- **Zusätzlich bitte:** den heutigen Stand in der Vault-Notiz nachtragen – Abschnitt *Status*:
-  „08.10.2026: M0 begonnen, Grundgerüst im Repo brummilab/Tracklab-DAW, warte auf Entscheidungsrunde 1“;
-  *Offene Punkte*: F0, F0b, Entscheidungsrunde 1. (Oder ich mache es, sobald der MCP-Zugriff steht.)
-- **Antwort:**
 
 ### F9 – Info: Audio-Interface der Band
 Modell, Anzahl Eingänge, Treiber (ASIO unter Windows? class-compliant unter Linux?).

@@ -6,6 +6,7 @@ durch den PO), `V` Verifikation/Prüfaufgabe durch den PO, `R` Release/Abnahme. 
 
 | Nr | Datum | Frage | Antwort | Folge |
 |---|---|---|---|---|
+| E0b | 08.10.2026 | F0b – Vault-Zugriff/Vault-Sync in Cloud-Sessions | Nicht nötig: David hat in Obsidian Git Sync aktiviert | Kein Obsidian-MCP in Cloud-Sessions; Vault-Abschnitte patcht der Lead nicht mehr selbst; `Projektinhalt.md` im Repo bleibt die gepflegte Quelle; Recherche `vault-kontext` entfällt |
 | E38 | 08.10.2026 | F38 – Docking und Light-Theme | Default: Docking Eigenbau (Split/Tab-Baum, Screensets als JSON); Light-Theme mit abgedunkelten Akzenten (#B45309, #0369A1, #0F766E, #4F46E5) (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §5 |
 | E37 | 08.10.2026 | F37 – Linux: Screenreader, Wayland | Default: v1 unter Linux ohne Screenreader (Tastatur, Kontrast, Skalierung ja); XWayland akzeptiert (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §5; Auftrag-Korrektur §8 |
 | E36 | 08.10.2026 | F36 – Linux-Standard-Backend | Default: JACK-API über pipewire-jack, Start über `pw-jack`; ALSA Zweitoption (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §2; sudo-Schritte erst bei lokalem Test |

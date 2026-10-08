@@ -22,7 +22,6 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 ## Wartet auf den PO
 
-- **F0b** Vault-Zugriff (Obsidian-MCP fehlt in Cloud-Sitzungen) und Vault-Sync einrichten.
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key,
   F28b EBU-Quellen (optional).
 
@@ -31,8 +30,7 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 1. M0-06: test-writer (Gerüst + Tests rot) → implementer-rt (grün) → reviewer → Gate → Merge → CI (Windows) prüfen →
    Bericht `team/research/engine-spike/BERICHT.md` → ADR-001 dem PO zur Bestätigung vorlegen (M0-05).
 2. M0-07 Gate auf CMake nach dem Spike.
-3. M0-08: `daw-features` (nach F11), `vault-kontext` (nach F0b).
-4. Mit Vault-Zugriff: Vault lesen, `Projektinhalt.md` abgleichen, Vault-Abschnitte patchen.
+3. M0-08: `daw-features` (Teil 1 läuft; Reaper-Preset nach F11). `vault-kontext` entfällt (E0b).
 
 ## Offene Karten
 
@@ -40,7 +38,7 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 |---|---|
 | in Arbeit | M0-06 Engine-Spike (test-writer) |
 | Review | – |
-| Backlog | M0-05 ADR-001 · M0-07 Gate CMake (Struktur-Vorschlag steht) · M0-08 Rest-Recherche |
+| Backlog | M0-05 ADR-001 · M0-07 Gate CMake (Struktur-Vorschlag steht) · M0-08 Rest-Recherche (daw-features) |
 | Erledigt | M0-01 · M0-02 · M0-03 · M0-04 |
 
 ## Builds

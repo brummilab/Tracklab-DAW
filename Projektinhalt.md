@@ -46,12 +46,12 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
   ADR-001-Entwurf (JUCE 9 + Tracktion 3.5 unter Spike-Vorbehalt). Engine-Spike M0-06 gestartet.
 
 ## Offene Punkte
-- F0b Vault-Zugriff in Cloud-Sessions (Obsidian-MCP fehlt) bzw. Vault-Sync per post-merge-Hook einrichten.
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
-- Rest-Recherche M0-08: DAW-Funktionen (nach F11), Vault-Kontext (nach F0b).
+- Rest-Recherche M0-08: DAW-Funktionen (Reaper-Preset nach F11).
 - ADR-001 endgültig bestätigen nach Spike-Bericht.
 
 ## Entscheidungen
+- E0b (08.10.2026): Vault-Zugriff aus Cloud-Sessions nicht nötig – Obsidian Git Sync aktiv.
 - E1–E38 (08.10.2026): Defaults übernommen – u. a. Lizenz AGPLv3, Stack unter Spike-Vorbehalt, Workflow A zuerst,
   Sonnet 5.5 als Standardmodell, Inno Setup, Release per Tag nach Freigabe, MCP 2026-07-28 mit eigener C++-Implementierung,
   JACK über PipeWire unter Linux, Plugin-Sandbox nach Latenz-Spike. Details `team/ENTSCHEIDUNGEN.md`.
