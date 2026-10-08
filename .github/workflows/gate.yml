@@ -1,0 +1,25 @@
+name: gate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate-linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gate
+        run: bash scripts/gate.sh
+
+  gate-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gate
+        shell: pwsh
+        run: ./scripts/gate.ps1

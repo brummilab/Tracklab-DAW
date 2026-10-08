@@ -1,0 +1,49 @@
+# Build
+/build/
+/build-*/
+/out/
+/cmake-build-*/
+CMakeUserPresets.json
+compile_commands.json
+.cache/
+
+# IDE / OS
+.vs/
+.vscode/
+.idea/
+*.user
+.DS_Store
+Thumbs.db
+
+# Secrets (R13)
+.env
+.env.*
+*.key
+*.pem
+secrets/
+.claude/settings.local.json
+
+# Real band recordings never go into the repo (R13).
+# Synthetic fixtures under tests/fixtures/ are allowed.
+*.wav
+*.mp3
+*.flac
+*.aif
+*.aiff
+*.ogg
+*.opus
+*.m4a
+!tests/fixtures/**/*.wav
+!tests/fixtures/**/*.flac
+
+# EBU test signals are downloaded by CI, not committed
+/tests/ebu-signals/
+
+# Tracklab project artefacts
+Peaks/
+Backups/
+claude-log.jsonl
+
+# Python
+__pycache__/
+*.pyc

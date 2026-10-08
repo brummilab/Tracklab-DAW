@@ -1,0 +1,7 @@
+Tracklab – Lizenz: PLATZHALTER
+
+Die Lizenz ist noch nicht entschieden (Entscheidungsrunde 1, team/TODO-PO.md, Frage F2).
+Empfehlung: GNU Affero General Public License v3.0 (AGPLv3), weil JUCE (AGPLv3)
+und die Tracktion Engine (GPLv3) eingesetzt werden sollen.
+
+Bis zur Entscheidung gilt: Alle Rechte vorbehalten. Das Repository ist privat.
