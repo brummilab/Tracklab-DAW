@@ -126,8 +126,7 @@ TEST_SUITE("core")
                                               "track create",
                                               "track.cre ate",
                                               "tr@ck.create",
-                                              "track.cr\xC3\xA9"
-                                              "e",  // non-ASCII
+                                              "track.caf\xC3\xA9",  // non-ASCII
                                               "track.create\n",
                                               "track/create"};
         for (const auto& id : badIds)
