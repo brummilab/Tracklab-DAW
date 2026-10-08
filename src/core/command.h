@@ -6,8 +6,10 @@
 
 #include <cstddef>
 #include <functional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace tracklab::core
@@ -48,6 +50,27 @@ struct CommandError
 
     /** {"code":..., "message":..., "pointer":...} */
     Json toJson() const;
+};
+
+/** What a handler throws for an expected, domain-level failure (no project open, unknown track id, ...): the registry
+    reports it 1:1 as CommandError{code, message, pointer} instead of the generic handler_failed. `code` is a stable
+    machine-readable string (error_code::... or a command's own); `pointer` is an RFC 6901 JSON Pointer into the params
+    ("" = none in particular). It is a std::runtime_error (what() = message), so code that only knows
+    std::exception still sees a sensible text. Like any failure of an undoable command it rolls the command back. */
+class CommandFailure : public std::runtime_error
+{
+public:
+    CommandFailure(std::string_view code, const std::string& message, std::string pointer = {})
+        : std::runtime_error(message), failureCode(code), failurePointer(std::move(pointer))
+    {
+    }
+
+    const std::string& code() const noexcept { return failureCode; }
+    const std::string& pointer() const noexcept { return failurePointer; }
+
+private:
+    std::string failureCode;
+    std::string failurePointer;
 };
 
 /** Outcome of CommandRegistry::execute. */

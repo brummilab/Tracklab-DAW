@@ -195,4 +195,68 @@ TEST_SUITE("core")
         CHECK(normalisedState(*f.edit) == before);
         CHECK(f.undoNames() == std::vector<std::string>{"Bleibt"});
     }
+
+    TEST_CASE("a Transaction inside a Transaction joins the outer one: one step with the outer name")
+    {
+        UndoFixture f(tracklab::engine::defaultUndoLevels, false);
+        const auto before = normalisedState(*f.edit);
+        auto& um = f.undoManager();
+        auto node = testNode(*f.edit);
+        {
+            Transaction outer(*f.edit, "Aussen");
+            node.setProperty("a", 1, &um);
+            {
+                Transaction inner(*f.edit, "Innen");
+                node.setProperty("b", 2, &um);
+            }
+            node.setProperty("c", 3, &um);  // after the inner one ended: still the outer step
+        }
+        settle(*f.edit);
+
+        CHECK(f.undoNames() == std::vector<std::string>{"Aussen"});
+        CHECK(um.undo());
+        settle(*f.edit);
+        CHECK(normalisedState(*f.edit) == before);
+    }
+
+    TEST_CASE("rollback() of a joined inner Transaction does nothing, the outer rollback takes everything back")
+    {
+        UndoFixture f(tracklab::engine::defaultUndoLevels, false);
+        const auto before = normalisedState(*f.edit);
+        auto& um = f.undoManager();
+        auto node = testNode(*f.edit);
+        {
+            Transaction outer(*f.edit, "Aussen");
+            node.setProperty("a", 1, &um);
+            {
+                Transaction inner(*f.edit, "Innen");
+                node.setProperty("b", 2, &um);
+                inner.rollback();
+            }
+            CHECK(f.propertyValue("a") == 1);
+            CHECK(f.propertyValue("b") == 2);  // the inner rollback did not touch anything
+            outer.rollback();
+        }
+        settle(*f.edit);
+
+        CHECK(normalisedState(*f.edit) == before);
+        CHECK(f.undoNames().empty());
+    }
+
+    TEST_CASE("after the outer Transaction ended, a new Transaction is a step of its own again")
+    {
+        UndoFixture f(tracklab::engine::defaultUndoLevels, false);
+        auto& um = f.undoManager();
+        auto node = testNode(*f.edit);
+        {
+            Transaction outer(*f.edit, "Aussen");
+            node.setProperty("a", 1, &um);
+            Transaction inner(*f.edit, "Innen");
+        }
+        {
+            Transaction next(*f.edit, "Danach");
+            node.setProperty("b", 2, &um);
+        }
+        CHECK(f.undoNames() == std::vector<std::string>{"Danach", "Aussen"});
+    }
 }

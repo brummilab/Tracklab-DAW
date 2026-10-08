@@ -56,10 +56,12 @@ public:
 
     /** Validates `params` against paramsSchema, runs the handler, validates its result against resultSchema.
         Must be called on the JUCE message thread, otherwise error not_on_message_thread (the handler is not run).
-        Order: thread -> unknown_command -> invalid_params (handler not run) -> handler -> invalid_result.
+        Order: thread -> unknown_command -> invalid_params (handler not run) -> no_edit (undoable only, handler not run) ->
+        handler -> invalid_result.
         The error of a validation is the FIRST problem the validator reports (pointer: the offending field; message:
         what was expected and what was received, see schema_validation.h).
-        A handler that throws a std::exception gives handler_failed (the registry stays usable). */
+        A handler that throws a std::exception gives handler_failed (the registry stays usable); one that throws a
+        CommandFailure gives exactly its code, message and pointer (expected failures such as no_edit). */
     CommandResult execute(std::string_view id, const Json& params) const;
 
     //==========================================================================
@@ -90,6 +92,12 @@ public:
 
 private:
     struct Entry;  // the command plus its compiled schemas; hides the validator from this header
+
+    /** Params check, handler, result check, without thread check and without a transaction: the common core of
+        execute() and executeBatch(). A CommandFailure of the handler becomes its error 1:1, other exceptions
+        handler_failed. */
+    CommandResult runUnchecked(const Entry& entry, const Json& params) const;
+    tracktion::Edit* currentEdit() const;  ///< the Edit of the EditContext, null if there is none
 
     std::map<std::string, std::unique_ptr<Entry>, std::less<>> commands;  // id -> entry (stable addresses)
     std::map<std::string, std::string, std::less<>> toolToId;             // tool name -> id

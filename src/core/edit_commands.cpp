@@ -1,6 +1,8 @@
 #include "core/edit_commands.h"
 
-#include <stdexcept>
+#include <tracktion_engine/tracktion_engine.h>
+
+#include <string>
 #include <utility>
 
 namespace tracklab::core
@@ -18,15 +20,27 @@ const char* const stepResultSchema = R"({
     "additionalProperties": false
 })";
 
-// STUB (test-writer, M1-03): metadata and schemas are final, the handlers are implemented with the card.
-Json notImplemented(const Json&)
+tracktion::Edit& requireEdit(const EditContext& context)
 {
-    throw std::logic_error("edit command not implemented yet");
+    if (context.edit() == nullptr)
+        throw CommandFailure(error_code::noEdit, "no project is open");
+    return *context.edit();
+}
+
+/** Shared by edit.undo and edit.redo. The name is read before the step is taken: afterwards it belongs to the other
+    stack. An empty history is not an error, a shortcut on it is no mistake of the caller. */
+Json historyStep(const EditContext& context, bool undo)
+{
+    auto& manager = requireEdit(context).getUndoManager();
+    const bool possible = undo ? manager.canUndo() : manager.canRedo();
+    const juce::String name = undo ? manager.getUndoDescription() : manager.getRedoDescription();
+    const bool done = possible && (undo ? manager.undo() : manager.redo());
+    return Json{{"done", done}, {"description", done ? name.toStdString() : std::string()}};
 }
 
 }  // namespace
 
-RegisterResult registerEditCommands(CommandRegistry& registry, EditContext&)
+RegisterResult registerEditCommands(CommandRegistry& registry, EditContext& context)
 {
     Command undo;
     undo.id = "edit.undo";
@@ -37,7 +51,7 @@ RegisterResult registerEditCommands(CommandRegistry& registry, EditContext&)
     undo.resultSchema = Json::parse(stepResultSchema);
     undo.shortcut = "Ctrl+Z";
     undo.menuPath = "Bearbeiten";
-    undo.handler = notImplemented;
+    undo.handler = [&context](const Json&) { return historyStep(context, true); };
     if (auto outcome = registry.registerCommand(std::move(undo)); !outcome.ok)
         return outcome;
 
@@ -49,7 +63,7 @@ RegisterResult registerEditCommands(CommandRegistry& registry, EditContext&)
     redo.resultSchema = Json::parse(stepResultSchema);
     redo.shortcut = "Ctrl+Shift+Z";
     redo.menuPath = "Bearbeiten";
-    redo.handler = notImplemented;
+    redo.handler = [&context](const Json&) { return historyStep(context, false); };
     if (auto outcome = registry.registerCommand(std::move(redo)); !outcome.ok)
         return outcome;
 
@@ -70,7 +84,14 @@ RegisterResult registerEditCommands(CommandRegistry& registry, EditContext&)
         "additionalProperties": false
     })");
     state.flags.readOnly = true;
-    state.handler = notImplemented;
+    state.handler = [&context](const Json&)
+    {
+        auto& manager = requireEdit(context).getUndoManager();
+        return Json{{"can_undo", manager.canUndo()},
+                    {"can_redo", manager.canRedo()},
+                    {"undo_description", manager.getUndoDescription().toStdString()},
+                    {"redo_description", manager.getRedoDescription().toStdString()}};
+    };
     return registry.registerCommand(std::move(state));
 }
 

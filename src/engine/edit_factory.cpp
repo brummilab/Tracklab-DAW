@@ -3,13 +3,15 @@
 namespace tracklab::engine
 {
 
-// STUB (test-writer, M1-03): creates the Edit but keeps Tracktion's default undo depth (30); `undoLevels` is applied
-// with the card.
-std::unique_ptr<te::Edit> createEdit(te::Engine& engine, const EditOptions&)
+std::unique_ptr<te::Edit> createEdit(te::Engine& engine, const EditOptions& options)
 {
     auto state = te::createEmptyEdit(engine);
     auto projectId = te::ProjectItemID::fromProperty(state, te::IDs::projectID);
-    return te::Edit::createEdit(te::Edit::Options{engine, state, projectId});
+    // Tracktion's default of 30 steps is too shallow for a session; the depth is the only option we change.
+    return te::Edit::createEdit(te::Edit::Options{.engine = engine,
+                                                  .editState = state,
+                                                  .editProjectItemID = projectId,
+                                                  .numUndoLevelsToStore = options.undoLevels});
 }
 
 }  // namespace tracklab::engine

@@ -3,8 +3,10 @@
 #include "core/schema_subset.h"
 #include "core/schema_validation.h"
 #include "core/tool_names.h"
+#include "core/transaction.h"
 
 #include <juce_events/juce_events.h>
+#include <tracktion_engine/tracktion_engine.h>
 
 #include <exception>
 #include <utility>
@@ -147,6 +149,47 @@ std::optional<std::string> CommandRegistry::idForToolName(std::string_view toolN
     return it->second;
 }
 
+CommandResult CommandRegistry::runUnchecked(const Entry& entry, const Json& params) const
+{
+    const std::string& id = entry.command.id;
+    if (const auto problem = entry.params.validate(params))
+        return fail(error_code::invalidParams, problem->message, problem->pointer);
+
+    Json output;
+    try
+    {
+        output = entry.command.handler(params);
+    }
+    catch (const CommandFailure& failure)
+    {
+        // An expected, domain-level failure: the handler chose code, message and pointer, pass them on unchanged.
+        return fail(failure.code(), failure.what(), failure.pointer());
+    }
+    catch (const std::exception& error)
+    {
+        return fail(error_code::handlerFailed, "command '" + id + "' failed: " + error.what());
+    }
+    catch (...)
+    {
+        return fail(error_code::handlerFailed, "command '" + id + "' failed with an unknown exception");
+    }
+
+    // A handler that breaks its own contract is a bug of ours; refuse the result instead of passing it on to Claude.
+    if (const auto problem = entry.result.validate(output))
+        return fail(error_code::invalidResult, "command '" + id + "' returned an invalid result: " + problem->message,
+                    problem->pointer);
+
+    CommandResult result;
+    result.ok = true;
+    result.result = std::move(output);
+    return result;
+}
+
+tracktion::Edit* CommandRegistry::currentEdit() const
+{
+    return editContextPtr != nullptr ? editContextPtr->edit() : nullptr;
+}
+
 CommandResult CommandRegistry::execute(std::string_view id, const Json& params) const
 {
     // Handlers touch the project and the GUI, which belong to the message thread. Not a jassert: a caller on the
@@ -161,41 +204,82 @@ CommandResult CommandRegistry::execute(std::string_view id, const Json& params) 
         return fail(error_code::unknownCommand, "no command '" + std::string(id) + "' is registered");
     const Entry& entry = *it->second;
 
+    if (!entry.command.flags.undoable)
+        return runUnchecked(entry, params);
+
+    // A call that is refused for its params never reaches the project, so it is not worth an Edit or a transaction.
     if (const auto problem = entry.params.validate(params))
         return fail(error_code::invalidParams, problem->message, problem->pointer);
 
-    Json output;
-    try
-    {
-        output = entry.command.handler(params);
-    }
-    catch (const std::exception& error)
-    {
-        return fail(error_code::handlerFailed, "command '" + std::string(id) + "' failed: " + error.what());
-    }
-    catch (...)
-    {
-        return fail(error_code::handlerFailed, "command '" + std::string(id) + "' failed with an unknown exception");
-    }
+    tracktion::Edit* edit = currentEdit();
+    if (edit == nullptr)
+        return fail(error_code::noEdit, "command '" + std::string(id) + "' needs an open project");
 
-    // A handler that breaks its own contract is a bug of ours; refuse the result instead of passing it on to Claude.
-    if (const auto problem = entry.result.validate(output))
-        return fail(error_code::invalidResult,
-                    "command '" + std::string(id) + "' returned an invalid result: " + problem->message,
-                    problem->pointer);
-
-    CommandResult result;
-    result.ok = true;
-    result.result = std::move(output);
+    // One undoable command = one undo step named after the command. Called from inside a handler (a macro), the
+    // Transaction joins the outer one, so the macro stays one step.
+    Transaction transaction(*edit, entry.command.titleDe);
+    auto result = runUnchecked(entry, params);
+    // A failure must leave no trace: what the handler wrote before it failed is taken back, no undo entry remains.
+    if (!result.ok)
+        transaction.rollback();
     return result;
 }
 
-// STUB (test-writer, M1-03): execute() does not open a transaction yet; executeBatch() is implemented with the card.
-BatchResult CommandRegistry::executeBatch(std::string_view, const std::vector<BatchStep>&) const
+BatchResult CommandRegistry::executeBatch(std::string_view nameDe, const std::vector<BatchStep>& steps) const
 {
-    BatchResult result;
-    result.error = CommandError{std::string(error_code::handlerFailed), "executeBatch is not implemented yet", {}};
-    return result;
+    BatchResult batch;
+    const auto failWith = [&batch](CommandError error, std::size_t index)
+    {
+        batch.ok = false;
+        batch.results.clear();
+        batch.error = std::move(error);
+        batch.failedIndex = index;
+        return batch;
+    };
+
+    if (!juce::MessageManager::existsAndIsCurrentThread())
+        return failWith(CommandError{std::string(error_code::notOnMessageThread),
+                                     "commands run on the message thread only; the batch '" + std::string(nameDe) +
+                                         "' was called from another thread",
+                                     {}},
+                        0);
+
+    // The Edit is needed as soon as one step can change it. Check up front: no handler of the batch runs without one.
+    std::optional<std::size_t> firstUndoable;
+    for (std::size_t i = 0; i < steps.size() && !firstUndoable; ++i)
+        if (const Command* command = find(steps[i].id); command != nullptr && command->flags.undoable)
+            firstUndoable = i;
+
+    std::optional<Transaction> transaction;
+    if (firstUndoable)
+    {
+        tracktion::Edit* edit = currentEdit();
+        if (edit == nullptr)
+            return failWith(CommandError{std::string(error_code::noEdit),
+                                         "command '" + steps[*firstUndoable].id + "' needs an open project",
+                                         {}},
+                            *firstUndoable);
+        transaction.emplace(*edit, std::string(nameDe));
+    }
+
+    for (std::size_t i = 0; i < steps.size(); ++i)
+    {
+        const auto it = commands.find(steps[i].id);
+        auto step = it == commands.end()
+                        ? fail(error_code::unknownCommand, "no command '" + steps[i].id + "' is registered")
+                        : runUnchecked(*it->second, steps[i].params);
+        if (!step.ok)
+        {
+            // All or nothing: the steps before and the failing step's own writes are taken back.
+            if (transaction)
+                transaction->rollback();
+            return failWith(std::move(step.error), i);
+        }
+        batch.results.push_back(std::move(step.result));
+    }
+
+    batch.ok = true;
+    return batch;
 }
 
 }  // namespace tracklab::core
