@@ -1,7 +1,7 @@
 # Engine-Spike M0-06 – Bericht
 
 Stand: 08.10.2026 · Karte M0-06 · Lauf: `implementer-rt` · Branch `m0-06-impl` · Grundlage für ADR-001.
-Windows-Werte kann nur die CI liefern: überall als **„folgt aus CI“** markiert.
+Windows-Werte kann nur die CI liefern: überall als **„folgt aus CI“** markiert – nachgetragen in §11.
 
 ## 1. Pins und Ergebnis „Tracktion develop + JUCE 9.0.3“
 | Abhängigkeit | Pin | Commit |
@@ -165,3 +165,14 @@ Aufnahmetreue) ausreichend, Build moderat (≈4,5 min kalt, <1 min warm). Auflag
 1. Echtzeit: Tracktions Aufnahmepfad allokiert/lockt (Abschnitt 7) → RTSan-Strategie für Fremdcode in M0-07.
 2. MP3-Import: Gapless-Info fehlt (1105 Samples Versatz) → eigene Karte.
 3. Upstream-Abhängigkeit `develop` (ungetaggt) bewusst pinnen; WindowsMedia-Workaround upstream melden.
+
+## 11. CI-Ergebnis (Lead, 08.10.2026)
+Erster Lauf von `spike-engine` auf `main` (Commit `4c7ffe8`, Run 37762180378): **alle 8 Jobs grün** – linux-gcc und
+linux-clang (Debug/Release, `ubuntu-24.04`), windows-msvc (Debug/Release, `windows-2025`), `mp3-fixture`, `mp3-compare`.
+Damit gelten die Punkte „folgt aus CI“ oben als erledigt:
+- **Windows/MSVC baut** mit `/W4 /WX` auf den eigenen Quellen; CTest grün. Der WindowsMedia-Workaround (§8) funktioniert.
+- **MP3 plattformgleich:** dekodierte Fixture (267 264 Samples) auf allen 6 Kombinationen **bitidentisch** (Abweichung 0).
+- Build-Zeiten kalt (Schritt „Build“, leerer Cache): linux-gcc Debug 4:53, Release 10:34; linux-clang Debug 5:15,
+  Release 10:57; windows-msvc Debug 10:43, Release 14:08 min. Configure Windows ~2:30 min. Warm-Werte folgen mit dem
+  nächsten Lauf (Cache jetzt befüllt).
+- Hinweis: `actions/checkout@v4`, `upload-/download-artifact@v4` laufen noch auf Node 20 (Warnung) → O-01.

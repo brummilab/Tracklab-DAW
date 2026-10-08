@@ -1,7 +1,8 @@
 # ADR-001: Tech-Stack und Lizenz
 
-- **Status:** Vorgeschlagen – Spike M0-06 unter Linux erfolgreich (57/57 Tests, `team/research/engine-spike/BERICHT.md`);
-  Windows/MSVC folgt aus dem ersten CI-Lauf. Danach Bestätigung durch den PO.
+- **Status:** Vorgeschlagen, **zur Bestätigung beim PO** (`team/TODO-PO.md` F39). Spike M0-06 erfolgreich unter Linux
+  (GCC, Clang) und Windows (MSVC) in der CI, MP3-Dekodierung auf allen Plattformen bitidentisch
+  (`team/research/engine-spike/BERICHT.md` §11).
 - **Datum:** 08.10.2026
 - **Entscheidungen:** E2, E3, E21, E24, E26, E30, E36 (`team/ENTSCHEIDUNGEN.md`)
 - **Belege:** `team/research/engine-spike/`, `lizenz-und-name/`, `audio-backends-linux/`, `plugin-hosting-clap-lv2/`,
@@ -36,10 +37,11 @@ wird unter AGPLv3 weitergegeben. Closed Source bräuchte kommerzielle Lizenzen v
 | Rust-Stack | Kein reifes Engine-Äquivalent zu Tracktion; Plugin-Hosting und GUI selbst bauen; Auftrag: nicht für v1. |
 | JUCE ohne Tracktion | Volle Kontrolle, aber Edit-Modell, Render, Aufnahme, PDC, Clips selbst bauen – Monate Mehraufwand. Bleibt Rückfall, falls der Spike scheitert. |
 
-## Spike-Ergebnis (M0-06, Linux)
+## Spike-Ergebnis (M0-06)
 - Tracktion `develop` baut mit JUCE 9.0.3 ohne Rückfall; Build kalt ~5 min (GCC Release, 4 Kerne), warm ~1 min.
 - Import WAV/MP3, Offline-Render (`RenderSpecification`) mit Lautheit (`LoudnessMeter`, ±0,1 LU/dB), 12 Eingänge über
   Hosted Device (0 fehlende Blöcke, −138 dB), eigenes VST3 (±0,01 dB) – alles headless ohne Display.
+- CI (Windows 2025/MSVC, Ubuntu 24.04/GCC+Clang): alle Jobs grün; Build kalt 5–14 min je Job.
 - Befunde: Tracktions Aufnahmepfad allokiert im Callback (RTSan-Strategie in M0-07); MP3 ohne Gapless (M2-01);
   WindowsMedia-Workaround nötig.
 
