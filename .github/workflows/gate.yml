@@ -29,8 +29,8 @@ concurrency:
 env:
   # A missing lame/ffmpeg is a failure in CI, never a silent skip (gate.sh sets it as well).
   SPIKE_REQUIRE_TOOLS: "1"
-  # Only the two pinned submodules; Tracktion's own nested JUCE submodule is never initialised.
-  TRACKLAB_SUBMODULES: third_party/JUCE third_party/tracktion_engine
+  # Only the pinned submodules (JUCE, Tracktion, nlohmann/json, json-schema-validator); Tracktion's own nested JUCE is never initialised.
+  TRACKLAB_SUBMODULES: third_party/JUCE third_party/tracktion_engine third_party/nlohmann_json third_party/json-schema-validator
   # apt must never wait for input or a stalled mirror: no debconf/needrestart prompts, short network timeouts with
   # retries (a job once hung for more than 25 minutes in the apt step); the apt steps also have a timeout-minutes.
   APT_GET: sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30

@@ -1,0 +1,5 @@
+# Line endings: text files are normalised by git; the generated command exports are compared byte for byte by a test
+# (tests/core/test_command_export.cpp), so they must be LF on every platform, also on a Windows checkout.
+* text=auto
+tools.json text eol=lf
+docs/commands.md text eol=lf
