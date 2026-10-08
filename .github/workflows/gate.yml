@@ -31,6 +31,9 @@ env:
   SPIKE_REQUIRE_TOOLS: "1"
   # Only the two pinned submodules; Tracktion's own nested JUCE submodule is never initialised.
   SPIKE_SUBMODULES: spike/engine/third_party/JUCE spike/engine/third_party/tracktion_engine
+  # apt must never wait for input or a stalled mirror: no debconf/needrestart prompts, short network timeouts with
+  # retries (a job once hung for more than 25 minutes in the apt step); the apt steps also have a timeout-minutes.
+  APT_GET: sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30
   # JUCE "Linux Dependencies" without WebKit, plus the tools the tests need.
   LINUX_PACKAGES: >-
     ninja-build lame ffmpeg xvfb
@@ -45,7 +48,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install clang-format
-        run: sudo apt-get update && sudo apt-get install -y clang-format-18
+        timeout-minutes: 10
+        run: $APT_GET update && $APT_GET install -y clang-format-18
       - name: Gate static
         run: bash scripts/gate.sh static
         env:
@@ -57,7 +61,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install lame
-        run: sudo apt-get update && sudo apt-get install -y lame
+        timeout-minutes: 10
+        run: $APT_GET update && $APT_GET install -y lame
       - name: Create fixture (synthetic, not committed)
         run: python3 spike/engine/tests/fixtures-gen/make_mp3_fixture.py mp3-fixture
       - uses: actions/upload-artifact@v4
@@ -98,9 +103,10 @@ jobs:
         run: git submodule update --init --depth 1 -- $SPIKE_SUBMODULES
 
       - name: Install build dependencies (apt)
+        timeout-minutes: 10
         run: |
-          sudo apt-get update
-          sudo apt-get install -y $LINUX_PACKAGES clang-18 clang-tidy-18 clang-format-18
+          $APT_GET update
+          $APT_GET install -y $LINUX_PACKAGES clang-18 clang-tidy-18 clang-format-18
       - name: ccache
         # v1.2.24: node24, @actions/cache 6 (v1.2.9 used the retired legacy cache service). One cache per
         # compiler and configuration (Debug and Release objects never match).
@@ -172,9 +178,13 @@ jobs:
           retention-days: 14
 
   rtsan-linux:
-    # RealtimeSanitizer needs Clang >= 20; ubuntu-26.04 ships Clang 20/21/22 (RTSan is Linux only, E30). Pinned to clang-20.
+    # RealtimeSanitizer needs Clang >= 20 (Linux only, E30). Pinned to clang-20 from noble-updates on ubuntu-24.04.
+    # ubuntu-26.04 does not work yet: clang-20 uses libstdc++ 15 there, and Tracktion develop does not compile with it
+    # (std::make_shared<AudioClipPlayhead>(): implicitly deleted default constructor because of
+    # `std::atomic<State> state`, tracktion_AudioClipBase.h). Move back once Tracktion builds with libstdc++ 15 -
+    # the same problem will hit Linux Mint 23 / Ubuntu 26.04 users (docs/realtime.md).
     needs: static
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 150
     env:
       # In CI a missing Clang >= 20 is a failure, locally the stage is skipped.
@@ -188,12 +198,11 @@ jobs:
       - name: Submodules (JUCE 9.0.3, Tracktion develop; not recursive)
         run: git submodule update --init --depth 1 -- $SPIKE_SUBMODULES
       - name: Install build dependencies (apt)
+        timeout-minutes: 10
         run: |
-          sudo apt-get update
-          sudo apt-get install -y $LINUX_PACKAGES ccache
-          # Sanitizer runtime and symbolizer for the pinned clang-20 (GATE_CLANG).
-          command -v clang-20 >/dev/null || sudo apt-get install -y clang-20
-          sudo apt-get install -y libclang-rt-20-dev llvm-20
+          $APT_GET update
+          # clang-20 is the noble-updates package (Clang 20.1.2); runtime and symbolizer in the same version.
+          $APT_GET install -y $LINUX_PACKAGES ccache clang-20 libclang-rt-20-dev llvm-20
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2.24
         with:

@@ -48,6 +48,10 @@ Gilt für jeden Code, der vom Audio-Thread erreichbar ist. Der reviewer prüft d
 - **Negativtest** `spike.rtsan_negative`: ein absichtlich allokierender `[[clang::nonblocking]]`-Callback muss RTSan
   auslösen. Der CTest-Wrapper (`spike/engine/cmake/rtsan_expect_failure.cmake`) verlangt Exit-Code ≠ 0 *und* einen
   RTSan-Befund im Callback; sonst ist das Gate rot (der Sanitizer wäre blind oder eine Suppression zu breit).
+- Der CI-Job `rtsan-linux` läuft auf `ubuntu-24.04` mit `clang-20` aus noble-updates (20.1.2). `ubuntu-26.04` geht noch nicht:
+  Dort nutzt clang-20 die libstdc++ 15, und Tracktion develop kompiliert damit nicht (`std::make_shared<AudioClipPlayhead>()`,
+  implizit gelöschter Konstruktor wegen `std::atomic<State>` in `tracktion_AudioClipBase.h`). Das betrifft auch Linux
+  Mint 23 / Ubuntu 26.04 als Zielplattform, bis Tracktion nachzieht (Risiko für M1).
 - Der RTSan-Lauf ist langsam (record12 etwa 2 Minuten statt 4 Sekunden), weil jeder unterdrückte Befund symbolisiert
   wird; die CTest-Timeouts sind für dieses Preset erhöht.
 - Plugin-Sandbox: ein abstürzendes Plugin darf den Audio-Thread nicht mitreißen (Design §6.5).
