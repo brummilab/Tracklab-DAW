@@ -58,8 +58,8 @@ bool decodeValue(const juce::XmlElement& element, juce::String& name, juce::var&
         return false;
 
     name = element.getStringAttribute("name");
-    const auto type = element.getStringAttribute("type", "string");
-    const auto text = element.getStringAttribute("val");
+    const auto& type = element.getStringAttribute("type", "string");
+    const auto& text = element.getStringAttribute("val");
 
     if (type == "bool")
         value = text == "1";
