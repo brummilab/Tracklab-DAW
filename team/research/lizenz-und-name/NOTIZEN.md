@@ -21,7 +21,7 @@ Einschränkung: gnu.org, juce.com, EUIPO, TMview waren gesperrt; Belege aus Orig
 | VST3-SDK | MIT (steinbergmedia/vst3sdk, © 2026) | kompatibel |
 | CLAP | MIT | kompatibel |
 | ASIO-SDK | Steinberg proprietär **oder GPLv3** (JUCE `native/asio/LICENSE.txt`) | kompatibel mit GPLv3-Option → in `NOTICE`/ADR festhalten |
-| LV2-Header / lilv | ISC | kompatibel (JUCE hostet LV2 ohne lilv) |
+| LV2-Header / lilv | ISC | kompatibel (JUCE bündelt lilv 0.24.12, serd, sord, sratom – Korrektur aus `plugin-hosting-clap-lv2`) |
 | nlohmann/json | MIT | kompatibel |
 | Catch2 / GoogleTest | BSL-1.0 / BSD-3-Clause | kompatibel |
 | libsamplerate, FLAC, Ogg, zlib, HarfBuzz | BSD/zlib/MIT | kompatibel |

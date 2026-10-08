@@ -125,7 +125,7 @@ durch dich (Prüfaufgabe).
 
 ---
 
-## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026) – F16–F33
+## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026) – F16–F35
 
 Details jeweils in `team/research/<thema>/NOTIZEN.md`.
 
@@ -252,6 +252,23 @@ Schwellen lassen sich nur an echten Aufnahmen realistisch einstellen. Echte Mits
 - **Bitte (später, ab M2/M3):** 1–2 Mitschnitte lokal ablegen (Ordner außerhalb des Repos) mit einer CSV der Songgrenzen
   (Start, Ende, Titel). Tests laufen dann nur lokal, nicht in der CI.
 - **Default:** nur synthetische Fixture.
+- **Antwort:**
+
+### F34 – Plugin-Sandbox: Umfang und Zeitpunkt (`plugin-hosting-clap-lv2`)
+Weder JUCE noch Tracktion bringen eine Laufzeit-Sandbox mit; Vorbilder sind Carla und yabridge (Shared Memory + Handshake
+je Audio-Block). Die Latenzkosten sind ungemessen.
+- **A (Empfehlung):** M6 mit Scanner-Isolation und Absturzerkennung beim nächsten Start; volle Sandbox nach Bitwig-Vorbild
+  als eigenes Paket, davor ein Latenz-Spike (eigene Karte vor M6).
+- B: volle Sandbox schon in M6. C: keine Sandbox (Ardour-Weg, verfehlt Auftrag §6.5).
+- **Default:** A.
+- **Antwort:**
+
+### F35 – CLAP- und LV2-Umfang (`plugin-hosting-clap-lv2`)
+JUCE 9 kann kein CLAP; `juce_clap_hosting` existiert nicht nachweisbar → eigener Adapter (mehrere Karten). JUCEs LV2-Host
+zeigt nur X11-Plugin-Oberflächen.
+- **Empfehlung:** CLAP in v1 lassen, aber erst nach der Sandbox-Entscheidung planen; LV2-Plugins ohne X11-Oberfläche über
+  die generische Parameteransicht bedienen.
+- **Default:** wie empfohlen.
 - **Antwort:**
 
 ---
