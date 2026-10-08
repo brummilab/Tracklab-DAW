@@ -17,7 +17,8 @@ juce::AudioBuffer<float> referenceInput(int channel, int numFrames)
     juce::AudioBuffer<float> reference(1, numFrames);
     const double w = 2.0 * 3.14159265358979323846 * spike::recordInputFrequencyHz(channel) / spike::kRecordSampleRate;
     for (int n = 0; n < numFrames; ++n)
-        reference.setSample(0, n, static_cast<float>(spike::kRecordInputAmplitude * std::sin(w * static_cast<double>(n))));
+        reference.setSample(0, n,
+                            static_cast<float>(spike::kRecordInputAmplitude * std::sin(w * static_cast<double>(n))));
     return reference;
 }
 

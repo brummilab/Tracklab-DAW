@@ -1,0 +1,43 @@
+# clang-tidy for our own sources only (M0-07). The gate (scripts/gate.sh tidy) passes the compile database of
+# the linux-clang-debug preset and lists only src/, tests/, spike/engine/src and spike/engine/tests; third_party/
+# and the JUCE/Tracktion module code are never analysed. Every finding is an error (WarningsAsErrors).
+#
+# Small set on purpose: real bugs (bugprone), avoidable cost (performance) and a hand-picked part of modernize.
+# Checks that are switched off, with the reason:
+#  - bugprone-easily-swappable-parameters: fires on every function with two ints/doubles (JUCE style API)
+#  - bugprone-narrowing-conversions: duplicates -Wconversion-style findings that the JUCE API (int sample counts,
+#    size_t containers) makes unavoidable; real narrowing is caught by the compiler warnings (-Wall -Wextra -Werror)
+#  - bugprone-exception-escape: the spike CLI deliberately lets a failing operation end the process
+#  - bugprone-unchecked-optional-access: false positives where the check happens through an error flag first
+#    (CLI argument parsing returns early when an optional is missing)
+#  - bugprone-implicit-widening-of-multiplication-result, bugprone-misplaced-widening-cast: index arithmetic in the
+#    spike tests with small, bounded values (JUCE sample counts are int, containers use size_t)
+#  - performance-unnecessary-value-param: JUCE smart pointers are passed by value on purpose where they are
+#    sunk (printJson(DynamicObject::Ptr)); enable again for M1 code if it turns out useful
+#  - performance-avoid-endl: the spike test runner flushes its skip notices on purpose
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  -bugprone-exception-escape,
+  -bugprone-unchecked-optional-access,
+  -bugprone-implicit-widening-of-multiplication-result,
+  -bugprone-misplaced-widening-cast,
+  performance-*,
+  -performance-unnecessary-value-param,
+  -performance-avoid-endl,
+  modernize-deprecated-headers,
+  modernize-make-unique,
+  modernize-redundant-void-arg,
+  modernize-use-bool-literals,
+  modernize-use-emplace,
+  modernize-use-equals-default,
+  modernize-use-equals-delete,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-using
+WarningsAsErrors: '*'
+# Headers of our own code are analysed together with the sources that include them.
+HeaderFilterRegex: '(^|/)(spike/engine/)?(src|tests)/'
+FormatStyle: none

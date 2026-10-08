@@ -1,20 +1,30 @@
 #!/usr/bin/env bash
 # Tracklab gate (Linux / Git Bash). Green = exit 0.
 #
-# Usage: scripts/gate.sh [static|build|all]   (default: all)
+# Usage: scripts/gate.sh [static|build|tidy|all]   (default: all)
 #   static  required files, secrets, audio files, clang-format (no compiler needed)
 #   build   CMake Debug + Release (-Werror for our own sources) and ctest; GCC by default (GATE_COMPILER=clang)
-#   all     static + build
+#   tidy    clang-tidy over our own sources (needs the compile database of the linux-clang-debug preset)
+#   all     static + build + tidy
 #
-# Rule from agent-team-vorlage: the gate never writes into the working tree. All build output goes to
-# GATE_BUILD_DIR (default: ${TMPDIR:-/tmp}/tracklab-gate, one sub directory per CMake preset).
-# A missing tool is a failure, never a silent skip.
+# Environment:
+#   GATE_BUILD_DIR      build output, default ${TMPDIR:-/tmp}/tracklab-gate (one sub directory per CMake preset)
+#   GATE_COMPILER       gcc (default) or clang, selects the presets of the build stage
+#   GATE_CONFIGS        configurations of the build stage, default "debug release"
+#   GATE_CC, GATE_CXX   compiler override for the build/tidy stage (e.g. gcc-14 / g++-14), the preset's name otherwise
+#   CLANG_FORMAT, CLANG_TIDY   tool names, default clang-format / clang-tidy
+#
+# Rule from agent-team-vorlage: the gate never writes into the working tree. A missing tool is a failure,
+# never a silent skip.
 set -u
 cd "$(dirname "$0")/.."
 
 stage="${1:-all}"
 GATE_BUILD_DIR="${GATE_BUILD_DIR:-${TMPDIR:-/tmp}/tracklab-gate}"
 GATE_COMPILER="${GATE_COMPILER:-gcc}"
+GATE_CONFIGS="${GATE_CONFIGS:-debug release}"
+CLANG_FORMAT="${CLANG_FORMAT:-clang-format}"
+CLANG_TIDY="${CLANG_TIDY:-clang-tidy}"
 # The spike tests treat a missing lame/ffmpeg as a failure when this is set (exit code 77 would mean "skipped").
 export SPIKE_REQUIRE_TOOLS=1
 # Only the two pinned submodules; Tracktion's own nested JUCE submodule is never initialised.
@@ -25,7 +35,7 @@ ok()   { printf '  [OK]   %s\n' "$1"; }
 bad()  { printf '  [FAIL] %s\n' "$1"; fail=1; }
 skip() { printf '  [SKIP] %s\n' "$1"; }
 
-# Runs a command, prints how long it took; returns the command's exit status.
+# Runs a command and prints how long it took; returns the command's exit status.
 timed() {
   local label="$1" start rc
   shift
@@ -49,8 +59,33 @@ logged() {
     rc=$?
   fi
   printf '  [TIME] %s: %s s\n' "$label" "$(( $(date +%s) - start ))"
-  [ "$rc" -eq 0 ] || { [ -n "${CI:-}" ] || tail -n 40 "$log"; }
+  [ "$rc" -eq 0 ] || { [ -z "${CI:-}" ] && tail -n 40 "$log"; }
   return $rc
+}
+
+# Our own C++ sources (never third_party/): src/, tests/ and the engine spike's src/ and tests/.
+own_sources() {
+  git ls-files -co --exclude-standard -- \
+    'src/*.cpp' 'src/*.h' 'src/*.hpp' 'tests/*.cpp' 'tests/*.h' 'tests/*.hpp' \
+    'spike/engine/src/*.cpp' 'spike/engine/src/*.h' 'spike/engine/src/*.hpp' \
+    'spike/engine/tests/*.cpp' 'spike/engine/tests/*.h' 'spike/engine/tests/*.hpp'
+}
+
+# Checks that the pinned submodules are there (the gate does not fetch: that would write into the working tree).
+require_submodules() {
+  local d rc=0
+  for d in $SUBMODULES; do
+    [ -f "$d/CMakeLists.txt" ] || { bad "Submodul fehlt: $d (git submodule update --init --depth 1 -- $SUBMODULES)"; rc=1; }
+  done
+  return $rc
+}
+
+# Compiler override for the configure step: GATE_CC / GATE_CXX or the explicit arguments of the caller.
+compiler_args() {
+  local cc="${1:-${GATE_CC:-}}" cxx="${2:-${GATE_CXX:-}}"
+  [ -n "$cc" ]  && printf '%s\n' "-DCMAKE_C_COMPILER=$cc"
+  [ -n "$cxx" ] && printf '%s\n' "-DCMAKE_CXX_COMPILER=$cxx"
+  return 0
 }
 
 stage_static() {
@@ -59,7 +94,7 @@ stage_static() {
            team/README.md team/RESUME.md team/TODO-PO.md team/ENTSCHEIDUNGEN.md \
            team/plan/PLAN.md team/board/BRIEF-VORLAGE.md \
            team/design/DESIGN.md docs/realtime.md docs/commands.md \
-           CMakeLists.txt CMakePresets.json \
+           CMakeLists.txt CMakePresets.json .clang-format .clang-tidy \
            assets/branding/tracklab-icon.svg assets/branding/tracklab.ico \
            assets/branding/png/tracklab-logo-light.png; do
     [ -f "$f" ] && ok "$f" || bad "$f fehlt"
@@ -94,40 +129,47 @@ stage_static() {
   echo "== Keine Audio-Mitschnitte im Repo (R13)"
   audio=$(git ls-files -co --exclude-standard | grep -Ei '\.(wav|mp3|flac|aif|aiff|ogg|opus|m4a)$' | grep -v '^tests/fixtures/' || true)
   [ -z "$audio" ] && ok "keine Audiodateien ausserhalb tests/fixtures/" || bad "Audiodateien gefunden: $audio"
-}
 
-# Presets of the requested compiler family, Debug and Release (DESIGN section 8: both without warnings).
-build_presets() {
-  case "$GATE_COMPILER" in
-    gcc|clang) echo "linux-$GATE_COMPILER-debug linux-$GATE_COMPILER-release" ;;
-    *) echo "" ;;
-  esac
+  echo "== clang-format ($CLANG_FORMAT)"
+  src=$(own_sources)
+  if ! command -v "$CLANG_FORMAT" >/dev/null; then
+    bad "$CLANG_FORMAT nicht installiert"
+  elif [ -z "$src" ]; then
+    skip "noch kein C++-Code"
+  else
+    # shellcheck disable=SC2086
+    if $CLANG_FORMAT --dry-run --Werror $src 2>&1 | head -n 40 | grep -q .; then
+      # shellcheck disable=SC2086
+      $CLANG_FORMAT --dry-run --Werror $src 2>&1 | head -n 40
+      bad "clang-format-Abweichungen (lokal beheben: clang-format -i <Datei>)"
+    else
+      ok "$(echo "$src" | wc -l) Dateien formatiert"
+    fi
+  fi
 }
 
 stage_build() {
-  echo "== CMake-Build und ctest ($GATE_COMPILER, Debug + Release)"
-  local presets p bd missing=0
-  presets=$(build_presets)
-  if [ -z "$presets" ]; then bad "GATE_COMPILER muss gcc oder clang sein (ist: $GATE_COMPILER)"; return; fi
-
+  echo "== CMake-Build und ctest ($GATE_COMPILER: $GATE_CONFIGS)"
+  local cfg p bd missing=0
+  case "$GATE_COMPILER" in
+    gcc)   command -v "${GATE_CXX:-g++}" >/dev/null     || { bad "${GATE_CXX:-g++} nicht installiert"; missing=1; } ;;
+    clang) command -v "${GATE_CXX:-clang++}" >/dev/null || { bad "${GATE_CXX:-clang++} nicht installiert"; missing=1; } ;;
+    *) bad "GATE_COMPILER muss gcc oder clang sein (ist: $GATE_COMPILER)"; return ;;
+  esac
   for t in cmake ninja ctest; do
     command -v "$t" >/dev/null || { bad "$t nicht installiert"; missing=1; }
   done
-  case "$GATE_COMPILER" in
-    gcc)   command -v g++ >/dev/null     || { bad "g++ nicht installiert"; missing=1; } ;;
-    clang) command -v clang++ >/dev/null || { bad "clang++ nicht installiert"; missing=1; } ;;
-  esac
-  for d in $SUBMODULES; do
-    [ -f "$d/CMakeLists.txt" ] || { bad "Submodul fehlt: $d (git submodule update --init --depth 1 -- $SUBMODULES)"; missing=1; }
-  done
+  require_submodules || missing=1
   [ "$missing" -eq 0 ] || return
 
   mkdir -p "$GATE_BUILD_DIR"
-  for p in $presets; do
+  for cfg in $GATE_CONFIGS; do
+    p="linux-$GATE_COMPILER-$cfg"
     bd="$GATE_BUILD_DIR/$p"
     echo "-- $p  ($bd)"
     # -B overrides the preset's binaryDir, which points into the working tree.
-    logged "configure $p" "$bd.configure.log" cmake --preset "$p" -B "$bd" \
+    # shellcheck disable=SC2046
+    logged "configure $p" "$bd.configure.log" cmake --preset "$p" -B "$bd" $(compiler_args) \
       || { bad "configure $p (Log: $bd.configure.log)"; continue; }
     logged "build $p" "$bd.build.log" cmake --build "$bd" --parallel \
       || { bad "build $p (Log: $bd.build.log)"; continue; }
@@ -137,11 +179,41 @@ stage_build() {
   done
 }
 
+stage_tidy() {
+  echo "== clang-tidy ($CLANG_TIDY)"
+  local bd="$GATE_BUILD_DIR/linux-clang-debug" files missing=0
+  command -v "$CLANG_TIDY" >/dev/null || { bad "$CLANG_TIDY nicht installiert"; missing=1; }
+  for t in cmake ninja "${GATE_CXX:-clang++}"; do
+    command -v "$t" >/dev/null || { bad "$t nicht installiert"; missing=1; }
+  done
+  require_submodules || missing=1
+  [ "$missing" -eq 0 ] || return
+
+  mkdir -p "$GATE_BUILD_DIR"
+  # The compile database comes from the Clang preset (clang-tidy understands Clang's flags); configure is enough,
+  # nothing has to be built. A build of the same preset (CI) is reused.
+  # shellcheck disable=SC2046
+  logged "configure linux-clang-debug" "$bd.configure.log" cmake --preset linux-clang-debug -B "$bd" $(compiler_args) \
+    || { bad "configure linux-clang-debug (Log: $bd.configure.log)"; return; }
+
+  files=$(own_sources | grep '\.cpp$')
+  [ -n "$files" ] || { skip "keine C++-Quellen"; return; }
+  # Only our headers are reported (system headers are never reported), one clang-tidy process per core.
+  # shellcheck disable=SC2016
+  if timed "clang-tidy" bash -c 'printf "%s\n" "$1" | xargs -P "$(nproc)" -n 1 "$2" -p "$3" --quiet --header-filter="$4" 2> >(grep -Ev "^[0-9]+ warnings? generated\.$" >&2)' \
+       _ "$files" "$CLANG_TIDY" "$bd" "^$(pwd)/(spike/engine/)?(src|tests)/"; then
+    ok "clang-tidy: $(echo "$files" | wc -l) Quellen ohne Befund"
+  else
+    bad "clang-tidy-Befunde"
+  fi
+}
+
 case "$stage" in
   static) stage_static ;;
   build)  stage_build ;;
-  all)    stage_static; stage_build ;;
-  *) echo "Usage: $0 [static|build|all]" >&2; exit 2 ;;
+  tidy)   stage_tidy ;;
+  all)    stage_static; stage_build; stage_tidy ;;
+  *) echo "Usage: $0 [static|build|tidy|all]" >&2; exit 2 ;;
 esac
 
 echo

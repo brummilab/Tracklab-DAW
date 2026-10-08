@@ -27,7 +27,8 @@ using detail::toStdPath;
 bool measureLoudness(te::Engine& engine, const juce::File& file, Loudness& loudness, std::string& error)
 {
     juce::AudioFormat* format = nullptr;
-    std::unique_ptr<juce::AudioFormatReader> reader(te::AudioFileUtils::createReaderFindingFormat(engine, file, format));
+    std::unique_ptr<juce::AudioFormatReader> reader(
+        te::AudioFileUtils::createReaderFindingFormat(engine, file, format));
     if (reader == nullptr)
     {
         error = "cannot read the rendered file " + toStd(file.getFullPathName());
@@ -97,8 +98,8 @@ RenderResult renderRegion(const std::filesystem::path& source, double startSecon
     // Brief M0-06, decision 6: a region beyond the end of the file is an error, it is never clamped.
     if (std::llround(endSeconds * info.sampleRate) > info.lengthInSamples)
     {
-        result.error = "region end " + std::to_string(endSeconds) + " s is after the end of the file ("
-                       + std::to_string(info.getLengthInSeconds()) + " s)";
+        result.error = "region end " + std::to_string(endSeconds) + " s is after the end of the file (" +
+                       std::to_string(info.getLengthInSeconds()) + " s)";
         return result;
     }
 
@@ -151,7 +152,8 @@ RenderResult renderRegion(const std::filesystem::path& source, double startSecon
         return result;
     }
 
-    std::filesystem::create_directories(outFile.parent_path().empty() ? std::filesystem::path(".") : outFile.parent_path());
+    std::filesystem::create_directories(outFile.parent_path().empty() ? std::filesystem::path(".")
+                                                                      : outFile.parent_path());
     const auto rendered = te::Renderer::renderToFile("render-region", job->params);
     if (rendered == juce::File() || !rendered.existsAsFile())
     {

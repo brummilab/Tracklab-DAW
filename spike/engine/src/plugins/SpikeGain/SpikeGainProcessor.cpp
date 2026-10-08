@@ -24,8 +24,7 @@ public:
     {
         auto param = std::make_unique<juce::AudioParameterFloat>(
             juce::ParameterID{"gainDb", 1}, "gainDb", juce::NormalisableRange<float>(kMinGainDb, kMaxGainDb),
-            static_cast<float>(spike::kSpikeGainDefaultDb),
-            juce::AudioParameterFloatAttributes().withLabel("dB"));
+            static_cast<float>(spike::kSpikeGainDefaultDb), juce::AudioParameterFloatAttributes().withLabel("dB"));
         gainDb = param.get();
         addParameter(param.release());
     }
@@ -35,8 +34,8 @@ public:
     bool isBusesLayoutSupported(const BusesLayout& layouts) const override
     {
         const auto out = layouts.getMainOutputChannelSet();
-        return (out == juce::AudioChannelSet::mono() || out == juce::AudioChannelSet::stereo())
-               && layouts.getMainInputChannelSet() == out;
+        return (out == juce::AudioChannelSet::mono() || out == juce::AudioChannelSet::stereo()) &&
+               layouts.getMainInputChannelSet() == out;
     }
 
     void prepareToPlay(double, int) override {}

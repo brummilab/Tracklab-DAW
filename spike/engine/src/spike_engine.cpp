@@ -11,7 +11,8 @@ juce::File toJuceFile(const std::filesystem::path& path)
     std::error_code ec;
     const auto absolute = path.is_absolute() ? path : std::filesystem::absolute(path, ec);
     const auto utf8 = absolute.u8string();
-    return juce::File(juce::String::fromUTF8(reinterpret_cast<const char*>(utf8.c_str()), static_cast<int>(utf8.size())));
+    return juce::File(
+        juce::String::fromUTF8(reinterpret_cast<const char*>(utf8.c_str()), static_cast<int>(utf8.size())));
 }
 
 std::filesystem::path toStdPath(const juce::File& file)
@@ -33,8 +34,7 @@ namespace
 class MemoryPropertyStorage final : public te::PropertyStorage
 {
 public:
-    explicit MemoryPropertyStorage(juce::File scratch)
-        : PropertyStorage("TracklabEngineSpike"), dir(std::move(scratch))
+    explicit MemoryPropertyStorage(juce::File scratch) : PropertyStorage("TracklabEngineSpike"), dir(std::move(scratch))
     {
     }
 
@@ -187,8 +187,7 @@ private:
 };
 
 //==============================================================================
-SpikeEngine::SpikeEngine()
-    : scratchDir(juce::File::createTempFile("tracklab-spike-engine"))
+SpikeEngine::SpikeEngine() : scratchDir(juce::File::createTempFile("tracklab-spike-engine"))
 {
     scratchDir.createDirectory();
 

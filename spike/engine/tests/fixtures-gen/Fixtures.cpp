@@ -16,7 +16,8 @@ constexpr double kPi = 3.14159265358979323846;
 juce::File toJuce(const std::filesystem::path& p)
 {
     const auto utf8 = p.u8string();
-    return juce::File(juce::String::fromUTF8(reinterpret_cast<const char*>(utf8.c_str()), static_cast<int>(utf8.size())));
+    return juce::File(
+        juce::String::fromUTF8(reinterpret_cast<const char*>(utf8.c_str()), static_cast<int>(utf8.size())));
 }
 
 /** Runs a command, waits for it and returns its exit code (-1 if it could not be started). */
@@ -67,7 +68,8 @@ juce::AudioBuffer<float> makeSine(double sampleRate, int numChannels, double fre
     {
         while (n >= ends[seg])
             ++seg;
-        const double v = segments[seg].amplitude * std::sin(2.0 * kPi * frequencyHz * static_cast<double>(n) / sampleRate + phaseRad);
+        const double v = segments[seg].amplitude *
+                         std::sin(2.0 * kPi * frequencyHz * static_cast<double>(n) / sampleRate + phaseRad);
         for (int ch = 0; ch < numChannels; ++ch)
             buffer.setSample(ch, static_cast<int>(n), static_cast<float>(v));
     }
@@ -92,12 +94,13 @@ void writeWav(const std::filesystem::path& file, const juce::AudioBuffer<float>&
     auto stream = std::make_unique<juce::FileOutputStream>(toJuce(file));
     jassert(stream->openedOk());
 
-    auto options = juce::AudioFormatWriterOptions()
-                       .withSampleRate(sampleRate)
-                       .withNumChannels(audio.getNumChannels())
-                       .withBitsPerSample(bitsPerSample)
-                       .withSampleFormat(bitsPerSample == 32 ? juce::AudioFormatWriterOptions::SampleFormat::floatingPoint
-                                                             : juce::AudioFormatWriterOptions::SampleFormat::integral);
+    auto options =
+        juce::AudioFormatWriterOptions()
+            .withSampleRate(sampleRate)
+            .withNumChannels(audio.getNumChannels())
+            .withBitsPerSample(bitsPerSample)
+            .withSampleFormat(bitsPerSample == 32 ? juce::AudioFormatWriterOptions::SampleFormat::floatingPoint
+                                                  : juce::AudioFormatWriterOptions::SampleFormat::integral);
     std::unique_ptr<juce::OutputStream> out = std::move(stream);
     auto writer = format.createWriterFor(out, options);
     jassert(writer != nullptr);
@@ -185,8 +188,8 @@ double rmsDb(const juce::AudioBuffer<float>& buffer, int channel, int start, int
     return 20.0 * std::log10(std::max(rms, 1.0e-12));
 }
 
-double maxAbsDiff(const juce::AudioBuffer<float>& a, int channelA, int offsetA,
-                  const juce::AudioBuffer<float>& b, int channelB, int offsetB, int num)
+double maxAbsDiff(const juce::AudioBuffer<float>& a, int channelA, int offsetA, const juce::AudioBuffer<float>& b,
+                  int channelB, int offsetB, int num)
 {
     const float* pa = a.getReadPointer(channelA) + offsetA;
     const float* pb = b.getReadPointer(channelB) + offsetB;

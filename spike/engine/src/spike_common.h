@@ -99,16 +99,16 @@ struct Record12Result
 {
     bool ok = false;
     std::string error = kNotImplemented;
-    int numInputs = 0;                    // must be kRecordNumInputs
-    int numTracks = 0;                    // must be kRecordNumInputs
+    int numInputs = 0;                         // must be kRecordNumInputs
+    int numTracks = 0;                         // must be kRecordNumInputs
     std::vector<std::filesystem::path> files;  // files[c] = recording of input c, mono, 48 kHz, 24 bit or float
-    std::int64_t lengthSamples = 0;       // per file; must equal round(seconds * 48000)
-    int missingBlocks = -1;               // blocks fed to the device but not present in the recordings
-    double worstDeviationDb = 0.0;        // max over channels/samples of 20*log10(|rec - ref|), ref = input signal
-                                          // (floor -200 dB for identical signals)
+    std::int64_t lengthSamples = 0;            // per file; must equal round(seconds * 48000)
+    int missingBlocks = -1;                    // blocks fed to the device but not present in the recordings
+    double worstDeviationDb = 0.0;             // max over channels/samples of 20*log10(|rec - ref|), ref = input signal
+                                               // (floor -200 dB for identical signals)
     // Observations for the spike report (not checked by the tests):
-    int graphLatencySamples = 0;          // latency of the playback graph, flushed with silence after the signal
-    std::int64_t clipStartSamples = 0;    // start of the recorded clips in the edit
+    int graphLatencySamples = 0;        // latency of the playback graph, flushed with silence after the signal
+    std::int64_t clipStartSamples = 0;  // start of the recorded clips in the edit
 };
 
 /** record-12 --seconds S [--out-dir D]: hosted audio device with 12 inputs (block size kRecordBlockSize),
@@ -122,12 +122,12 @@ struct Vst3Result
 {
     bool ok = false;
     std::string error = kNotImplemented;
-    int numScanned = 0;       // plugin descriptions found in the bundle (>= 1 on success)
-    std::string pluginName;   // name from the plugin description ("SpikeGain")
-    bool rendered = false;    // one block of kVst3TestBlockFrames frames was processed
-    double inputRmsDb = 0.0;  // RMS of the test signal fed to the plugin
-    double outputRmsDb = 0.0; // RMS of the plugin output
-    double gainDb = 0.0;      // outputRmsDb - inputRmsDb
+    int numScanned = 0;        // plugin descriptions found in the bundle (>= 1 on success)
+    std::string pluginName;    // name from the plugin description ("SpikeGain")
+    bool rendered = false;     // one block of kVst3TestBlockFrames frames was processed
+    double inputRmsDb = 0.0;   // RMS of the test signal fed to the plugin
+    double outputRmsDb = 0.0;  // RMS of the plugin output
+    double gainDb = 0.0;       // outputRmsDb - inputRmsDb
 };
 
 /** load-vst3 <bundle> [--gain-db G]: scans the VST3 bundle, loads the first plugin, optionally sets the

@@ -22,8 +22,8 @@ namespace
 constexpr double kFreq = 997.0;
 constexpr double kPi = 3.14159265358979323846;
 
-const double kAmp20 = 0.1;                      // -20 dBFS peak
-const double kAmp30 = 0.031622776601683794;     // -30 dBFS peak
+const double kAmp20 = 0.1;                   // -20 dBFS peak
+const double kAmp30 = 0.031622776601683794;  // -30 dBFS peak
 
 spike::RenderResult render(const std::filesystem::path& source, double start, double end, const TempDir& dir,
                            const char* outName = "out.wav")
@@ -237,7 +237,9 @@ TEST_SUITE("render")
         REQUIRE(rendered.ok);
         double samplePeak = 0.0;
         for (int ch = 0; ch < rendered.numChannels; ++ch)
-            samplePeak = std::max(samplePeak, static_cast<double>(rendered.samples.getMagnitude(ch, 0, rendered.samples.getNumSamples())));
+            samplePeak =
+                std::max(samplePeak,
+                         static_cast<double>(rendered.samples.getMagnitude(ch, 0, rendered.samples.getNumSamples())));
         // The true peak can never be below the sample peak of the file that was measured.
         CHECK(r.loudness.truePeakDbtp >= amplitudeToDb(samplePeak) - 0.01);
     }

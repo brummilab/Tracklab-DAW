@@ -88,7 +88,8 @@ bool verifyRecording(te::Engine& engine, const juce::File& file, int channel, st
                      std::vector<bool>& badBlocks, double& worstAbs, std::int64_t& length, std::string& error)
 {
     juce::AudioFormat* format = nullptr;
-    std::unique_ptr<juce::AudioFormatReader> reader(te::AudioFileUtils::createReaderFindingFormat(engine, file, format));
+    std::unique_ptr<juce::AudioFormatReader> reader(
+        te::AudioFileUtils::createReaderFindingFormat(engine, file, format));
     if (reader == nullptr)
     {
         error = "cannot read recording " + toStd(file.getFullPathName());
@@ -116,7 +117,8 @@ bool verifyRecording(te::Engine& engine, const juce::File& file, int channel, st
         double blockWorst = available < num ? 1.0 : 0.0;  // missing frames count as a missing block
         for (int i = 0; i < available; ++i)
         {
-            const double d = std::abs(static_cast<double>(buffer.getSample(0, i)) - static_cast<double>(inputSample(w, start + i)));
+            const double d =
+                std::abs(static_cast<double>(buffer.getSample(0, i)) - static_cast<double>(inputSample(w, start + i)));
             blockWorst = std::max(blockWorst, d);
         }
         worstAbs = std::max(worstAbs, blockWorst);
@@ -171,8 +173,8 @@ Record12Result record12(double seconds, const std::filesystem::path& outDir)
     auto waveInputs = dm.getWaveInputDevices();
     if (waveInputs.size() != static_cast<std::size_t>(kRecordNumInputs))
     {
-        result.error = "the hosted device has " + std::to_string(waveInputs.size()) + " wave inputs instead of "
-                       + std::to_string(kRecordNumInputs);
+        result.error = "the hosted device has " + std::to_string(waveInputs.size()) + " wave inputs instead of " +
+                       std::to_string(kRecordNumInputs);
         return result;
     }
     for (auto* input : waveInputs)
@@ -248,8 +250,8 @@ Record12Result record12(double seconds, const std::filesystem::path& outDir)
         if (clip == nullptr)
         {
             const auto warning = engine.takeLastWarning();
-            result.error = "track " + std::to_string(c + 1) + " has no recording"
-                           + (warning.isNotEmpty() ? ": " + toStd(warning) : std::string());
+            result.error = "track " + std::to_string(c + 1) + " has no recording" +
+                           (warning.isNotEmpty() ? ": " + toStd(warning) : std::string());
             return result;
         }
         if (c == 0)

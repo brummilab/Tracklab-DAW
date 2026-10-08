@@ -28,7 +28,8 @@ std::unique_ptr<juce::AudioFormatReader> openReader(te::Engine& engine, const ju
     }
 
     juce::AudioFormat* format = nullptr;
-    std::unique_ptr<juce::AudioFormatReader> reader(te::AudioFileUtils::createReaderFindingFormat(engine, file, format));
+    std::unique_ptr<juce::AudioFormatReader> reader(
+        te::AudioFileUtils::createReaderFindingFormat(engine, file, format));
     if (reader == nullptr || format == nullptr)
     {
         error = "unsupported or damaged audio file: " + toStd(file.getFullPathName());
@@ -108,7 +109,8 @@ DumpPcmResult dumpPcm(const std::filesystem::path& file, const std::filesystem::
         for (int n = 0; n < num; ++n)
             for (int ch = 0; ch < numChannels; ++ch)
             {
-                const auto bits = juce::ByteOrder::swapIfBigEndian(std::bit_cast<juce::uint32>(buffer.getSample(ch, n)));
+                const auto bits =
+                    juce::ByteOrder::swapIfBigEndian(std::bit_cast<juce::uint32>(buffer.getSample(ch, n)));
                 std::memcpy(bytes.data() + b, &bits, 4);
                 b += 4;
             }
