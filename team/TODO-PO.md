@@ -124,5 +124,78 @@ durch dich (Prüfaufgabe).
 
 ---
 
+## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026)
+
+Details jeweils in `team/research/<thema>/NOTIZEN.md`.
+
+### F16 – MCP: Spec-Zielversion (`mcp-server`)
+Seit 28.07.2026 gibt es MCP-Revision **2026-07-28** (zustandslos, kein `initialize`, keine Session-ID).
+- **Empfehlung:** 2026-07-28 primär, 2025-11-25 als Fallback, bis die Unterstützung in Claude Code/Desktop belegt ist.
+- **Default:** wie empfohlen.
+- **Antwort:**
+
+### F17 – MCP: Implementierungsweg (`mcp-server`)
+Es gibt kein offizielles C++-SDK.
+- **A (Empfehlung):** eigene JSON-RPC-Implementierung im C++-Modul `mcp` + kleiner C++-stdio-Shim für Claude Desktop;
+  offizielle Conformance-Suite (`@modelcontextprotocol/conformance`, braucht Node in der CI) im Gate.
+- B: Rust-Shim mit offiziellem SDK `rmcp` (zweite Toolchain).
+- **Default:** A.
+- **Antwort:**
+
+### F18 – MCP: statisches Bearer-Token statt OAuth (`mcp-server`)
+Spec: HTTP-Server SOLLEN OAuth 2.1 nutzen (keine Pflicht).
+- **Empfehlung:** zufälliges Token (nur Umgebungsvariable/Schlüsselbund, nie im Repo), dazu Origin- **und** Host-Prüfung,
+  Bindung nur an 127.0.0.1, 403 bei Fehlern; als ADR dokumentieren.
+- **Default:** wie empfohlen.
+- **Antwort:**
+
+### F19 – Claude-API: `strict` nur für ausgewählte Tools (`claude-api`)
+Die API erlaubt höchstens **20 strict-Tools** und 24 optionale Parameter je Request und kennt kein `minimum`/`maximum`.
+„Alle Tools strict“ (Auftrag §7.3) geht deshalb nicht.
+- **Empfehlung:** strict für Kern-Tools und destruktive Commands, **immer** zusätzlich lokale Validierung gegen das
+  Registry-Schema (inkl. Wertebereiche). Auftrag §7.3 anpassen.
+- **Default:** wie empfohlen.
+- **Antwort:**
+
+### F20 – Claude-API: Planvorschlag nicht erzwingbar (`claude-api`)
+Auf Opus 5.5 und Sonnet 5.5 liefert `tool_choice` `any`/`tool` HTTP 400.
+- **Empfehlung:** `assistant.propose_plan` über den System-Prompt anfordern (`tool_choice: auto`), kein Modellwechsel.
+- **Default:** wie empfohlen.
+- **Antwort:**
+
+### F21 – HTTP-Client für Streaming (`claude-api`)
+`juce::WebInputStream` blockiert unter Linux, bis der Lesepuffer voll ist, und bricht bei < 100 B/s ab – ungünstig für SSE.
+- **Empfehlung:** libcurl direkt (eigener Worker-Thread); unter Windows über vcpkg/FetchContent. ADR.
+- **Default:** wie empfohlen.
+- **Antwort:**
+
+### F22 – Test mit echtem API-Key
+Einige Punkte (strict + deferred Tools, Cache-Treffer, SSE-Verhalten) lassen sich nur mit einem Key prüfen.
+- **Bitte:** später einen Test-Key mit Ausgabenlimit bereitstellen – **nicht ins Repo**, nur als Umgebungsvariable
+  bzw. GitHub-Secret. Wann, entscheidest du; ohne Key bleiben die Punkte `[VERIFIZIEREN]`.
+- **Antwort:**
+
+### F23 – Quelltext-Angebot in der App (`lizenz-und-name`)
+Builds an Bandmitglieder sind „Weitergabe“ im Sinne der AGPL: Quelltext muss mitgehen.
+- **Empfehlung:** Menüpunkt „Über Tracklab“ mit Lizenz und Quelltext-Link, Akzeptanzkriterium in M1; SPDX `AGPL-3.0-only`.
+- **Default:** wie empfohlen.
+- **Antwort:**
+
+### F24 – JUCE 8 oder JUCE 9 (`lizenz-und-name`, `engine-spike`)
+JUCE 9 ist erschienen (9.0.3 seit 28.09.2026), der Auftrag §5 sagt noch „nicht erschienen“. Tracktion Engine pinnt JUCE 8.0.14+.
+- **Empfehlung:** im Engine-Spike die von Tracktion getestete JUCE-Version nehmen, Ergebnis in ADR-001.
+- **Default:** wie empfohlen.
+- **Antwort:**
+
+### F25 – Marke „Tracklab“ (`lizenz-und-name`)
+Direkter Namenstreffer: **2Simple „Tracklab“** (Mehrspur-Musikwerkzeug in Purple Mash, Schulplattform, 2026).
+Registerabfragen waren aus der Cloud nicht möglich.
+- **Empfehlung:** privat weiter „Tracklab“; vor jeder Veröffentlichung Registerrecherche (EUIPO/TMview, DPMA, USPTO,
+  Klassen 9/41/42) durch dich, Plan-B-Namen bereithalten.
+- **Default:** privat weiter, Prüfung vor Veröffentlichung.
+- **Antwort:**
+
+---
+
 ## Prüfaufgaben (V)
 – noch keine

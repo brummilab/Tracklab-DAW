@@ -17,7 +17,7 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 - **F0b** Vault-Zugriff (Obsidian-MCP fehlt in Cloud-Sitzungen) und Vault-Sync einrichten.
 - **Entscheidungsrunde 1:** F1–F13, dazu F14 (Hook ↔ Vorlage) und F15 (Präfix `V`).
-- **Neue Claude-Code-Sitzung starten**, damit die Agent-Definitionen geladen werden (Vorlage, Schritt 6), dann „weiter“.
+- **Entscheidungsrunde 2:** F16–F25 aus der Recherche (MCP, Claude-API, Lizenz, JUCE 9, Marke).
 
 ## Nächster Schritt (Lead)
 
@@ -32,7 +32,7 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | M0-04 Recherche (Läufe: engine-spike, lizenz-und-name, claude-api, mcp-server) |
+| in Arbeit | M0-04 Recherche – fertig: mcp-server, claude-api, lizenz-und-name; läuft: engine-spike, loudness-standards, ci-packaging |
 | Review | – |
 | Backlog | M0-05 ADR-001 · M0-06 Engine-Spike (Entwurf) · M0-07 Gate CMake (Entwurf) |
 | Erledigt | M0-01 · M0-02 · M0-03 |
