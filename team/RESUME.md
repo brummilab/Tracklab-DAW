@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 08.10.2026 · **Meilenstein:** M1 (Fundament) – Planung · **Status:** M1 läuft – M1-02 + O-04 in Arbeit (M1-06 nach M1-02)
+**Stand:** 08.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01, M1-02, O-04 erledigt – M1-03 + M1-06 starten
 
 ## Zuletzt erledigt
 
@@ -12,6 +12,9 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
   Tracklab-Ergänzungen, Agents `researcher`, `test-writer`, `implementer`, `implementer-rt`, `reviewer`, `cleanup`
   (Modelle/Effort nach Auftrag §3.4), Board als Dateien, `plan/PLAN.md`, `CLAUDE.md` mit Vorlagen-Abschnitt.
   Hook erlaubt jetzt `git merge --ff-only` im eigenen Worktree (F14, Default A).
+- **M1-02** gemerged (`6aa3807`): `src/core` Command-Registry v1 (Schema-Validierung nlohmann + pboettch Draft-7-Subset,
+  Fehler mit Feld-Pointer und Klartext für Claude, Tool-Namen, `invalid_flags`/`handler_failed`/`invalid_metadata`, Export
+  `tools.json`/`docs/commands.md` mit Aktualitätstest), `.gitattributes`, MSVC `/utf-8`. Review 2 Runden. Folgekarte O-06.
 - **O-04** gemerged: dauerhafter App-Cache, private Caches pro Benutzer (0700), sicheres Aufräumen (lstat/uid, Lock-Prüfung),
   Logs ohne Home-Pfad, Tests nie in echten Benutzerordnern. Review 2 Runden (Sicherheitsbefund behoben). Folgekarte O-05.
 - **M1-01** gemerged (`2097ea1`): Submodule unter `third_party/`, `cmake/TracklabDeps.cmake` (JUCE/Tracktion einmal
@@ -47,10 +50,10 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | M1-02 Registry (implementer) |
+| in Arbeit | – |
 | Review | – |
-| Backlog | M1-03 … M1-09 · O-05 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
-| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 · O-04 |
+| Backlog | M1-03 … M1-09 · O-05 · O-06 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
+| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 · M1-02 · O-04 |
 
 ## Builds
 
