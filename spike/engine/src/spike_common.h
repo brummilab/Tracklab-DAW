@@ -3,8 +3,8 @@
 // The tests (spike/engine/tests) and the spike_cli executable call exactly these functions.
 // The header deliberately uses only std types so that callers need no JUCE/Tracktion types.
 //
-// STATUS: the functions in spike_common.cpp are STUBS written by the test-writer. They fail with
-// kNotImplemented. The implementer replaces the bodies (and may add more files under src/).
+// Implementation: spike_import.cpp (import, dump-pcm), spike_render.cpp (render-region), spike_record12.cpp
+// (record-12), spike_vst3.cpp (load-vst3), spike_common.cpp (CLI), spike_engine.{h,cpp} (engine factory).
 //
 // Conventions
 //  - Every function reports failure through `ok == false` plus a human readable `error`.
@@ -24,7 +24,7 @@
 namespace spike
 {
 
-/** Error text of every stub. Real failures must NOT use this text. */
+/** Default error text of a result that was never filled in. Real failures must NOT use this text. */
 inline constexpr const char* kNotImplemented = "not implemented";
 
 //==============================================================================
@@ -105,6 +105,10 @@ struct Record12Result
     std::int64_t lengthSamples = 0;       // per file; must equal round(seconds * 48000)
     int missingBlocks = -1;               // blocks fed to the device but not present in the recordings
     double worstDeviationDb = 0.0;        // max over channels/samples of 20*log10(|rec - ref|), ref = input signal
+                                          // (floor -200 dB for identical signals)
+    // Observations for the spike report (not checked by the tests):
+    int graphLatencySamples = 0;          // latency of the playback graph, flushed with silence after the signal
+    std::int64_t clipStartSamples = 0;    // start of the recorded clips in the edit
 };
 
 /** record-12 --seconds S [--out-dir D]: hosted audio device with 12 inputs (block size kRecordBlockSize),

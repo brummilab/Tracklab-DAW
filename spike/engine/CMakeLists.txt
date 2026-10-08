@@ -105,7 +105,7 @@ add_dependencies(spike_tests spike_cli SpikeGain_VST3)
 
 set(SPIKE_TEST_ARGS
   "--spike-cli=$<TARGET_FILE:spike_cli>"
-  "--spike-gain-vst3=$<TARGET_PROPERTY:SpikeGain_VST3,JUCE_PLUGIN_ARTEFACT_FILE>")
+  "--spike-gain-vst3=$<TARGET_GENEX_EVAL:SpikeGain_VST3,$<TARGET_PROPERTY:SpikeGain_VST3,JUCE_PLUGIN_ARTEFACT_FILE>>")
 
 # One CTest entry per doctest suite. Exit code 77 means "skipped" (e.g. lame/ffmpeg missing), never "passed".
 foreach(suite IN ITEMS import render record12 vst3 mp3 cli)

@@ -8,6 +8,8 @@
 //  - A sine at fs/6 (8 kHz at 48 kHz) with a phase of 60 degrees has samples of only 0 and +-A*sin(60 deg)
 //    (sample peak 1.25 dB below the true peak), but the continuous waveform reaches A: true peak 20*log10(A) dBTP.
 //    (fs/4 is not used: the 4x oversampling filter of ffmpeg's ebur128 reads 0.6 dB high at 12 kHz.)
+//    The sine is faded in and out over 10 ms: a hard cut at the file edges is a step whose band-limited
+//    reconstruction overshoots (Gibbs) to 0.526 = -5.58 dBTP, so the file would not have the sine's true peak.
 //  - Two equally long halves at -20 and -30 dBFS: the gated power mean is 10*log10(0.5*0.01 + 0.5*0.001)
 //    = -22.60 LUFS (both halves are above the relative gate); the short-term loudness plateaus are -20 and
 //    -30 LUFS, so the 10th and 95th percentile sit on the plateaus: LRA = 10 LU.
@@ -185,7 +187,11 @@ TEST_SUITE("render")
         TempDir dir;
         const auto source = dir.file("fs6.wav");
         // 8 kHz at 48 kHz: the samples are 0, +-0.433 (sample peak -7.27 dBFS), the waveform itself reaches 0.5.
-        writeWav(source, makeSine(48000.0, 2, 8000.0, {{5.0, 0.5}}, kPi / 3.0), 48000.0, 24);
+        auto signal = makeSine(48000.0, 2, 8000.0, {{5.0, 0.5}}, kPi / 3.0);
+        // 10 ms fades: without them the edges of the file overshoot to -5.58 dBTP (ideal sinc reconstruction).
+        signal.applyGainRamp(0, 480, 0.0f, 1.0f);
+        signal.applyGainRamp(signal.getNumSamples() - 480, 480, 1.0f, 0.0f);
+        writeWav(source, signal, 48000.0, 24);
 
         const auto r = render(source, 0.0, 5.0, dir);
 
