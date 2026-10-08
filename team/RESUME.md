@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 08.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01, M1-02, O-04 erledigt – M1-03 + M1-06 starten
+**Stand:** 08.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01, M1-02, O-04 erledigt – M1-03 + M1-06 in Arbeit
 
 ## Zuletzt erledigt
 
@@ -50,9 +50,9 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | – |
+| in Arbeit | M1-03 Undo (test-writer) · M1-06 Geräte (test-writer) |
 | Review | – |
-| Backlog | M1-03 … M1-09 · O-05 · O-06 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
+| Backlog | M1-04 · M1-05 · M1-07 · M1-08 · M1-09 · O-05 · O-06 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
 | Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 · M1-02 · O-04 |
 
 ## Builds
