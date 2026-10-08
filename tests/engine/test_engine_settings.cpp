@@ -5,6 +5,7 @@
 //   7  juce::var types (int, int64, double, bool, String) survive a restart without loss
 #include "engine/engine_factory.h"
 
+#include "engine_test_options.h"
 #include "test_support.h"
 
 #include <cmath>
@@ -17,7 +18,7 @@ using namespace tracklab::engine;
 
 EngineOptions fileOptions(const juce::File& dir)
 {
-    EngineOptions options;
+    auto options = tracklab_test::testOptions();
     options.storage = SettingsStorage::file;
     options.settingsDirectory = dir;
     return options;
@@ -124,7 +125,7 @@ TEST_SUITE("engine")
 
     TEST_CASE("the UIBehaviour answers confirmation requests with cancel at once")
     {
-        auto engine = createEngine();
+        auto engine = createEngine(tracklab_test::testOptions());
         REQUIRE(engine != nullptr);
         auto& ui = engine->getUIBehaviour();
 

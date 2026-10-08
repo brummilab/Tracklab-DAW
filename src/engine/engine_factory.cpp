@@ -1,5 +1,6 @@
 #include "engine/engine_factory.h"
 
+#include "engine/cache_folder.h"
 #include "engine/settings_storage.h"
 
 namespace tracklab::engine
@@ -97,14 +98,49 @@ juce::File defaultSettingsDirectory()
     return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile("Tracklab");
 }
 
+juce::File defaultCacheDirectory()
+{
+    // Environment variables are the documented way to find these folders; JUCE has no special location for them.
+#if JUCE_WINDOWS
+    const auto localAppData = juce::SystemStats::getEnvironmentVariable("LOCALAPPDATA", {});
+    const auto base = localAppData.isNotEmpty() ? juce::File(localAppData)
+                                                : juce::File::getSpecialLocation(juce::File::userHomeDirectory)
+                                                      .getChildFile("AppData")
+                                                      .getChildFile("Local");
+    return base.getChildFile("Tracklab").getChildFile("cache");
+#else
+    // XDG Base Directory spec: an empty value or a relative path counts as not set.
+    const auto xdg = juce::SystemStats::getEnvironmentVariable("XDG_CACHE_HOME", {});
+    if (xdg.isNotEmpty() && juce::File::isAbsolutePath(xdg))
+        return juce::File(xdg).getChildFile("Tracklab");
+    return juce::File::getSpecialLocation(juce::File::userHomeDirectory)
+        .getChildFile(".cache")
+        .getChildFile("Tracklab");
+#endif
+}
+
 std::unique_ptr<te::Engine> createEngine(const EngineOptions& options)
 {
+    // The base of the private caches is a folder of this user (not the shared temp folder) unless the caller names
+    // one: in a folder that other users can write to, the cleanup below could be led astray.
+    const auto privateBase = detail::resolvePrivateBase(options.tempDirectory);
+
+    // First, so that the folder of this engine is not even a candidate. Folders of running engines are kept.
+    if (privateBase.cleanable)
+        detail::removeOrphanedPrivateCaches(privateBase.folder);
+
+    auto cache = options.cache == CacheMode::persistent
+                     ? detail::CacheFolder::makePersistent(
+                           options.cacheDirectory == juce::File() ? defaultCacheDirectory() : options.cacheDirectory)
+                     : detail::CacheFolder::makePrivate(privateBase.folder);
+
     std::unique_ptr<te::PropertyStorage> storage;
     if (options.storage == SettingsStorage::file)
         storage = std::make_unique<detail::FilePropertyStorage>(
-            options.settingsDirectory == juce::File() ? defaultSettingsDirectory() : options.settingsDirectory);
+            options.settingsDirectory == juce::File() ? defaultSettingsDirectory() : options.settingsDirectory,
+            std::move(cache));
     else
-        storage = std::make_unique<detail::MemoryPropertyStorage>();
+        storage = std::make_unique<detail::MemoryPropertyStorage>(std::move(cache));
 
     return std::make_unique<te::Engine>(std::move(storage), std::make_unique<HeadlessUIBehaviour>(),
                                         std::make_unique<TracklabEngineBehaviour>(options.devices));

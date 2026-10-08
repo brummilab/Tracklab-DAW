@@ -2,8 +2,11 @@
 //
 // Both variants keep every value in memory as a juce::var. The file variant additionally persists them to
 // `settings.xml`. Nothing here is reachable from the audio thread: settings are read and written by the message
-// thread and by background jobs only (docs/realtime.md).
+// thread and by background jobs only, and take a lock and allocate (docs/realtime.md). Code that runs on the audio
+// thread reads the values it needs when it is prepared or when the graph is built.
 #pragma once
+
+#include "engine/cache_folder.h"
 
 #include <tracktion_engine/tracktion_engine.h>
 
@@ -21,6 +24,11 @@ namespace te = tracktion;
     On any failure `target` stays as it was, no temporary file is left behind, and nothing is thrown.
     Creates the folder of `target` if it is missing. Allocates and does IO: never call it from the audio thread. */
 [[nodiscard]] bool writeFileAtomically(const juce::File& target, const juce::String& content);
+
+/** `file` as shown in a log: the user's home folder (File::userHomeDirectory) at the start of the path is replaced by
+    `~` (only as a whole path component: a sibling that merely starts with the same characters is left alone). Paths
+    outside the home folder are unchanged. Log files can be shared; the home path contains the account name. */
+[[nodiscard]] juce::String pathForLog(const juce::File& file);
 
 /** Base of the two variants: all PropertyStorage accessors on top of one map.
     A lock guards the map because background jobs may read settings while the message thread writes them. */
@@ -67,11 +75,12 @@ private:
     std::unique_ptr<juce::PropertiesFile> legacyPropertiesFile;
 };
 
-/** Settings in memory only; prefs and cache folders are a private temporary folder deleted with the storage. */
+/** Settings in memory only; the prefs folder is a private temporary folder deleted with the storage. The cache
+    folder is the given one (owned: a private one is deleted with the storage, a persistent one is kept). */
 class MemoryPropertyStorage final : public TracklabPropertyStorage
 {
 public:
-    MemoryPropertyStorage();
+    explicit MemoryPropertyStorage(std::unique_ptr<CacheFolder> cacheFolder);
     ~MemoryPropertyStorage() override;
 
     juce::File getAppCacheFolder() override;
@@ -80,6 +89,7 @@ public:
     juce::File getDefaultLoadSaveDirectory(te::ProjectItem::Category category) override;
 
 private:
+    std::unique_ptr<CacheFolder> cache;
     juce::File scratchDir;
 
     juce::File subFolder(const char* name) const;
@@ -89,12 +99,14 @@ private:
 
     No IO per setProperty(): a change only marks the storage dirty and starts a 2 s message-thread timer (like
     Tracktion's own PropertiesFile); the timer, flushSettingsToDisk() and the destructor write the whole file.
-    The cache folder is a private temporary folder: Tracktion fills it with throw-away files, and the settings folder
-    stays a place that holds settings.xml only. */
+    The cache folder is a separate one (see CacheFolder): Tracktion fills it with throw-away files, and none of them
+    lands next to settings.xml. The prefs folder is this directory, so besides settings.xml it can hold what Tracktion
+    puts into the prefs folder itself (the CrashTracer's files, an `examples` folder) and the `.corrupt-*` copy of an
+    unreadable settings file. */
 class FilePropertyStorage final : public TracklabPropertyStorage, private juce::Timer
 {
 public:
-    explicit FilePropertyStorage(juce::File settingsDirectory);
+    FilePropertyStorage(juce::File settingsDirectory, std::unique_ptr<CacheFolder> cacheFolder);
     ~FilePropertyStorage() override;
 
     juce::File getAppCacheFolder() override;
@@ -103,7 +115,7 @@ public:
 
 private:
     juce::File directory;
-    juce::File cacheDir;
+    std::unique_ptr<CacheFolder> cache;
     std::atomic<bool> dirty{false};
 
     juce::File settingsFile() const { return directory.getChildFile("settings.xml"); }

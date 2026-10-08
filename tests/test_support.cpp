@@ -9,7 +9,8 @@ namespace tracklab_test
 namespace
 {
 std::atomic<int> g_skipped{0};
-}
+juce::File g_engineTemp;
+}  // namespace
 
 void skipTest(const juce::String& reason)
 {
@@ -20,6 +21,16 @@ void skipTest(const juce::String& reason)
 int skippedCount()
 {
     return g_skipped.load();
+}
+
+const juce::File& engineTempDirectory()
+{
+    return g_engineTemp;
+}
+
+void setEngineTempDirectory(const juce::File& folder)
+{
+    g_engineTemp = folder;
 }
 
 ScopedTempDir::ScopedTempDir() : folder(juce::File::createTempFile("tracklab-test"))

@@ -3,6 +3,7 @@
 // folder stays untouched (file storage always points at a temporary folder).
 #include "engine/engine_factory.h"
 
+#include "engine_test_options.h"
 #include "test_support.h"
 
 #include <atomic>
@@ -17,7 +18,7 @@ constexpr auto kProbeSetting = te::SettingID::compCrossfadeMs;
 
 EngineOptions fileOptions(const juce::File& dir)
 {
-    EngineOptions options;
+    auto options = tracklab_test::testOptions();
     options.storage = SettingsStorage::file;
     options.settingsDirectory = dir;
     return options;
@@ -53,7 +54,7 @@ TEST_SUITE("engine")
     {
         for (int round = 0; round < 2; ++round)
         {
-            auto engine = createEngine();
+            auto engine = createEngine(tracklab_test::testOptions());
             REQUIRE(engine != nullptr);
             // Touching a sub-object proves that the engine is fully constructed, not just allocated.
             CHECK(engine->getUIBehaviour().getAllOpenEdits().isEmpty());
@@ -74,7 +75,7 @@ TEST_SUITE("engine")
 
     TEST_CASE("DeviceMode::none opens no audio device")
     {
-        EngineOptions options;
+        auto options = tracklab_test::testOptions();
         options.devices = DeviceMode::none;
         auto engine = createEngine(options);
         REQUIRE(engine != nullptr);
@@ -91,7 +92,7 @@ TEST_SUITE("engine")
     //==========================================================================
     TEST_CASE("in-memory storage keeps its values for the life of the engine")
     {
-        auto engine = createEngine();
+        auto engine = createEngine(tracklab_test::testOptions());
         REQUIRE(engine != nullptr);
         auto& storage = engine->getPropertyStorage();
         CHECK(static_cast<int>(storage.getProperty(kProbeSetting, 7)) == 7);
@@ -105,7 +106,7 @@ TEST_SUITE("engine")
         const auto userFolder = defaultSettingsDirectory();
         const auto userFolderBefore = tracklab_test::snapshotOf(userFolder);
 
-        EngineOptions options;
+        auto options = tracklab_test::testOptions();
         options.storage = SettingsStorage::inMemory;
         options.settingsDirectory = temp.dir();  // has to be ignored by the in-memory variant
         {
@@ -123,11 +124,11 @@ TEST_SUITE("engine")
     TEST_CASE("in-memory storage does not carry values from one engine to the next")
     {
         {
-            auto engine = createEngine();
+            auto engine = createEngine(tracklab_test::testOptions());
             REQUIRE(engine != nullptr);
             engine->getPropertyStorage().setProperty(kProbeSetting, 42);
         }
-        auto engine = createEngine();
+        auto engine = createEngine(tracklab_test::testOptions());
         REQUIRE(engine != nullptr);
         CHECK(static_cast<int>(engine->getPropertyStorage().getProperty(kProbeSetting, 7)) == 7);
     }
@@ -230,7 +231,7 @@ TEST_SUITE("engine")
     //==========================================================================
     TEST_CASE("the user name is Tracklab, not the system user (in-memory storage)")
     {
-        auto engine = createEngine();
+        auto engine = createEngine(tracklab_test::testOptions());
         REQUIRE(engine != nullptr);
         const auto name = engine->getPropertyStorage().getUserName();
         CHECK(name == "Tracklab");
@@ -251,7 +252,7 @@ TEST_SUITE("engine")
 
     TEST_CASE("the application version is the CMake project version (in-memory storage)")
     {
-        auto engine = createEngine();
+        auto engine = createEngine(tracklab_test::testOptions());
         REQUIRE(engine != nullptr);
         CHECK(engine->getPropertyStorage().getApplicationVersion() == juce::String(TRACKLAB_EXPECTED_VERSION));
     }
@@ -267,7 +268,7 @@ TEST_SUITE("engine")
     //==========================================================================
     TEST_CASE("the UIBehaviour runs a progress task to completion without blocking")
     {
-        auto engine = createEngine();
+        auto engine = createEngine(tracklab_test::testOptions());
         REQUIRE(engine != nullptr);
 
         QuickJob job;
@@ -281,7 +282,7 @@ TEST_SUITE("engine")
 
     TEST_CASE("the UIBehaviour opens no window for alerts and messages")
     {
-        auto engine = createEngine();
+        auto engine = createEngine(tracklab_test::testOptions());
         REQUIRE(engine != nullptr);
         auto& ui = engine->getUIBehaviour();
 
@@ -296,7 +297,7 @@ TEST_SUITE("engine")
 
     TEST_CASE("the UIBehaviour opens no window for confirmation requests and never confirms them")
     {
-        auto engine = createEngine();
+        auto engine = createEngine(tracklab_test::testOptions());
         REQUIRE(engine != nullptr);
         auto& ui = engine->getUIBehaviour();
 
