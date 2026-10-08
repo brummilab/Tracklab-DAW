@@ -14,6 +14,15 @@ Gilt für jeden Code, der vom Audio-Thread erreichbar ist. Der reviewer prüft d
 - Speicher wird auf einem Hintergrund-Thread freigegeben (Garbage-Queue)
 - Änderungen am Engine-Graph: Commands laufen auf dem Message-Thread und übergeben lock-frei an den Audio-Thread
 
+## Einstellungen (PropertyStorage)
+- `te::PropertyStorage` und die Settings der Engine (`src/engine/settings_storage.*`) sind **nie** im Audio-Thread
+  erlaubt: `getProperty`/`setProperty` nehmen einen Lock, allozieren (`juce::var`, `std::map`, XML) und können über
+  `flushSettingsToDisk()` Datei-IO auslösen. Das gilt auch für scheinbar harmlose Lesezugriffe.
+- Werte, die ein Audio-Callback braucht, werden auf dem Message-Thread bei `prepareToPlay`/beim Aufbau des Graphen
+  gelesen und als einfache Werte (Zahlen, Flags) oder über einen atomaren Snapshot an den Audio-Thread übergeben.
+  Ändert der Nutzer die Einstellung später, läuft die Übergabe wie jede andere Änderung (Command auf dem
+  Message-Thread, lock-freie Übergabe).
+
 ## Prüfung
 - Audio-Callbacks und DSP-Prozess-Funktionen sind `[[clang::nonblocking]]` annotiert (im Code über das Makro
   `SPIKE_NONBLOCKING`, das auf GCC/MSVC/Clang < 19 leer ist) und `noexcept` (Clang 20 verlangt das). Die Annotation

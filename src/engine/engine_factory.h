@@ -24,8 +24,8 @@ enum class DeviceMode : std::uint8_t
 /** Where the engine keeps its settings (te::PropertyStorage). */
 enum class SettingsStorage : std::uint8_t
 {
-    inMemory,  ///< Nothing is written to the user's settings folders. Prefs/cache folders are private temporary
-               ///< folders that are deleted together with the engine. `settingsDirectory` is ignored.
+    inMemory,  ///< Nothing is written to the user's settings folders. The prefs folder is a private temporary
+               ///< folder that is deleted together with the engine. `settingsDirectory` is ignored.
     file       ///< `<settingsDirectory>/settings.xml`, written atomically (see EngineOptions).
 };
 
@@ -35,8 +35,9 @@ enum class SettingsStorage : std::uint8_t
 enum class CacheMode : std::uint8_t
 {
     privateTemporary,  ///< CLI and tests (default): a private folder `tracklab-engine-cache*` in the temp folder,
-                       ///< deleted together with the engine.
-    persistent         ///< App: a permanent folder (EngineOptions::cacheDirectory) that survives the engine.
+                       ///< deleted together with the engine. Holds for both SettingsStorage variants.
+    persistent         ///< App: a permanent folder (EngineOptions::cacheDirectory) that survives the engine. Holds for
+                       ///< both SettingsStorage variants.
 };
 
 struct EngineOptions
@@ -50,9 +51,11 @@ struct EngineOptions
     juce::File cacheDirectory;
 
     /** Base folder of the private `tracklab-engine-cache*` folders. Empty = the system temp folder. Tests point it at
-        a temporary folder. When an engine with file storage is created, every `tracklab-engine-cache*` folder in
-        this folder that no running engine uses (left behind by a crash) is deleted, whatever the cache mode. Other
-        entries are never touched. */
+        a temporary folder. When any engine is created (every cache mode, every storage), every
+        `tracklab-engine-cache*` folder in this folder that no running engine uses (left behind by a crash) is
+        deleted, whatever its age. A running engine, also in another process, marks its folder with a
+        juce::InterProcessLock that the operating system releases when the process dies. Other entries, also the
+        `tracklab-engine*` scratch folders of the in-memory storage, are never touched. */
     juce::File tempDirectory;
 
     /** Folder of `settings.xml` for SettingsStorage::file. Empty = defaultSettingsDirectory().
@@ -60,8 +63,9 @@ struct EngineOptions
         Contract of the file variant:
         - `PropertyStorage::flushSettingsToDisk()` and the destruction of the engine write the whole file.
         - Writing is atomic: the content goes to a juce::TemporaryFile in the same folder as the target, is flushed,
-          and replaces the target with overwriteTargetFileWithTemporary(). If that fails, the existing target stays
-          unchanged and nothing is thrown. No temporary file is left behind after a flush.
+          and replaces the target with juce::File::replaceFileIn() (a rename; the JUCE call
+          overwriteTargetFileWithTemporary() would assert in debug builds when that fails). If it fails, the existing
+          target stays unchanged and nothing is thrown. No temporary file is left behind after a flush.
         - A missing settings folder is created when the engine is created or when the file is written.
         - An existing, readable settings.xml is read when the engine is created (values survive a restart).
         - A missing or unreadable (e.g. truncated) file means default settings; creation must not fail. */
@@ -73,7 +77,8 @@ struct EngineOptions
 juce::File defaultSettingsDirectory();
 
 /** Permanent cache folder of the app, taken from the environment (not created):
-    - Linux: `$XDG_CACHE_HOME/Tracklab`; if the variable is unset or empty `~/.cache/Tracklab`.
+    - Linux: `$XDG_CACHE_HOME/Tracklab`; if the variable is unset, empty or a relative path (XDG Base Directory
+      specification) `~/.cache/Tracklab`.
     - Windows: `%LOCALAPPDATA%\Tracklab\cache`. */
 juce::File defaultCacheDirectory();
 

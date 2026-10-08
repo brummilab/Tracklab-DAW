@@ -79,7 +79,20 @@ bool decodeValue(const juce::XmlElement& element, juce::String& name, juce::var&
 //==============================================================================
 juce::String pathForLog(const juce::File& file)
 {
-    return file.getFullPathName();  // TODO(O-04): stub, to be implemented
+    const auto& path = file.getFullPathName();
+    const auto home = juce::File::getSpecialLocation(juce::File::userHomeDirectory);
+
+    // A home folder that is the file system root would turn every path into "~/...": nothing to hide there.
+    if (home == juce::File() || home.getParentDirectory() == home)
+        return path;
+    if (file == home)
+        return "~";
+
+    // isAChildOf() compares whole path components, so "/home/a-other" is not below "/home/a". The rest keeps the
+    // native separator, as in the full path.
+    if (file.isAChildOf(home))
+        return "~" + path.substring(home.getFullPathName().length());
+    return path;
 }
 
 //==============================================================================
@@ -87,7 +100,7 @@ bool writeFileAtomically(const juce::File& target, const juce::String& content)
 {
     if (!target.getParentDirectory().createDirectory())
     {
-        juce::Logger::writeToLog("Tracklab: cannot create the folder of " + target.getFullPathName());
+        juce::Logger::writeToLog("Tracklab: cannot create the folder of " + pathForLog(target));
         return false;
     }
 
@@ -97,7 +110,7 @@ bool writeFileAtomically(const juce::File& target, const juce::String& content)
         juce::FileOutputStream out(temporary.getFile());
         if (out.failedToOpen())
         {
-            juce::Logger::writeToLog("Tracklab: cannot write " + temporary.getFile().getFullPathName() + ": " +
+            juce::Logger::writeToLog("Tracklab: cannot write " + pathForLog(temporary.getFile()) + ": " +
                                      out.getStatus().getErrorMessage());
             return false;
         }
@@ -105,23 +118,24 @@ bool writeFileAtomically(const juce::File& target, const juce::String& content)
         const auto utf8 = content.toUTF8();
         if (!out.write(utf8.getAddress(), utf8.sizeInBytes() - 1))
         {
-            juce::Logger::writeToLog("Tracklab: cannot write " + temporary.getFile().getFullPathName());
+            juce::Logger::writeToLog("Tracklab: cannot write " + pathForLog(temporary.getFile()));
             return false;
         }
         // Data must be on disk before the rename, otherwise a crash could leave an empty file in place of the old one.
         out.flush();
         if (out.getStatus().failed())
         {
-            juce::Logger::writeToLog("Tracklab: cannot flush " + temporary.getFile().getFullPathName());
+            juce::Logger::writeToLog("Tracklab: cannot flush " + pathForLog(temporary.getFile()));
             return false;
         }
     }
 
-    // Not overwriteTargetFileWithTemporary(): it asserts in debug builds when the replacement fails, and a full disk
-    // or a locked file is a normal condition for a settings write.
+    // replaceFileIn() and not overwriteTargetFileWithTemporary(): both replace the target by renaming, but the latter
+    // asserts in debug builds when that fails, and a full disk or a locked file is a normal condition for a settings
+    // write.
     if (!temporary.getFile().replaceFileIn(target))
     {
-        juce::Logger::writeToLog("Tracklab: cannot replace " + target.getFullPathName());
+        juce::Logger::writeToLog("Tracklab: cannot replace " + pathForLog(target));
         return false;
     }
     return true;
@@ -252,7 +266,8 @@ juce::PropertiesFile& TracklabPropertyStorage::getPropertiesFile()
 }
 
 //==============================================================================
-MemoryPropertyStorage::MemoryPropertyStorage() : scratchDir(juce::File::createTempFile("tracklab-engine"))
+MemoryPropertyStorage::MemoryPropertyStorage(std::unique_ptr<CacheFolder> cacheFolder)
+    : cache(std::move(cacheFolder)), scratchDir(juce::File::createTempFile("tracklab-engine"))
 {
     scratchDir.createDirectory();
 }
@@ -271,7 +286,7 @@ juce::File MemoryPropertyStorage::subFolder(const char* name) const
 
 juce::File MemoryPropertyStorage::getAppCacheFolder()
 {
-    return subFolder("cache");
+    return cache->getFolder();
 }
 
 juce::File MemoryPropertyStorage::getAppPrefsFolder()
@@ -290,11 +305,10 @@ juce::File MemoryPropertyStorage::getDefaultLoadSaveDirectory(te::ProjectItem::C
 }
 
 //==============================================================================
-FilePropertyStorage::FilePropertyStorage(juce::File settingsDirectory)
-    : directory(std::move(settingsDirectory)), cacheDir(juce::File::createTempFile("tracklab-engine-cache"))
+FilePropertyStorage::FilePropertyStorage(juce::File settingsDirectory, std::unique_ptr<CacheFolder> cacheFolder)
+    : directory(std::move(settingsDirectory)), cache(std::move(cacheFolder))
 {
     directory.createDirectory();
-    cacheDir.createDirectory();
     load();
 }
 
@@ -303,13 +317,11 @@ FilePropertyStorage::~FilePropertyStorage()
     stopTimer();
     if (dirty)
         writeNow();
-    cacheDir.deleteRecursively();
 }
 
 juce::File FilePropertyStorage::getAppCacheFolder()
 {
-    cacheDir.createDirectory();
-    return cacheDir;
+    return cache->getFolder();
 }
 
 juce::File FilePropertyStorage::getAppPrefsFolder()
@@ -333,9 +345,9 @@ void FilePropertyStorage::load()
                                               juce::Time::getCurrentTime().formatted("%Y%m%d-%H%M%S"))
                               .getNonexistentSibling(false);
         if (file.moveFileTo(copy))
-            juce::Logger::writeToLog("Tracklab: unreadable settings kept as " + copy.getFullPathName());
+            juce::Logger::writeToLog("Tracklab: unreadable settings kept as " + pathForLog(copy));
         else
-            juce::Logger::writeToLog("Tracklab: unreadable settings file " + file.getFullPathName());
+            juce::Logger::writeToLog("Tracklab: unreadable settings file " + pathForLog(file));
         return;
     }
 
