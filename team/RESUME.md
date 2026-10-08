@@ -17,7 +17,7 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 - **F0b** Vault-Zugriff (Obsidian-MCP fehlt in Cloud-Sitzungen) und Vault-Sync einrichten.
 - **Entscheidungsrunde 1:** F1–F13, dazu F14 (Hook ↔ Vorlage) und F15 (Präfix `V`).
-- **Entscheidungsrunde 2:** F16–F30 aus der Recherche (MCP, Claude-API, Lizenz, JUCE 9, Marke, Tracktion-Stand, Lautheit, EBU-Quellen, Signing, Plattformen).
+- **Entscheidungsrunde 2:** F16–F33 aus der Recherche (MCP, Claude-API, Lizenz, JUCE 9, Marke, Tracktion-Stand, Lautheit, EBU-Quellen, Signing, Plattformen, Songgrenzen).
 
 ## Nächster Schritt (Lead)
 
@@ -32,7 +32,7 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | M0-04 Recherche – fertig: mcp-server, claude-api, lizenz-und-name, engine-spike, loudness-standards, ci-packaging; läuft: audio-backends-linux, plugin-hosting-clap-lv2, gui-design-system, songgrenzen-erkennung; offen: daw-features (nach F11), vault-kontext (nach F0b) |
+| in Arbeit | M0-04 Recherche – fertig: mcp-server, claude-api, lizenz-und-name, engine-spike, loudness-standards, ci-packaging, songgrenzen-erkennung; läuft: audio-backends-linux, plugin-hosting-clap-lv2, gui-design-system; offen: daw-features (nach F11), vault-kontext (nach F0b) |
 | Review | – |
 | Backlog | M0-05 ADR-001 · M0-06 Engine-Spike (Brief-Vorschlag steht) · M0-07 Gate CMake (Struktur-Vorschlag steht) |
 | Erledigt | M0-01 · M0-02 · M0-03 |

@@ -125,7 +125,7 @@ durch dich (Prüfaufgabe).
 
 ---
 
-## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026) – F16–F30
+## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026) – F16–F33
 
 Details jeweils in `team/research/<thema>/NOTIZEN.md`.
 
@@ -232,6 +232,26 @@ Ohne Signatur warnt Windows SmartScreen beim Installer.
 - **Empfehlung:** nur x64 (kein ARM); RealtimeSanitizer nur unter Linux (Clang ≥ 20), Windows nur MSVC-Build; als
   RTSan-Basis schon in M0 den Runner `ubuntu-26.04` nutzen.
 - **Default:** wie empfohlen.
+- **Antwort:**
+
+### F31 – Songgrenzen: Eigenbau statt Fremdlibrary (`songgrenzen-erkennung`)
+- **Empfehlung:** Eigenbau (~500–800 Zeilen, nur JUCE-FFT: Pegel, Applaus-Erkennung, Novelty, Auswahl mit bekannter
+  Songanzahl). Essentia/aubio bringen Abhängigkeiten bzw. Zusatzlizenzen; madmom-Modelle sind nicht-kommerziell.
+- **Default:** Eigenbau.
+- **Antwort:**
+
+### F32 – Songgrenzen: Defaults und Zielwert (`songgrenzen-erkennung`)
+Vorschlag: Mindestlänge 60 s, Höchstlänge 12 min, 1 s Vorlauf und 3 s Nachklang je Song; Akzeptanz: Grenzen-Trefferquote
+(F-Measure) ≥ 0,9 bei ±3 s auf echten Mitschnitten mit Setlist.
+- **Info bitte:** Wie lang ist euer kürzester und längster Song (live)? Gibt es Medleys/nahtlose Übergänge?
+- **Default:** wie vorgeschlagen.
+- **Antwort:**
+
+### F33 – Songgrenzen: lokale Test-Mitschnitte (`songgrenzen-erkennung`)
+Schwellen lassen sich nur an echten Aufnahmen realistisch einstellen. Echte Mitschnitte kommen **nie** ins Repo (R13).
+- **Bitte (später, ab M2/M3):** 1–2 Mitschnitte lokal ablegen (Ordner außerhalb des Repos) mit einer CSV der Songgrenzen
+  (Start, Ende, Titel). Tests laufen dann nur lokal, nicht in der CI.
+- **Default:** nur synthetische Fixture.
 - **Antwort:**
 
 ---
