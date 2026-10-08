@@ -126,7 +126,7 @@ durch dich (Prüfaufgabe).
 
 ---
 
-## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026) – F16–F36
+## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026) – F16–F38
 
 Details jeweils in `team/research/<thema>/NOTIZEN.md`.
 
@@ -278,6 +278,22 @@ Mint 22 nutzt PipeWire. JUCEs ALSA-Backend bekommt unter Linux keinen Echtzeit-T
   (Starter/`.desktop`), Puffergröße wird über PipeWire gesetzt. ALSA bleibt Zweitoption.
 - B: ALSA direkt als Standard (PipeWire müsste gestoppt werden).
 - **Default:** A. Die nötigen `sudo apt install …`-Schritte stelle ich erst, wenn lokal gebaut/getestet wird.
+- **Antwort:**
+
+### F37 – Barrierefreiheit und Wayland unter Linux (`gui-design-system`)
+JUCE 9 unterstützt Screenreader nur unter Windows (Narrator/UIA), nicht unter Linux (kein AT-SPI). Ein Wayland-Backend
+fehlt, Tracklab läuft dort über XWayland.
+- **Empfehlung:** v1 unter Linux ohne Screenreader (Tastaturbedienung, Kontrastthema, Skalierung ja); XWayland akzeptieren.
+  Auftrag §8 und DESIGN §5 entsprechend anpassen.
+- **Default:** wie empfohlen.
+- **Antwort:**
+
+### F38 – Docking und Light-Theme (`gui-design-system`)
+- **Docking:** JUCE hat keins, gepflegte Libraries fehlen → **Eigenbau** (Split/Tab-Baum, Screensets als JSON, über die
+  Registry steuerbar).
+- **Light-Theme:** Die Brand-Akzentfarben sind auf Weiß zu kontrastarm (Amber 2,15:1) → abgedunkelte Varianten für
+  Text/Icons: Amber `#B45309`, Sky `#0369A1`, Teal `#0F766E`, Indigo `#4F46E5`. Logo bleibt unverändert.
+- **Default:** beides wie empfohlen.
 - **Antwort:**
 
 ---

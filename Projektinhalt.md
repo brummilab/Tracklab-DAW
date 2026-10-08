@@ -39,12 +39,16 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
   Branding nach `assets/branding/`, Design Rev 1, Recherche-Themen, Entscheidungsrunde 1 angelegt.
 - 08.10.2026: Agent-Team-Vorlage v1.0.0 übernommen (M0-03): Prozessvertrag, 6 Sub-Agents (inkl. `implementer-rt`
   für Echtzeit-Code), Board als Dateien, Plan; Gate prüft zusätzlich die Agent-Definitionen.
-- Blockiert: Entscheidungsrunde 1 (F1–F15) und Vault-Zugriff (`team/TODO-PO.md`).
+- 08.10.2026: Recherche M0-04 abgeschlossen (10 Themen, `team/research/*/NOTIZEN.md`). Kernbefunde: JUCE 9.0.3 ist
+  erschienen, Tracktion Engine `develop` 3.5.0 bringt LUFS-Messung und Render-Queue, MCP-Spec 2026-07-28, AGPLv3
+  bestätigt, Namenstreffer 2Simple „Tracklab“. Brief-Vorschläge für Engine-Spike (M0-06) und Gate (M0-07).
+- Blockiert: Entscheidungsrunden 1 (F1–F15) und 2 (F16–F38) sowie Vault-Zugriff (`team/TODO-PO.md`).
 
 ## Offene Punkte
 - F0b Vault-Zugriff in Cloud-Sessions (Obsidian-MCP fehlt) bzw. Vault-Sync per post-merge-Hook einrichten.
 - Entscheidungsrunde 1 (F1–F13) sowie Widersprüche Vorlage ↔ Auftrag (F14 Hook/merge, F15 Präfix `V`).
-- Neue Claude-Code-Sitzung starten, damit die Agents geladen werden.
+- Entscheidungsrunde 2 (F16–F38) aus der Recherche.
+- Rest-Recherche M0-08: DAW-Funktionen (nach F11), Vault-Kontext (nach F0b).
 - Engine-Spike (JUCE + Tracktion Engine) nach Annahme von ADR-001.
 
 ## Entscheidungen
