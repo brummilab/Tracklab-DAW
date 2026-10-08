@@ -124,7 +124,7 @@ durch dich (Prüfaufgabe).
 
 ---
 
-## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026) – F16–F27
+## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026) – F16–F28
 
 Details jeweils in `team/research/<thema>/NOTIZEN.md`.
 
@@ -207,6 +207,16 @@ das, was Workflow A braucht: Mehrkanal beliebig, Render-Queue, LUFS-Normalisieru
 - **Empfehlung:** im Spike die Engine-Messung gegen analytisch bekannte Signale prüfen, in M2 gegen die EBU-Testsignale
   validieren; nur bei Abweichung eigene Implementierung.
 - **Default:** wie empfohlen.
+- **Antwort:**
+
+### F28 – EBU-Dokumente und Testsignale (`loudness-standards`)
+tech.ebu.ch und itu.int sind in Cloud-Sessions gesperrt; die Lizenz der EBU-Testsignale ist unbekannt.
+- **Bitte (eins davon):** (a) die Domains `tech.ebu.ch`, `itu.int` im Netzwerk der Cloud-Umgebung freigeben, oder
+  (b) `tech3341.pdf`, `tech3342.pdf`, `r128v5_0.pdf` und die Nutzungsbedingungen des „EBU Loudness Test Set“ lokal
+  ablegen und mir den Ort nennen (nicht ins Repo).
+- **Empfehlung Testsignale:** CI lädt das Set herunter und prüft SHA-256 (falls die Terms es erlauben); Rückfall: eigene
+  Signale nach Tech-3341-Beschreibung erzeugen.
+- **Default:** Rückfall (eigene Signale), bis die Terms geklärt sind.
 - **Antwort:**
 
 ---
