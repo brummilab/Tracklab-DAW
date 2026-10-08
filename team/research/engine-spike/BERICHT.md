@@ -14,7 +14,26 @@ Windows-Werte kann nur die CI liefern: überall als **„folgt aus CI“** marki
 - Einbindung wie geplant: Submodule, `add_subdirectory` JUCE vor Tracktion, Tracktions `modules/juce` nicht geklont,
   `TE_ADD_EXAMPLES=OFF`. Modulcode wird genau einmal kompiliert (`spike_modules`), dazu einmal JUCE für das Plugin.
 
-## 2. Testergebnis (lokal, Ubuntu 24.04, 4 Kerne, 15 GB RAM)
+## 2. Testframework
+**Entscheidung: doctest 2.4.11** aus `third_party/tracktion_engine/modules/3rd_party/doctest` (Lead-Vorgabe:
+„doctest aus Tracktion, falls einbindbar; sonst Catch2 v3“ – einbindbar, Fallback nicht nötig).
+- Wird mit dem Tracktion-Submodul mitgeliefert (MIT-Lizenz, ein Header) → **keine neue Abhängigkeit**, kein
+  FetchContent/Netzzugriff beim Configure, Version über den Tracktion-Pin festgelegt.
+- Gleiches Framework wie Tracktions eigene Tests (`TEST_SUITE`/`TEST_CASE`, z. B. `tracktion_WaveInputDevice.test.cpp`)
+  → deren Testmuster (Hosted Device, Render) lassen sich direkt übernehmen.
+- Schnell zu kompilieren (Header-only, ein `DOCTEST_CONFIG_IMPLEMENT` in `test_main.cpp`), eigene `main` mit
+  `ScopedJuceInitialiser_GUI` (Message-Thread) ist einfach.
+- Skip-Konzept: doctest kennt kein „skipped“ als Ergebnis; `test_main.cpp` liefert **Exit 77**, wenn etwas
+  übersprungen und nichts fehlgeschlagen ist, CTest wertet das über `SKIP_RETURN_CODE 77` als „skipped“, nie als
+  „passed“; mit `SPIKE_REQUIRE_TOOLS=1` (CI) wird ein fehlendes Werkzeug zum Fehler.
+- Abgrenzung Catch2 v3: funktional gleichwertig (inkl. eingebautem `SKIP()`), aber zusätzliche Abhängigkeit
+  (FetchContent mit Tag-Pin oder Submodul), deutlich längere Kompilierzeit und zweites Framework neben Tracktions
+  doctest. Kein Vorteil, der das rechtfertigt.
+- **Empfehlung für ADR-001 / DESIGN §2:** doctest aus dem Tracktion-Pin als Testframework für Tracklab-C++-Tests
+  festschreiben; CTest-Einträge je Suite, Skip über Exit 77. Wechselt der Tracktion-Pin, die doctest-Version im
+  Bericht/ADR mitprüfen. `[VERIFIZIEREN]` bei späterer Entkopplung von Tracktion: dann doctest selbst pinnen.
+
+## 3. Testergebnis (lokal, Ubuntu 24.04, 4 Kerne, 15 GB RAM)
 57 doctest-Fälle in 6 CTest-Suiten, `SPIKE_REQUIRE_TOOLS=1` (lame 3.100, ffmpeg 6.1.1), alle grün, 0 übersprungen.
 
 | Suite | GCC 13.3 Release | Clang 18.1 Debug |
@@ -31,7 +50,7 @@ Debug-Lauf: zwei JUCE-`jassert` auf stderr, beide erwartet: `juce_Midi_linux.cpp
 `/dev/snd/seq` im Container; MIDI-Scan des DeviceManagers) und `juce_VST3PluginFormatImpl.h:1117` (Negativtest
 „kein VST3-Bundle“). Windows: folgt aus CI.
 
-## 3. Ergebnisse je Minimal-Ziel
+## 4. Ergebnisse je Minimal-Ziel
 **import / dump-pcm** – über Tracktions Importpfad (`te::AudioFile`, `AudioFileUtils::createReaderFindingFormat`).
 WAV 16/24/32-float, 44,1/48/96 kHz: Länge, Rate, Kanäle exakt.
 - MP3 (lame 128 kbit/s): JUCEs `MP3AudioFormat` wertet die LAME-Gapless-Info **nicht** aus. 2 s bei 44,1 kHz
@@ -67,7 +86,7 @@ WAV 16/24/32-float, 44,1/48/96 kHz: Länge, Rate, Kanäle exakt.
 Editor), gescannt und geladen über `engine.getPluginManager().pluginFormatManager`, ein Block 4800 Frames:
 Default −6,00 dB, +3, −12, 0 dB jeweils ±0,01 dB. **xvfb nicht nötig:** alle Tests liefen ohne `DISPLAY`.
 
-## 4. Build-Zeiten und Cache (lokal, 4 Kerne, Ninja, ccache 4.9.1, eigenes CCACHE_DIR)
+## 5. Build-Zeiten und Cache (lokal, 4 Kerne, Ninja, ccache 4.9.1, eigenes CCACHE_DIR)
 | Compiler/Config | Configure | Build kalt | Build warm | ccache | Build-Ordner |
 |---|---|---|---|---|---|
 | GCC 13.3 Release | 35 s | 275 s | 57 s | 33 MB | 273 MB |
@@ -77,9 +96,11 @@ Default −6,00 dB, +3, −12, 0 dB jeweils ±0,01 dB. **xvfb nicht nötig:** al
 ¹ „Warm“ = neuer Build-Ordner mit vollem Cache. Bei Debug (`-g`) hasht ccache das Arbeitsverzeichnis mit → fast
 nur Fehltreffer. In CI ist der Pfad gleich (`build/`), dort sind Treffer zu erwarten; lokal hilft `CCACHE_NOHASHDIR=1`
 bzw. `base_dir`. Kalt-Messungen liefen teils parallel zu anderen Prozessen (Richtwerte). Runner/Cache-Größen der CI:
-folgt aus CI (Step-Summary des Workflows).
+folgt aus CI (Step-Summary des Workflows). CI-Caching: `hendrikmuhs/ccache-action@v1.2.24` (node24,
+`@actions/cache` 6; v1.2.9 nutzte die abgeschaltete Legacy-Cache-API) und `Mozilla-Actions/sccache-action@v0.0.11`
+(node24).
 
-## 5. apt-Pakete (Linux)
+## 6. apt-Pakete (Linux)
 Belegt über die tatsächlich eingebundenen Systemheader (`ninja -t deps`) und gelinkten Bibliotheken:
 ```
 sudo apt install build-essential cmake ninja-build pkg-config ccache \
@@ -93,7 +114,7 @@ CI-Workflow entfernt. Vermutlich ebenfalls nicht nötig, aber nicht durch Deinst
 `libjack-jackd2-dev`, `ladspa-sdk`, `libcurl4-openssl-dev`, `libglu1-mesa-dev`, `mesa-common-dev`, `libegl-dev`,
 `libxcomposite-dev`, `xvfb` `[VERIFIZIEREN]` (bleiben bis dahin im Workflow).
 
-## 6. Echtzeit-Beobachtung: Tracktions Aufnahmepfad im Callback
+## 7. Echtzeit-Beobachtung: Tracktions Aufnahmepfad im Callback
 Methode: gdb-Skript zählt `malloc/calloc/realloc/free(≠NULL)/pthread_mutex_lock` auf dem Thread, der
 `HostedAudioDeviceInterface::processBlock` ausführt, während es läuft (`record-12 --seconds 1`, GCC Release,
 94 Blöcke). Worker-Threads des Graphen sind nicht erfasst; `shared_mutex`/SpinLock nicht gezählt.
@@ -108,11 +129,13 @@ Methode: gdb-Skript zählt `malloc/calloc/realloc/free(≠NULL)/pthread_mutex_lo
 - **Bewertung:** Tracktion erfüllt `docs/realtime.md` im Aufnahmepfad nicht wörtlich (Locks sind meist unkontendiert,
   Allokationen vor allem beim Start/Größenwechsel). Für M0-07 (RTSan im Gate) heißt das: RTSan wird in Tracktion-Code
   Befunde melden → Suppressions-Liste oder Ausnahmen für Fremdcode nötig; kritische Stellen ggf. upstream melden.
-- `[[clang::nonblocking]]` gibt es erst ab Clang 20; lokal und auf `ubuntu-24.04` ist Clang 18 → Makro
-  `SPIKE_NONBLOCKING` ist dort leer. Ab Clang 20 würden Aufrufe in nicht annotierten JUCE/Tracktion-Code
+- `[[clang::nonblocking]]` gibt es ab **Clang 19** (Attribut eingeführt); **Clang 20** prüft es
+  (`-Wfunction-effects`) und bringt RealtimeSanitizer (`-fsanitize=realtime`) – belegt in den Release Notes
+  `release/19.x` und `release/20.x` (`clang/docs/ReleaseNotes.rst`). Lokal und auf `ubuntu-24.04` ist Clang 18 →
+  Makro `SPIKE_NONBLOCKING` ist dort leer. Ab Clang 20 würden Aufrufe in nicht annotierten JUCE/Tracktion-Code
   `-Wfunction-effects` auslösen (mit `-Werror` Build-Fehler) → in M0-07 entscheiden.
 
-## 7. Blocker, Workarounds, Abweichungen
+## 8. Blocker, Workarounds, Abweichungen
 1. **Test korrigiert (nachweislich falsch):** `render` „True Peak … fs/6 … (−6,02 dBTP)“. Die Datei beginnt bei
    60° Phase mit einem Sprung 0 → 0,433 und endet mit maximaler Steigung. Ihre ideale bandbegrenzte Rekonstruktion
    (Sinc, numpy) hat am Rand **0,526 = −5,58 dBTP** (Mitte −6,02). Tracktions Meter misst −5,59 dB (korrekt);
@@ -130,15 +153,15 @@ Methode: gdb-Skript zählt `malloc/calloc/realloc/free(≠NULL)/pthread_mutex_lo
 6. `Record12Result` um zwei Beobachtungsfelder ergänzt (`graphLatencySamples`, `clipStartSamples`; JSON
    `graph_latency_samples`, `clip_start_samples`) – von Tests nicht geprüft.
 
-## 8. Offene Risiken (Windows/MSVC)
-- Build/Tests unter MSVC 2022 `/W4 /WX` komplett ungeprüft; Workaround aus 7.3 nicht kompiliert.
+## 9. Offene Risiken (Windows/MSVC)
+- Build/Tests unter MSVC 2022 `/W4 /WX` komplett ungeprüft; Workaround aus 8.3 nicht kompiliert.
 - JUCEs `jassert`-Verhalten und VST3-`moduleinfo.json`-Erzeugung (Helper läuft beim Build) unter Windows.
 - MP3-Plattformvergleich und Windows-Build-Zeiten/sccache-Trefferquote: nur CI.
 
-## 9. Empfehlung für ADR-001
+## 10. Empfehlung für ADR-001
 **JUCE 9.0.3 + Tracktion Engine `develop` @ `bb38617` übernehmen** (Linux belegt, Windows nach grüner CI):
 alle vier Minimal-Ziele mit Bordmitteln erfüllt, Messgenauigkeit (LUFS/TP/LRA, sample-genaue Regionen, −138 dB
 Aufnahmetreue) ausreichend, Build moderat (≈4,5 min kalt, <1 min warm). Auflagen für die Folgekarten:
-1. Echtzeit: Tracktions Aufnahmepfad allokiert/lockt (Abschnitt 6) → RTSan-Strategie für Fremdcode in M0-07.
+1. Echtzeit: Tracktions Aufnahmepfad allokiert/lockt (Abschnitt 7) → RTSan-Strategie für Fremdcode in M0-07.
 2. MP3-Import: Gapless-Info fehlt (1105 Samples Versatz) → eigene Karte.
 3. Upstream-Abhängigkeit `develop` (ungetaggt) bewusst pinnen; WindowsMedia-Workaround upstream melden.
