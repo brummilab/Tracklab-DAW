@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status:** M0-07 gemerged; erster CI-Lauf: alles grün außer rtsan-linux (ubuntu-26.04: libstdc++ 15 bricht Tracktion) → CI-Fix läuft
+**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status:** M0-07 + CI-Fix gemerged – warte auf CI-Lauf (rtsan auf ubuntu-24.04) · danach M0-Abschluss
 
 ## Zuletzt erledigt
 
@@ -34,9 +34,7 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 ## Nächster Schritt (Lead)
 
-1. CI-Fix M0-07: rtsan-linux auf ubuntu-24.04 + clang-20 (Implementer, Branch `m0-07-ci-fix`), apt-Hänger im Job
-   `linux-clang release` prüfen → kurzer Review → Merge → CI grün belegen. **Risiko:** Tracktion `develop` baut nicht mit
-   libstdc++ 15 (Ubuntu 26.04 = Basis Mint 23) → vor Mint-23-Support klären (Upstream/Pin-Update).
+1. CI-Lauf nach dem CI-Fix (rtsan auf ubuntu-24.04, apt robust) grün belegen. Risiko Mint 23 → O-03.
 2. M0-Abschluss: Rückblick `team/RUECKBLICK-M0.md`, PLAN M0 ✅, M1 planen (Design-Abschnitte, Briefs M1-xx).
 3. M0-08: Reaper-Preset nach F11.
 
@@ -46,7 +44,7 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 |---|---|
 | in Arbeit | – |
 | Review | – |
-| Backlog | M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 |
+| Backlog | M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
 | Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 |
 
 ## Builds
