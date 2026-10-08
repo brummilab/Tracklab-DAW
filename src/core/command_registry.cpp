@@ -72,6 +72,12 @@ RegisterResult CommandRegistry::registerCommand(Command command)
                       "/id");
     if (!command.handler)
         return refuse(error_code::missingHandler, "command '" + command.id + "' has no handler", "/handler");
+    // Both texts are shown to people (menu, command list) and to Claude (tool description): empty is a mistake.
+    if (command.titleDe.empty())
+        return refuse(error_code::invalidMetadata, "command '" + command.id + "' has an empty titleDe", "/titleDe");
+    if (command.descriptionEn.empty())
+        return refuse(error_code::invalidMetadata, "command '" + command.id + "' has an empty descriptionEn",
+                      "/descriptionEn");
     if (command.flags.readOnly && (command.flags.undoable || command.flags.destructive))
         return refuse(error_code::invalidFlags,
                       "command '" + command.id + "': readOnly cannot be combined with undoable or destructive",

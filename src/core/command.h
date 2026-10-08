@@ -23,6 +23,7 @@ inline constexpr std::string_view duplicateId = "duplicate_id";           ///< i
 inline constexpr std::string_view toolNameCollision = "tool_name_collision";  ///< another id maps to the same tool name
 inline constexpr std::string_view invalidSchema = "invalid_schema";           ///< schema outside the allowed subset
 inline constexpr std::string_view missingHandler = "missing_handler";         ///< Command::handler is empty
+inline constexpr std::string_view invalidMetadata = "invalid_metadata";       ///< titleDe or descriptionEn is empty
 inline constexpr std::string_view invalidFlags = "invalid_flags";  ///< readOnly together with undoable/destructive
 // Execution (CommandRegistry::execute)
 inline constexpr std::string_view unknownCommand = "unknown_command";  ///< no command with this id

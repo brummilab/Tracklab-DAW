@@ -198,4 +198,45 @@ TEST_SUITE("core")
         CHECK(outcome.error.code == error_code::invalidSchema);
         CHECK(outcome.error.pointer == "/resultSchema/properties/x/$ref");
     }
+
+    //==========================================================================
+    TEST_CASE("keywords next to $ref are refused, because the validator would ignore them silently")
+    {
+        for (const char* sibling : {R"("maximum": 10)", R"("minimum": 0)", R"("type": "integer")", R"("enum": [1, 2])",
+                                    R"("properties": {})", R"("items": {"type": "string"})"})
+        {
+            CAPTURE(sibling);
+            const std::string text = std::string(R"({"type": "object", "additionalProperties": false,
+                "properties": {"x": {"$ref": "#/$defs/n", )") +
+                                     sibling + R"(}},
+                "$defs": {"n": {"type": "integer"}}})";
+            const auto violation = findSchemaSubsetViolation(Json::parse(text));
+            REQUIRE(violation.has_value());
+            CHECK(violation->code == error_code::invalidSchema);
+            CHECK(violation->pointer.rfind("/properties/x/", 0) == 0);
+            CHECK(violation->pointer != "/properties/x/$ref");
+            CHECK(violation->message.find("$ref") != std::string::npos);
+        }
+    }
+
+    TEST_CASE("description and default may stand next to $ref")
+    {
+        const Json schema = parse(R"({"type": "object", "additionalProperties": false,
+            "properties": {"x": {"$ref": "#/$defs/n", "description": "A count", "default": 3}},
+            "$defs": {"n": {"type": "integer"}}})");
+        CHECK_FALSE(findSchemaSubsetViolation(schema).has_value());
+    }
+
+    TEST_CASE("registerCommand refuses a keyword next to $ref with invalid_schema")
+    {
+        CommandRegistry registry;
+        const auto outcome = registry.registerCommand(
+            makeCommand("track.create", parse(R"({"type": "object", "additionalProperties": false,
+                "properties": {"x": {"$ref": "#/$defs/n", "maximum": 10}},
+                "$defs": {"n": {"type": "integer"}}})")));
+        CHECK_FALSE(outcome.ok);
+        CHECK(outcome.error.code == error_code::invalidSchema);
+        CHECK(outcome.error.pointer == "/paramsSchema/properties/x/maximum");
+        CHECK(registry.size() == 0);
+    }
 }

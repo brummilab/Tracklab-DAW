@@ -87,15 +87,10 @@ std::string exportToolsJson(const CommandRegistry& registry)
 
 std::string exportCommandsMarkdown(const CommandRegistry& registry)
 {
-    // Umlauts are written as UTF-8 byte escapes (and the literals split so that no escape swallows a following
-    // letter): MSVC would otherwise read the source file in the local code page.
-    std::string text =
-        "# Command-Referenz\n\n"
-        "> Diese Datei wird automatisch aus der Command-Registry erzeugt (`tracklab-cli export-tools`) und "
-        "in der CI auf\n"
-        "> Aktualit\xC3\xA4t"
-        " gepr\xC3\xBC"
-        "ft. Nicht von Hand bearbeiten.\n";
+    std::string text = "# Command-Referenz\n\n"
+                       "> Diese Datei wird automatisch aus der Command-Registry erzeugt (`tracklab-cli export-tools`) "
+                       "und in der CI auf\n"
+                       "> Aktualität geprüft. Nicht von Hand bearbeiten.\n";
 
     std::map<std::string, std::vector<const Command*>> byNamespace;  // sorted by namespace; rows keep id order
     for (const Command* command : registry.list())
@@ -107,8 +102,7 @@ std::string exportCommandsMarkdown(const CommandRegistry& registry)
     for (const auto& [name, commands] : byNamespace)
     {
         text += "\n## " + name + "\n\n";
-        text += "| ID | Tool-Name | Titel | Beschreibung | Flags | Shortcut | Men\xC3\xBC"
-                "pfad |\n"
+        text += "| ID | Tool-Name | Titel | Beschreibung | Flags | Shortcut | Menüpfad |\n"
                 "|---|---|---|---|---|---|---|\n";
         for (const Command* command : commands)
             text += "| `" + command->id + "` | `" + toolNameFromId(command->id) + "` | " + cell(command->titleDe) +

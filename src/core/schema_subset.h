@@ -6,6 +6,7 @@
 // have "additionalProperties": false. The root of a command schema is an object schema.
 // Further rules (lead decision 6): "type" is a single type name (no list); an internal "$ref" must resolve inside the
 // same schema and must not be a pure reference cycle; every name in "required" must be declared in "properties".
+// Beside "$ref" only "description" and "default" are allowed (the validator ignores other keywords there).
 // Property names (keys of "properties" and "$defs"), the values of "enum" and "default" are data, not keywords.
 #pragma once
 

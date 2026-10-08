@@ -92,6 +92,15 @@ std::optional<CommandError> checkKeywords(const Json& node, const Pointer& at, b
                                            "anyOf, $ref, $defs, description, default)");
     }
 
+    // The validator ignores every keyword next to "$ref" except "default": a "maximum" there would silently not be
+    // checked. Refuse it instead; "description" is harmless documentation.
+    if (node.contains("$ref"))
+        for (const auto& item : node.items())
+            if (item.key() != "$ref" && item.key() != "description" && item.key() != "default")
+                return violation(at / item.key(), "keyword '" + item.key() +
+                                                      "' next to '$ref' would be ignored by the validator; only "
+                                                      "'description' and 'default' may stand beside '$ref'");
+
     if (const auto type = node.find("type"); type != node.end())
     {
         if (!type->is_string())

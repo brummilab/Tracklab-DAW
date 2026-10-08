@@ -29,6 +29,7 @@ public:
         1. isValidCommandId(id)                        -> invalid_id            (pointer "/id")
         2. isValidToolName(toolNameFromId(id))         -> invalid_tool_name     (pointer "/id")
         3. handler is set                              -> missing_handler       (pointer "/handler")
+        3b. titleDe and descriptionEn not empty        -> invalid_metadata      (pointer "/titleDe" or "/descriptionEn")
         4. readOnly not combined with undoable/destructive -> invalid_flags     (pointer "/flags")
         5. id not registered yet                       -> duplicate_id          (pointer "/id")
         6. tool name not used by another command       -> tool_name_collision   (pointer "/id")

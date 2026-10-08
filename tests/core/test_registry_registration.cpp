@@ -143,7 +143,23 @@ TEST_SUITE("core")
         }
     }
 
-    TEST_CASE("id rules are strict: one namespace and one name, lowercase ASCII (design choice, see report)")
+    TEST_CASE("ids with three or more segments are valid and map to a tool name with all dots replaced")
+    {
+        for (const char* id : {"mixer.track.set_volume", "a.b.c.d"})
+        {
+            CAPTURE(id);
+            CHECK(isValidCommandId(id));
+            CommandRegistry registry;
+            REQUIRE(registry.registerCommand(makeCommand(id)).ok);
+            CHECK(registry.toolNameForId(id) == toolNameFromId(id));
+            CHECK(registry.idForToolName(toolNameFromId(id)) == id);
+        }
+        CHECK(toolNameFromId("mixer.track.set_volume") == "mixer_track_set_volume");
+        CHECK_FALSE(isValidCommandId("mixer.track."));
+        CHECK_FALSE(isValidCommandId("mixer..track"));
+    }
+
+    TEST_CASE("id rules are strict: at least two segments, lowercase ASCII, a segment starts with a letter")
     {
         // Design Rev 3 only shows ids like "track.create"; the strict reading is the safe one for a tool name that
         // is derived from the id.

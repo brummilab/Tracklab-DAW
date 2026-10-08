@@ -24,8 +24,8 @@ $GateBuildDir = if ($env:GATE_BUILD_DIR) { $env:GATE_BUILD_DIR } else { Join-Pat
 $env:SPIKE_REQUIRE_TOOLS = '1'
 # Configurations of the build stage ("debug release" by default).
 $Configs = if ($env:GATE_CONFIGS) { $env:GATE_CONFIGS -split '\s+' | Where-Object { $_ } } else { @('debug', 'release') }
-# Only the two pinned submodules; Tracktion's own nested JUCE submodule is never initialised.
-$Submodules = @('third_party/JUCE', 'third_party/tracktion_engine')
+# Only the pinned submodules; Tracktion's own nested JUCE submodule is never initialised.
+$Submodules = @('third_party/JUCE', 'third_party/tracktion_engine', 'third_party/nlohmann_json', 'third_party/json-schema-validator')
 
 # Runs a native command (streams its output, which is what a CI log wants) and prints how long it took.
 # Returns $true if the exit code was 0.

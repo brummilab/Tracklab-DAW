@@ -47,6 +47,9 @@ endif()
 add_library(tracklab_config_flags INTERFACE)
 if(NOT MSVC)
   target_link_libraries(tracklab_config_flags INTERFACE juce::juce_recommended_config_flags)
+else()
+  # Source files are UTF-8 (German text in string literals); without this MSVC reads them in the local code page.
+  target_compile_options(tracklab_config_flags INTERFACE /utf-8)
 endif()
 
 # --- Module code is compiled exactly once ------------------------------------------------------

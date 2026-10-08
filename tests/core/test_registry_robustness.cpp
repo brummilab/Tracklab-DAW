@@ -117,4 +117,38 @@ TEST_SUITE("core")
             CHECK(outcome.ok);
         }
     }
+
+    //==========================================================================
+    TEST_CASE("an empty titleDe or descriptionEn is refused with invalid_metadata")
+    {
+        for (const std::string field : {"titleDe", "descriptionEn"})
+        {
+            CAPTURE(field);
+            CommandRegistry registry;
+            Command command = makeCommand("track.create");
+            (field == "titleDe" ? command.titleDe : command.descriptionEn).clear();
+            const auto outcome = registry.registerCommand(command);
+            CHECK_FALSE(outcome.ok);
+            CHECK(outcome.error.code == error_code::invalidMetadata);
+            CHECK(outcome.error.pointer == "/" + field);
+            CHECK(outcome.error.message.find(field) != std::string::npos);
+            CHECK(registry.size() == 0);
+        }
+    }
+
+    TEST_CASE("an unknown property below an anyOf says no more than it knows")
+    {
+        // The schema of the place is not unique below an anyOf: the message must not claim "takes no properties".
+        CommandRegistry registry;
+        const Json schema = Json::parse(R"({
+            "type": "object",
+            "properties": {"v": {"anyOf": [{"type": "object", "properties": {"a": {"type": "integer"}},
+                                            "additionalProperties": false}, {"type": "string"}]}},
+            "additionalProperties": false
+        })");
+        registerOrFail(registry, makeCommand("track.create", schema));
+        const auto result = registry.execute("track.create", Json::parse(R"({"v": {"b": 1}})"));
+        CHECK_FALSE(result.ok);
+        CHECK(result.error.message.find("takes no properties") == std::string::npos);
+    }
 }

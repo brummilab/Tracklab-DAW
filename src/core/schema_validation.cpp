@@ -199,12 +199,16 @@ ValidationFailure enrich(const Json& root, const RawFailure& raw)
     if (const auto name =
             between(message, "validation failed for additional property '", "': instance invalid as per false-schema"))
     {
-        std::string text = "unknown property '" + *name + "'; ";
-        std::string allowed;
-        if (const Json* schema = schemaAt(root, raw.pointer); schema != nullptr && schema->contains("properties"))
-            for (const auto& item : schema->at("properties").items())
-                allowed += (allowed.empty() ? "" : ", ") + item.key();
-        text += allowed.empty() ? "this object takes no properties" : "allowed: " + allowed;
+        std::string text = "unknown property '" + *name + "'";
+        // Only say what the object takes if the schema of this place is known (it is not below an anyOf).
+        if (const Json* schema = schemaAt(root, raw.pointer))
+        {
+            std::string allowed;
+            if (schema->contains("properties"))
+                for (const auto& item : schema->at("properties").items())
+                    allowed += (allowed.empty() ? "" : ", ") + item.key();
+            text += allowed.empty() ? "; this object takes no properties" : "; allowed: " + allowed;
+        }
         return {(raw.pointer / *name).to_string(), text};
     }
 
