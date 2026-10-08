@@ -32,9 +32,9 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | – |
+| in Arbeit | M0-04 Recherche (Läufe: engine-spike, lizenz-und-name, claude-api, mcp-server) |
 | Review | – |
-| Backlog | M0-04 Recherche · M0-05 ADR-001 · M0-06 Engine-Spike (Entwurf) · M0-07 Gate CMake (Entwurf) |
+| Backlog | M0-05 ADR-001 · M0-06 Engine-Spike (Entwurf) · M0-07 Gate CMake (Entwurf) |
 | Erledigt | M0-01 · M0-02 · M0-03 |
 
 ## Builds
