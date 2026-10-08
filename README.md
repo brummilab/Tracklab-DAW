@@ -23,7 +23,7 @@ Details: [`docs/auftrag/Claude-Code-Prompt.md`](docs/auftrag/Claude-Code-Prompt.
 
 ## Status
 
-**Meilenstein M0 – Einrichtung.** Es gibt noch keinen lauffähigen Code.
+**M0 (Einrichtung) abgeschlossen, M1 (Fundament) in Planung.** Noch keine nutzbare Anwendung – nur der Engine-Spike.
 
 - Grundgerüst, Branding, Gate (Doku-, Agent- und Secret-Checks) und CI stehen.
 - Agent-Team-Vorlage v1.0.0 ist übernommen: Prozessvertrag `team/README.md`, Sub-Agents in `.claude/agents/`
@@ -36,7 +36,7 @@ Details: [`docs/auftrag/Claude-Code-Prompt.md`](docs/auftrag/Claude-Code-Prompt.
   Render mit Lautheitsmessung, 12-Kanal-Aufnahme und VST3 laufen (57 Tests) – unter Linux und Windows grün.
 - Gate auf C++/CMake umgebaut: Build (GCC, Clang, MSVC), clang-format/-tidy, RealtimeSanitizer – lokal
   `./scripts/gate.sh all`, in der CI `gate.yml`.
-- **Jetzt:** Abschluss M0 und Planung M1.
+- **Jetzt:** Planung M1 (Projektformat, Command-Registry, Undo, Audio-I/O, CLI).
 
 Aktueller Arbeitsstand: [`team/RESUME.md`](team/RESUME.md).
 

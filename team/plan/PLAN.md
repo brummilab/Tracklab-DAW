@@ -6,8 +6,8 @@ Details zu Zielen und Akzeptanz: Auftrag §12, `team/design/DESIGN.md` Abschnitt
 
 | M | Ziel | Status | Abnahme |
 |---|---|---|---|
-| M0 | Vorlage übernommen, Gate auf C++ umgebaut, Agents ergänzt, Recherche, ADR-001-Vorschlag, Engine-Spike | 🔄 | Repo und Vault-Sync stehen; Entscheidungsrunden 1+2 beantwortet ✅; Recherche ✅; Spike baut in der CI für Windows + Linux; ADR-001 bestätigt |
-| M1 | Fundament: CMake, JUCE + Tracktion, Audio-I/O, Projektformat, Autosave, Command-Registry v1, Undo, CLI (`render`, `analyze`), CI + Artefakte, „Über Tracklab“ mit Lizenz/Quelltext (E23) | ⏳ | Projekt anlegen/speichern/öffnen; Fixture-Render golden; Artefakte downloadbar |
+| M0 | Vorlage übernommen, Gate auf C++ umgebaut, Agents ergänzt, Recherche, ADR-001, Engine-Spike | ✅ 08.10.2026 | Entscheidungen E0–E39 ✅; Recherche ✅; Spike in CI Windows + Linux ✅; ADR-001 angenommen ✅; Gate C++/CMake + RTSan ✅ (Rückblick `team/RUECKBLICK-M0.md`; Reaper-Preset M0-08 → M9) |
+| M1 | Fundament: CMake, JUCE + Tracktion, Audio-I/O, Projektformat, Autosave, Command-Registry v1, Undo, CLI (`render`, `analyze`), CI + Artefakte, „Über Tracklab“ mit Lizenz/Quelltext (E23) | 🔄 | Projekt anlegen/speichern/öffnen; Fixture-Render golden; Artefakte downloadbar |
 | M2 | Mitschnitt-Workflow ohne Claude | ⏳ | Workflow A von Hand durchgespielt; Export passt in die Video-Pipeline |
 | M3 | Claude-Integration MVP + MCP-Server | ⏳ | Workflow A per Claude-Befehl; dieselben Befehle über Claude Code via MCP |
 | M4 | Spuren & Aufnahme | ⏳ | David nimmt 12 Kanäle auf (Testprotokoll) |

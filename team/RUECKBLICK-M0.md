@@ -1,6 +1,6 @@
 # Rückblick M0 – Einrichtung
 
-Stand: 08.10.2026 · Lead: Hauptsitzung · PO: David
+Stand: 08.10.2026 · Lead: Hauptsitzung · PO: David · Abschluss: CI grün (Run 37783956619, alle Jobs)
 
 ## Zahlen
 - **Karten erledigt:** 7 (M0-01 Grundgerüst, M0-02 Recherche-Themen/Design Rev 1, M0-03 Vorlage, M0-04 Recherche,

@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status:** M0-07 + CI-Fix gemerged – warte auf CI-Lauf (rtsan auf ubuntu-24.04) · danach M0-Abschluss
+**Stand:** 08.10.2026 · **Meilenstein:** M1 (Fundament) – Planung · **Status:** M0 abgeschlossen (CI grün, Run 37783956619) · M1-Planung
 
 ## Zuletzt erledigt
 
@@ -34,9 +34,9 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 ## Nächster Schritt (Lead)
 
-1. CI-Lauf nach dem CI-Fix (rtsan auf ubuntu-24.04, apt robust) grün belegen. Risiko Mint 23 → O-03.
-2. M0-Abschluss: Rückblick `team/RUECKBLICK-M0.md`, PLAN M0 ✅, M1 planen (Design-Abschnitte, Briefs M1-xx).
-3. M0-08: Reaper-Preset nach F11.
+1. M1 planen: DESIGN-Abschnitte für Registry v1, Projektformat, Undo, CLI präzisieren (Rev 3), M1 in kleine Karten
+   schneiden (Rückblick-Lehre), Briefs nach `board/backlog/`. Vor M1-Karten mit eigenen Graph-Nodes: O-02.
+2. M0-08 (Reaper-Preset) ruht bis F11; Umsetzung erst M9.
 
 ## Offene Karten
 

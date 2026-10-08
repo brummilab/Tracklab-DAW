@@ -48,10 +48,12 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
   Lautheit, 12-Kanal-Aufnahme, VST3 laufen headless (57/57 Tests, Linux). Windows-CI grün, MP3 plattformgleich.
 - 08.10.2026: ADR-001 angenommen (E39). Gate auf C++/CMake umgebaut (M0-07): Build GCC/Clang/MSVC, clang-format/-tidy,
   RealtimeSanitizer (Clang 20) mit Negativtest.
+- 08.10.2026: **M0 abgeschlossen** – CI grün (Linux GCC/Clang, Windows MSVC, RTSan). GitHub-About mit Beschreibung und
+  Topics gesetzt. Rückblick `team/RUECKBLICK-M0.md`. Nächster Meilenstein: M1 Fundament.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
-- Rest-Recherche M0-08: DAW-Funktionen (Reaper-Preset nach F11).
+- Reaper-Preset (M0-08) nach F11; Risiko Mint 23 / libstdc++ 15 (O-03).
 
 ## Entscheidungen
 - E39 (08.10.2026): ADR-001 angenommen – JUCE 9.0.3, Tracktion Engine develop, AGPLv3, doctest.
