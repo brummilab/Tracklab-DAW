@@ -7,6 +7,7 @@ Die Spezifikation. Jede Änderung am Soll-Verhalten bekommt eine neue **Revision
 
 | Rev | Datum | Inhalt | Entscheidungen |
 |---|---|---|---|
+| 3 | 08.10.2026 | M1-Fundament: Projektformat, Speichern/Autosave, Undo, Registry v1, Headless, Settings/Geräte (`team/research/m1-fundament/NOTIZEN.md`) | E40–E42 |
 | 2 | 08.10.2026 | Recherche M0-04 eingearbeitet: JUCE 9, Tracktion 3.5, MCP 2026-07-28, Claude-API-Grenzen, Linux-Audio, Plugin-Sandbox-Stufen, GUI/Barrierefreiheit, Songgrenzen, CI | E1–E8, E13–E21, E23–E38 |
 | 1 | 08.10.2026 | Kurzfassung von §4–§12 des Auftrags (`docs/auftrag/Claude-Code-Prompt.md`) | – (Entscheidungsrunde 1 offen) |
 
@@ -62,11 +63,32 @@ Beschreibung (EN), JSON-Schema (`additionalProperties: false`), Rückgabe-Schema
 Registry. Makros sind Command-Listen und selbst Commands. Commands laufen auf dem Message-Thread.
 Registry erzeugt `docs/commands.md` und `tools.json`; CI prüft Aktualität.
 
+**Registry v1 (Rev 3):** `Command{id, titleDe, descriptionEn, paramsSchema, resultSchema, flags, shortcut, menuPath,
+handler}`; Parameter werden **immer** lokal gegen das Schema validiert (nlohmann/json 3.12.0 + pboettch/json-schema-validator
+2.4.0, Draft 7). Schemas nur im Subset `type, properties, required, additionalProperties:false, enum, minimum/maximum,
+items, anyOf, $ref/$defs` – ein Registry-Test erzwingt das. Tool-Name = ID mit `_` statt `.`; Map in beide Richtungen,
+Kollision → Startfehler. Fehler als strukturierte Antwort `{ok:false, error:{code, message, pointer}}`.
+`tracklab-cli export-tools` erzeugt `tools.json` und `docs/commands.md`; das Gate prüft Aktualität.
+
+**Undo (Rev 3):** Alle `undoable`-Commands schreiben über `Edit::getUndoManager()`. Ausführungsrahmen der Registry:
+`UndoTransactionInhibitor` → `beginNewTransaction(name)` → Command(s) → freigeben. Eine Geste/ein Makro/ein Claude-Turn =
+eine Transaktion. Undo-Tiefe 200 (einstellbar). Vertragstest je Command: Undo stellt den Zustand wieder her (normalisiert),
+Redo wiederholt ihn.
+
+**Engine-Fabrik (Rev 3):** eine Stelle erzeugt `tracktion::Engine` mit eigener `PropertyStorage` (Settings-Datei unter
+`userApplicationDataDirectory/Tracklab/`, atomar; Tests/CLI in-memory), eigenem `UIBehaviour` (headless ohne Dialoge),
+`EngineBehaviour` (Geräte nur in der App), `getUserName()` = `"Tracklab"`, `getApplicationVersion()` = Tracklab-Version.
+
 **Echtzeit:** `docs/realtime.md`.
 
-**Projektformat:** Tracktion-Edit (ValueTree/XML); Ordner `<Projekt>/<Projekt>.<ext>` + `Audio/`,
-`Renders/`, `Backups/`, `Peaks/`, `claude-log.jsonl`. Autosave, rotierende Backups, Crash-Recovery,
-relative Pfade, Formatversion + Migrationstests.
+**Projektformat (Rev 3, E40/E41):** Tracktion-`Edit` (ValueTree/XML) **ohne** Tracktion-`Project`/`ProjectManager`;
+Ordner `<Projekt>/<Projekt>.tracklab` + `Audio/`, `Renders/`, `Backups/`, `Peaks/`, `claude-log.jsonl`.
+`tracklabFormatVersion` am `EDIT`-Knoten, Migrationen auf dem ValueTree vor `Edit::createEdit`, je Version ein Test.
+Relative Pfade (`alwaysUseRelativePaths`, Auflösung relativ zur Projektdatei); Rundlauftest mit verschobenem Ordner.
+**Speichern atomar** (Temp-Datei im selben Ordner → flush → ersetzen), nie Tracktions `EditFileOperations::save`.
+Backups: bei jedem Speichern rotierend 10 Versionen in `Backups/`. Autosave: alle 2 min (einstellbar) in
+`<Projekt>.tracklab.autosave`, nur wenn geändert; beim Öffnen neuere Autosave → Wiederherstellen anbieten.
+Unlesbare Projektdatei → Fehler mit Angebot der letzten Backup-Version. Keine Personendaten in der Datei.
 
 **Plugin-Hosting (E34, E35):** Scanner im eigenen Prozess für **alle** Formate (Tracktion-Mechanismus erweitern, er
 lagert heute nur VST/AU aus), Timeout je Datei, Blacklist + Cache (Änderungszeit/Version). Stufen: M6 = Scanner-Isolation

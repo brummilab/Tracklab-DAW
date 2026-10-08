@@ -34,10 +34,9 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 ## Nächster Schritt (Lead)
 
-1. Recherche `m1-fundament` läuft (Edit/Undo/Speichern, JSON-Schema-Lib, Headless, Geräte). Danach
-   M1 planen: DESIGN-Abschnitte für Registry v1, Projektformat, Undo, CLI präzisieren (Rev 3), M1 in kleine Karten
-   schneiden (Rückblick-Lehre), Briefs nach `board/backlog/`. Vor M1-Karten mit eigenen Graph-Nodes: O-02.
-2. M0-08 (Reaper-Preset) ruht bis F11; Umsetzung erst M9.
+1. M1 läuft nach Abhängigkeiten (max. 4 parallel): **M1-01** zuerst → dann M1-02 und M1-06 parallel → M1-03 → M1-04 →
+   M1-05 und M1-07 → M1-08 (nach M1-02/M1-04) → M1-09. Je Karte: test-writer → implementer → reviewer → Gate → Merge → CI.
+2. M0-08 (Reaper-Preset) ruht bis F11; Umsetzung M9. O-02 vor Karten mit eigenen Graph-Nodes; O-03 vor Mint-23-Support.
 
 ## Offene Karten
 
@@ -45,7 +44,7 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 |---|---|
 | in Arbeit | – |
 | Review | – |
-| Backlog | M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
+| Backlog | M1-01 … M1-09 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
 | Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 |
 
 ## Builds

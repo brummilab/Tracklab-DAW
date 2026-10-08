@@ -20,3 +20,9 @@ Details zu Zielen und Akzeptanz: Auftrag §12, `team/design/DESIGN.md` Abschnitt
 Optimierungsrunden (O-Karten) nach M2, M5 und M8. Rückblick `team/RUECKBLICK-<M>.md` nach jedem Meilenstein.
 
 Zusätzlich vor M6: Karte **Sandbox-Latenz-Spike** (E34). LV2/CLAP in M9 (E35).
+
+## M1-Karten (Design Rev 3)
+M1-01 Gerüst/Engine-Fabrik → M1-02 Registry → M1-03 Undo → M1-04 Projektformat → M1-05 Autosave/Backups;
+M1-06 Einstellungen/Geräte (nach M1-01/02); M1-07 CLI + Golden (nach M1-04); M1-08 App-Shell + About (nach M1-02/04);
+M1-09 CI-Artefakte (zuletzt). Abnahme M1: Projekt anlegen/speichern/öffnen (CLI + App), Fixture-Render golden,
+Artefakte downloadbar, Prüfaufgabe V1 (echte Audio-Backends) durch David.
