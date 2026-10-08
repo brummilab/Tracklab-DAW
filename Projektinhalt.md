@@ -56,7 +56,7 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
   RTSan; volle Matrix manuell. M1-03/M1-06 auf PO-Wunsch angehalten.
 - 08.10.2026: Umstieg auf öffentliches Repo beschlossen (E45); Prüfung ohne Secrets-/Audio-Funde, Restfragen F43.
 - 08.10.2026: F43 mit Defaults entschieden (E46): Vorlage-Nennung gekürzt, Release-Beine wieder bei jedem Code-Push,
-  Markenprüfung „Tracklab“ vor dem ersten Release (O-07).
+  Markenprüfung „Tracklab“ vor dem ersten Release (O-07). Private Pfade und Namen anderer Projekte neutralisiert.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
