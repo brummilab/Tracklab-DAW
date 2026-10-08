@@ -24,14 +24,14 @@ Bei Widersprüchen gilt der Auftrag, außer eine Revision korrigiert ihn ausdrü
 - **Akzeptanztests:** Workflow A (Live-Mitschnitt → Songs → −14 LUFS/−1 dBTP → WAV 48/24 + MP3 mit
   Messbericht) zuerst; Workflow B (12+ Kanäle, Comping, Mix, Mastering, Export) als Ausbau.
 
-## 2. Tech-Stack – ADR-001 (E3: angenommen unter Vorbehalt des Engine-Spikes)
-Entwurf: `docs/adr/ADR-001-tech-stack.md`. Belege: `team/research/*/NOTIZEN.md`.
+## 2. Tech-Stack – ADR-001 (angenommen, E39)
+`docs/adr/ADR-001-tech-stack.md`. Belege: `team/research/*/NOTIZEN.md`.
 
 | Baustein | Festlegung (Rev 2) |
 |---|---|
 | Sprache/Build | C++20, CMake ≥ 3.25, Ninja; MSVC (Windows), GCC + Clang (Linux); nur x64 (E30) |
-| Framework | **JUCE 9.0.3** (`be29c81`), Rückfall 8.0.15 – entscheidet der Spike (E24). Git-Submodule, `add_subdirectory` |
-| Engine | **Tracktion Engine `develop` @ `bb38617`** (3.5.0, ungetaggt; E26), Rückfall `v3.2.0`; Upgrade nur per Karte |
+| Framework | **JUCE 9.0.3** (`be29c81`) – Spike bestanden (E24, E39). Git-Submodule, `add_subdirectory` |
+| Engine | **Tracktion Engine `develop` @ `bb38617`** (3.5.0, ungetaggt; E26, E39); Upgrade nur per Karte |
 | Plugins | VST3 (MVP, SDK 3.8 MIT in JUCE); LV2 über JUCE (nur X11-UIs, E35); CLAP eigener Adapter (clap + clap-helpers, v1) |
 | Audio | Windows ASIO (GPLv3-Option des SDK) + WASAPI exklusiv/geteilt; Linux **JACK-API über pipewire-jack** als Standard, Start über `pw-jack` (E36), ALSA Zweitoption |
 | GUI | native JUCE-Komponenten + Design-Tokens; Windows Direct2D, Linux Software-Renderer (X11/XWayland) |

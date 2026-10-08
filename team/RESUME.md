@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status:** M0-07 Gate auf CMake in Arbeit · ADR-001 wartet auf PO-Bestätigung (F39)
+**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status:** M0-07 Gate auf CMake in Arbeit · ADR-001 angenommen (E39)
 
 ## Zuletzt erledigt
 
@@ -32,9 +32,8 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 ## Nächster Schritt (Lead)
 
 1. M0-07: implementer läuft → reviewer → Gate → Merge → CI prüfen.
-2. F39: ADR-001-Bestätigung durch den PO → E39, ADR-Status „angenommen“, M0-05 erledigt.
-3. Danach M0-Abschluss: Rückblick `team/RUECKBLICK-M0.md`, M1 planen (Briefs).
-4. M0-08: Reaper-Preset nach F11.
+2. Danach M0-Abschluss: Rückblick `team/RUECKBLICK-M0.md`, M1 planen (Briefs).
+3. M0-08: Reaper-Preset nach F11.
 
 ## Offene Karten
 
@@ -42,8 +41,8 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 |---|---|
 | in Arbeit | M0-07 Gate auf CMake (implementer) |
 | Review | – |
-| Backlog | M0-05 ADR-001 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 |
-| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-06 |
+| Backlog | M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 |
+| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 |
 
 ## Builds
 

@@ -45,14 +45,6 @@ und `itu.int` in der Cloud-Umgebung freigeben **oder** `tech3341.pdf`, `tech3342
 Nutzungsbedingungen des „EBU Loudness Test Set“ lokal ablegen (nicht ins Repo).
 - **Antwort:**
 
-### F39 – ADR-001 bestätigen (Tech-Stack)
-Der Engine-Spike ist durch: JUCE 9.0.3 + Tracktion Engine `develop` (3.5.0) bauen und laufen unter Linux und Windows,
-alle Tests grün, MP3-Dekodierung plattformgleich. Entwurf: `docs/adr/ADR-001-tech-stack.md`,
-Bericht: `team/research/engine-spike/BERICHT.md`.
-- **Empfehlung:** ADR-001 annehmen (JUCE 9.0.3, Tracktion `develop` @ `bb38617`, AGPLv3, doctest).
-- **Default:** keiner – der Stack wird erst mit deinem „ja“ endgültig. M0-07 (Gate-Umbau) läuft unabhängig davon weiter.
-- **Antwort:**
-
 ---
 
 ## Prüfaufgaben (V)

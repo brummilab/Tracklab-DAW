@@ -1,10 +1,9 @@
 # ADR-001: Tech-Stack und Lizenz
 
-- **Status:** Vorgeschlagen, **zur Bestätigung beim PO** (`team/TODO-PO.md` F39). Spike M0-06 erfolgreich unter Linux
-  (GCC, Clang) und Windows (MSVC) in der CI, MP3-Dekodierung auf allen Plattformen bitidentisch
-  (`team/research/engine-spike/BERICHT.md` §11).
+- **Status:** **Angenommen** (E39, 08.10.2026). Spike M0-06 erfolgreich unter Linux (GCC, Clang) und Windows (MSVC),
+  MP3-Dekodierung bitidentisch (`team/research/engine-spike/BERICHT.md` §11).
 - **Datum:** 08.10.2026
-- **Entscheidungen:** E2, E3, E21, E24, E26, E30, E36 (`team/ENTSCHEIDUNGEN.md`)
+- **Entscheidungen:** E39 (Annahme), E2, E3, E21, E24, E26, E30, E36 (`team/ENTSCHEIDUNGEN.md`)
 - **Belege:** `team/research/engine-spike/`, `lizenz-und-name/`, `audio-backends-linux/`, `plugin-hosting-clap-lv2/`,
   `ci-packaging/`, `claude-api/` (jeweils `NOTIZEN.md`)
 

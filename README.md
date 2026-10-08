@@ -30,11 +30,11 @@ Details: [`docs/auftrag/Claude-Code-Prompt.md`](docs/auftrag/Claude-Code-Prompt.
   (researcher, test-writer, implementer, implementer-rt, reviewer, cleanup), Board als Dateien unter `team/board/`.
 - Recherche abgeschlossen (`team/research/*/NOTIZEN.md`), Entscheidungsrunden 1 und 2 entschieden
   (`team/ENTSCHEIDUNGEN.md`), Design Rev 2.
-- Tech-Stack (ADR-001, Entwurf: [`docs/adr/ADR-001-tech-stack.md`](docs/adr/ADR-001-tech-stack.md)): C++20/CMake,
-  JUCE 9, Tracktion Engine 3.5 – unter Vorbehalt des Engine-Spikes.
+- Tech-Stack festgelegt ([ADR-001](docs/adr/ADR-001-tech-stack.md), angenommen): C++20/CMake, JUCE 9.0.3,
+  Tracktion Engine 3.5 (develop), AGPLv3.
 - Engine-Spike (`spike/engine/`) unter Linux erfolgreich: JUCE 9.0.3 + Tracktion Engine bauen zusammen, Import,
-  Render mit Lautheitsmessung, 12-Kanal-Aufnahme und VST3 laufen (57 Tests). Windows prüft die CI.
-- **Jetzt:** Windows-CI des Spikes, dann ADR-001 bestätigen und Gate auf CMake umbauen (M0-07).
+  Render mit Lautheitsmessung, 12-Kanal-Aufnahme und VST3 laufen (57 Tests) – unter Linux und Windows grün.
+- **Jetzt:** Gate auf CMake umbauen (M0-07), dann Abschluss M0 und Planung M1.
 
 Aktueller Arbeitsstand: [`team/RESUME.md`](team/RESUME.md).
 

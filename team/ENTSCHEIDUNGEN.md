@@ -6,6 +6,7 @@ durch den PO), `V` Verifikation/Prüfaufgabe durch den PO, `R` Release/Abnahme. 
 
 | Nr | Datum | Frage | Antwort | Folge |
 |---|---|---|---|---|
+| E39 | 08.10.2026 | F39 – ADR-001 Tech-Stack bestätigen | „ADR-001 ok“ (PO im Chat) | ADR-001 angenommen: JUCE 9.0.3, Tracktion `develop` @ `bb38617`, AGPL-3.0-only, doctest; M0-05 erledigt |
 | E0b | 08.10.2026 | F0b – Vault-Zugriff/Vault-Sync in Cloud-Sessions | Nicht nötig: David hat in Obsidian Git Sync aktiviert | Kein Obsidian-MCP in Cloud-Sessions; Vault-Abschnitte patcht der Lead nicht mehr selbst; `Projektinhalt.md` im Repo bleibt die gepflegte Quelle; Recherche `vault-kontext` entfällt |
 | E38 | 08.10.2026 | F38 – Docking und Light-Theme | Default: Docking Eigenbau (Split/Tab-Baum, Screensets als JSON); Light-Theme mit abgedunkelten Akzenten (#B45309, #0369A1, #0F766E, #4F46E5) (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §5 |
 | E37 | 08.10.2026 | F37 – Linux: Screenreader, Wayland | Default: v1 unter Linux ohne Screenreader (Tastatur, Kontrast, Skalierung ja); XWayland akzeptiert (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §5; Auftrag-Korrektur §8 |
