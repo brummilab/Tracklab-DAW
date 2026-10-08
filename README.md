@@ -42,7 +42,7 @@ Aktueller Arbeitsstand: [`team/RESUME.md`](team/RESUME.md).
 
 ## Builds
 
-Noch keine. Sobald der Engine-Spike steht, erzeugt jeder Push auf `main` Test-Builds als Download
+Noch keine. Sobald der Engine-Spike steht, erzeugt jeder Push auf `main` mit Code-Änderung Test-Builds als Download
 in den GitHub-Actions-Läufen (Workflow `gate`). Den jeweils aktuellen Link trägt der Team Lead in
 `team/RESUME.md` ein.
 

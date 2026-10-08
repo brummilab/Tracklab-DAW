@@ -52,6 +52,8 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
   Topics gesetzt. Rückblick `team/RUECKBLICK-M0.md`. Nächster Meilenstein: M1 Fundament.
 - 08.10.2026: M1 geplant (9 Karten, Design Rev 3, E40–E42). M1-01 erledigt: Projektgerüst `src/`, gemeinsame
   JUCE/Tracktion-Bibliothek unter `third_party/`, Engine-Fabrik mit atomaren Einstellungen.
+- 08.10.2026: GitHub-Actions-Minuten aufgebraucht → CI sparsam (E44): nur `main`, nur bei Code-Änderung, Debug-Beine +
+  RTSan; volle Matrix manuell. M1-03/M1-06 auf PO-Wunsch angehalten.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.

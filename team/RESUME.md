@@ -7,6 +7,8 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 > **Angehalten 08.10.2026:** Beide Implementer auf Wunsch des PO gestoppt, ungeprüft, nichts gemerged.
 > Stand: `m1-03-impl` @ `99c56ca` (Umsetzung committet, Build/Format-Lauf unterbrochen),
 > `m1-06-impl` @ `9aafc75` (Umsetzung + Lizenzprüfung committet, RTSan grün, tidy-Befunde offen).
+> **CI (E44):** Actions-Minuten des Kontos aufgebraucht; `gate.yml` läuft nur noch bei Push auf `main` mit Code-Änderung
+> (Debug + RTSan), volle Matrix manuell. Bis neue Minuten da sind, zählt nur das lokale Gate.
 > Worktrees bleiben liegen. Fortsetzen nur auf Anweisung des PO: Implementer zu Ende führen → Review → Merge.
 
 ## Zuletzt erledigt

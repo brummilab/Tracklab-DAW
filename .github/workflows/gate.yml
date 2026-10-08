@@ -3,16 +3,30 @@ name: gate
 # One workflow for the whole gate (DESIGN section 8). Every job calls scripts/gate.sh or scripts/gate.ps1, so the
 # same checks run locally and in CI:
 #   static             required files, secrets, audio files, clang-format
-#   build-test-linux   CMake Debug + Release with GCC and Clang 18, ctest; clang-tidy on the Clang Debug leg
+#   build-test-linux   CMake Debug (+ Release on a full run) with GCC and Clang 18, ctest; clang-tidy on the Clang Debug leg
 #   rtsan-linux        RealtimeSanitizer (Clang >= 20, Linux only) over the engine tests, see docs/realtime.md
-#   build-test-windows CMake Debug + Release with MSVC, ctest
+#   build-test-windows CMake Debug (+ Release on a full run) with MSVC, ctest
 #   mp3-compare        MP3 decoding compared across platforms (engine spike M0-06)
 # Packaging and release get their own workflows in later cards.
+#
+# Saving Actions minutes (E44): the local gate (scripts/gate.sh all) is mandatory before every merge, CI only
+# re-checks. A push runs CI only on main and only when something besides team records and documentation changed.
+# A push runs the Debug legs (Linux GCC + Clang, Windows MSVC) plus RTSan; the Release legs run only on a manual
+# run with "full" (Actions tab -> gate -> Run workflow).
 
 on:
   push:
+    branches: [main]
+    paths-ignore:
+      - "team/**"
+      - "docs/**"
+      - "**/*.md"
   workflow_dispatch:
     inputs:
+      full:
+        description: "Full matrix: also the Release legs (Linux GCC/Clang, Windows MSVC)"
+        type: boolean
+        default: false
       xvfb:
         description: "Run the Linux tests under xvfb-run (to find out whether the VST3 test needs a display)"
         type: boolean
@@ -23,7 +37,7 @@ permissions:
 
 concurrency:
   group: gate-${{ github.ref }}
-  # A newer push to a branch replaces the running gate; on main every commit keeps its own run and artefacts.
+  # A newer manual run on another branch replaces the running gate; on main every commit keeps its own run and artefacts.
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
@@ -80,7 +94,7 @@ jobs:
       fail-fast: false
       matrix:
         compiler: [gcc, clang]
-        config: [debug, release]
+        config: ${{ fromJSON(inputs.full && '["debug", "release"]' || '["debug"]') }}
         include:
           # GCC 14 and Clang 18 are preinstalled on ubuntu-24.04 (DESIGN section 8).
           - compiler: gcc
@@ -233,7 +247,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config: [debug, release]
+        config: ${{ fromJSON(inputs.full && '["debug", "release"]' || '["debug"]') }}
     env:
       GATE_CONFIGS: ${{ matrix.config }}
       SCCACHE_GHA_ENABLED: "true"
@@ -329,11 +343,8 @@ jobs:
         run: |
           {
             echo "### MP3 decoding: platform comparison"
-            python3 spike/engine/tests/mp3_platform_compare.py \
-              pcm/pcm-linux-gcc-release/decoded.f32 \
-              pcm/pcm-linux-gcc-debug/decoded.f32 \
-              pcm/pcm-linux-clang-release/decoded.f32 \
-              pcm/pcm-linux-clang-debug/decoded.f32 \
-              pcm/pcm-windows-msvc-release/decoded.f32 \
-              pcm/pcm-windows-msvc-debug/decoded.f32
+            # Reference is GCC Debug (runs on every push); the Release legs are only there on a full run.
+            reference=pcm/pcm-linux-gcc-debug/decoded.f32
+            mapfile -t others < <(ls pcm/*/decoded.f32 | grep -v '/pcm-linux-gcc-debug/')
+            python3 spike/engine/tests/mp3_platform_compare.py "$reference" "${others[@]}"
           } | tee -a "$GITHUB_STEP_SUMMARY"

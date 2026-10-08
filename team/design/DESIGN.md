@@ -181,7 +181,8 @@ Vorlauf 1 s, Nachklang 3 s. Bewertung: Boundary-F ±3 s ≥ 0,9; Fixture `mitsch
 - `tracklab-cli`: `render`, `analyze`, `find-songs`, `run-commands`, `screenshot`, `validate-lufs`, `export-tools`.
 - CI-Jobs (Runner gepinnt: `ubuntu-24.04`, `windows-2025`): static → build-test-linux (GCC 14, Clang 18),
   rtsan-linux (Clang ≥ 20 – RTSan nur Linux, E30), build-test-windows (MSVC, sccache), package-linux (AppImage, .deb),
-  package-windows (Inno Setup 6.7.x + ZIP, E6), smoke, docs-check. Test-Artefakte 14 Tage bei jedem Push auf `main`.
+  package-windows (Inno Setup 6.7.x + ZIP, E6), smoke, docs-check. Test-Artefakte 14 Tage bei jedem Push auf `main` mit Code-Änderung
+  (seit E44: Push = Debug-Beine + RTSan, Release-Beine nur manuell mit `full`; reine `team/`-/`docs/`-/`*.md`-Pushes ohne CI).
 - Kein Code-Signing vorerst (E29).
 - Release (E7): Freigabe durch David → Tag `vJJJJ.MM.N` (in Cloud-Sessions setzt David den Tag); Release-Workflow prüft
   den Tag strikt per Regex `^v[0-9]{4}\.[0-9]{2}\.[0-9]+$`.
