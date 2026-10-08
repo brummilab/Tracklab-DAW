@@ -1,0 +1,11 @@
+[
+  {
+    "description": "Returns the version of Tracklab.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "name": "app_version"
+  }
+]

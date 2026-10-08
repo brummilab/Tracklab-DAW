@@ -54,7 +54,7 @@ void fillExampleRegistry(CommandRegistry& registry, bool reverse = false)
         commands.push_back(c);
     }
     if (reverse)
-        commands.assign(commands.rbegin(), commands.rend());
+        std::reverse(commands.begin(), commands.end());
     for (const auto& c : commands)
         registerOrFail(registry, c);
 }
