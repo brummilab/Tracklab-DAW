@@ -121,13 +121,18 @@ juce::File defaultCacheDirectory()
 
 std::unique_ptr<te::Engine> createEngine(const EngineOptions& options)
 {
+    // The base of the private caches is a folder of this user (not the shared temp folder) unless the caller names
+    // one: in a folder that other users can write to, the cleanup below could be led astray.
+    const auto privateBase = detail::resolvePrivateBase(options.tempDirectory);
+
     // First, so that the folder of this engine is not even a candidate. Folders of running engines are kept.
-    detail::removeOrphanedPrivateCaches(options.tempDirectory);
+    if (privateBase.cleanable)
+        detail::removeOrphanedPrivateCaches(privateBase.folder);
 
     auto cache = options.cache == CacheMode::persistent
                      ? detail::CacheFolder::makePersistent(
                            options.cacheDirectory == juce::File() ? defaultCacheDirectory() : options.cacheDirectory)
-                     : detail::CacheFolder::makePrivate(options.tempDirectory);
+                     : detail::CacheFolder::makePrivate(privateBase.folder);
 
     std::unique_ptr<te::PropertyStorage> storage;
     if (options.storage == SettingsStorage::file)

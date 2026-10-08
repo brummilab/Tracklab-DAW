@@ -34,7 +34,8 @@ enum class SettingsStorage : std::uint8_t
     check it headlessly. */
 enum class CacheMode : std::uint8_t
 {
-    privateTemporary,  ///< CLI and tests (default): a private folder `tracklab-engine-cache*` in the temp folder,
+    privateTemporary,  ///< CLI and tests (default): a private folder `tracklab-engine-cache*` in
+                       ///< EngineOptions::tempDirectory,
                        ///< deleted together with the engine. Holds for both SettingsStorage variants.
     persistent         ///< App: a permanent folder (EngineOptions::cacheDirectory) that survives the engine. Holds for
                        ///< both SettingsStorage variants.
@@ -50,12 +51,15 @@ struct EngineOptions
         defaultCacheDirectory(). Created when missing, never deleted by the engine. Ignored for privateTemporary. */
     juce::File cacheDirectory;
 
-    /** Base folder of the private `tracklab-engine-cache*` folders. Empty = the system temp folder. Tests point it at
-        a temporary folder. When any engine is created (every cache mode, every storage), every
-        `tracklab-engine-cache*` folder in this folder that no running engine uses (left behind by a crash) is
-        deleted, whatever its age. A running engine, also in another process, marks its folder with a
-        juce::InterProcessLock that the operating system releases when the process dies. Other entries, also the
-        `tracklab-engine*` scratch folders of the in-memory storage, are never touched. */
+    /** Base folder of the private `tracklab-engine-cache*` folders. Empty = a folder of the user alone, mode 0700
+        (Linux: `$XDG_RUNTIME_DIR/tracklab`, else `<defaultCacheDirectory()>/private`; Windows: the temp folder, which
+        is per user); never the shared `/tmp`. If that is not possible, the system temp folder is used and nothing is
+        cleaned up there. Tests point it at a temporary folder.
+        When any engine is created (every cache mode, every storage), every `tracklab-engine-cache*` directory in
+        the base that no running engine uses (left behind by a crash) is deleted, whatever its age. A running engine,
+        also in another process, marks its folder with a juce::InterProcessLock that the operating system releases
+        when the process dies. Never touched: other entries, also the `tracklab-engine*` scratch folders of the
+        in-memory storage, and every candidate that is a symbolic link or does not belong to the user. */
     juce::File tempDirectory;
 
     /** Folder of `settings.xml` for SettingsStorage::file. Empty = defaultSettingsDirectory().
