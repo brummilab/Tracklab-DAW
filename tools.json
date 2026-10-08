@@ -7,5 +7,32 @@
       "type": "object"
     },
     "name": "app_version"
+  },
+  {
+    "description": "Returns whether undo and redo are possible and the names of the next undo and redo step.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "name": "edit_get_undo_state"
+  },
+  {
+    "description": "Redoes the last undone step of the project. Does nothing (done=false) if there is none.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "name": "edit_redo"
+  },
+  {
+    "description": "Undoes the last undo step of the project. Does nothing (done=false) if there is none.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "name": "edit_undo"
   }
 ]

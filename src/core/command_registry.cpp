@@ -190,4 +190,12 @@ CommandResult CommandRegistry::execute(std::string_view id, const Json& params) 
     return result;
 }
 
+// STUB (test-writer, M1-03): execute() does not open a transaction yet; executeBatch() is implemented with the card.
+BatchResult CommandRegistry::executeBatch(std::string_view, const std::vector<BatchStep>&) const
+{
+    BatchResult result;
+    result.error = CommandError{std::string(error_code::handlerFailed), "executeBatch is not implemented yet", {}};
+    return result;
+}
+
 }  // namespace tracklab::core

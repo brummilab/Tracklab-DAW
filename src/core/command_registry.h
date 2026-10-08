@@ -3,6 +3,7 @@
 #pragma once
 
 #include "core/command.h"
+#include "core/edit_context.h"
 
 #include <cstddef>
 #include <map>
@@ -61,11 +62,38 @@ public:
         A handler that throws a std::exception gives handler_failed (the registry stays usable). */
     CommandResult execute(std::string_view id, const Json& params) const;
 
+    //==========================================================================
+    // Undo (M1-03, DESIGN Rev 3 section 3 "Undo")
+
+    /** The project the commands work on; null = none (default). Not owned: it has to outlive the registry's use of it.
+        Commands reach the Edit through the same EditContext (registerEditCommands(registry, context) etc.). */
+    void setEditContext(EditContext* context) noexcept { editContextPtr = context; }
+    EditContext* editContext() const noexcept { return editContextPtr; }
+
+    /** execute() of an `undoable` command (flags.undoable) runs in exactly ONE undo transaction (core::Transaction)
+        named titleDe of the command:
+        - no entry for commands without the flag (readOnly, edit.undo, ...), and none if the command changed nothing;
+        - no Edit in the EditContext (none set, or edit() null) -> error no_edit, the handler is not run;
+        - a failed command (invalid_result, handler_failed) leaves no trace: what the handler already changed is rolled
+          back (Transaction::rollback), no undo entry, redo stack unchanged;
+        - execute() called from inside a handler (a macro command) joins the transaction of the outer command
+          instead of starting its own: one outer command = one undo step, named after the outer command. */
+
+    /** Runs the steps in order as ONE undo transaction named `nameDe` (a macro / a Claude turn). Every step is
+        validated and run like execute(), but without a transaction of its own, so the result is one undo step
+        whatever the steps' flags. If a step fails (any execute() error, incl. unknown_command and invalid_params), the
+        steps already run are rolled back (Transaction::rollback: state as before, no undo entry, redo stack unchanged)
+        and the result carries the error and the index of the failing step; later steps are not run.
+        An empty list is ok with no results. no_edit and not_on_message_thread as for execute()
+        (no_edit only if a step is undoable). */
+    BatchResult executeBatch(std::string_view nameDe, const std::vector<BatchStep>& steps) const;
+
 private:
     struct Entry;  // the command plus its compiled schemas; hides the validator from this header
 
     std::map<std::string, std::unique_ptr<Entry>, std::less<>> commands;  // id -> entry (stable addresses)
     std::map<std::string, std::string, std::less<>> toolToId;             // tool name -> id
+    EditContext* editContextPtr = nullptr;                                // not owned
 };
 
 }  // namespace tracklab::core
