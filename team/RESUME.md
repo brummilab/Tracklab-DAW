@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 08.10.2026 · **Meilenstein:** M1 (Fundament) – Planung · **Status:** M1 läuft – M1-01 in Arbeit
+**Stand:** 08.10.2026 · **Meilenstein:** M1 (Fundament) – Planung · **Status:** M1 läuft – M1-01 erledigt; M1-02 + M1-06 starten
 
 ## Zuletzt erledigt
 
@@ -12,6 +12,9 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
   Tracklab-Ergänzungen, Agents `researcher`, `test-writer`, `implementer`, `implementer-rt`, `reviewer`, `cleanup`
   (Modelle/Effort nach Auftrag §3.4), Board als Dateien, `plan/PLAN.md`, `CLAUDE.md` mit Vorlagen-Abschnitt.
   Hook erlaubt jetzt `git merge --ff-only` im eigenen Worktree (F14, Default A).
+- **M1-01** gemerged (`2097ea1`): Submodule unter `third_party/`, `cmake/TracklabDeps.cmake` (JUCE/Tracktion einmal
+  kompiliert, Spike + `src/` teilen), `src/engine` Engine-Fabrik (Settings atomar/in-memory, headless UIBehaviour,
+  `getUserName()`="Tracklab"), `tracklab_tests`. Gate all grün. Folgekarte O-04.
 - **M0-07 Gate auf CMake** gemerged (`f0d26f0`): Root-CMake + Presets; `gate.sh static|build|tidy|rtsan|all`,
   `gate.ps1` (MSVC); clang-format/-tidy nur eigener Code; RTSan (Clang 20) mit 20 Fremdcode-Suppressions, Negativtest,
   `-Wfunction-effects`; ein Workflow `gate.yml`. Review 2 Runden (`team/reviews/M0-07.md`). Folgekarte O-02.
@@ -42,10 +45,10 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | M1-01 Gerüst (implementer) |
+| in Arbeit | – |
 | Review | – |
-| Backlog | M1-02 … M1-09 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
-| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 |
+| Backlog | M1-02 … M1-09 · O-04 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
+| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 |
 
 ## Builds
 

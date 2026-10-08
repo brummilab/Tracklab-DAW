@@ -50,6 +50,8 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
   RealtimeSanitizer (Clang 20) mit Negativtest.
 - 08.10.2026: **M0 abgeschlossen** – CI grün (Linux GCC/Clang, Windows MSVC, RTSan). GitHub-About mit Beschreibung und
   Topics gesetzt. Rückblick `team/RUECKBLICK-M0.md`. Nächster Meilenstein: M1 Fundament.
+- 08.10.2026: M1 geplant (9 Karten, Design Rev 3, E40–E42). M1-01 erledigt: Projektgerüst `src/`, gemeinsame
+  JUCE/Tracktion-Bibliothek unter `third_party/`, Engine-Fabrik mit atomaren Einstellungen.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.

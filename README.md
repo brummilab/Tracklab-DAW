@@ -36,7 +36,7 @@ Details: [`docs/auftrag/Claude-Code-Prompt.md`](docs/auftrag/Claude-Code-Prompt.
   Render mit Lautheitsmessung, 12-Kanal-Aufnahme und VST3 laufen (57 Tests) – unter Linux und Windows grün.
 - Gate auf C++/CMake umgebaut: Build (GCC, Clang, MSVC), clang-format/-tidy, RealtimeSanitizer – lokal
   `./scripts/gate.sh all`, in der CI `gate.yml`.
-- **Jetzt:** Planung M1 (Projektformat, Command-Registry, Undo, Audio-I/O, CLI).
+- **Jetzt:** M1 Fundament – Gerüst und Engine-Aufbau fertig (M1-01); als Nächstes Command-Registry und Audio-Geräte.
 
 Aktueller Arbeitsstand: [`team/RESUME.md`](team/RESUME.md).
 
@@ -51,8 +51,9 @@ in den GitHub-Actions-Läufen (Workflow `gate`). Den jeweils aktuellen Link trä
 | Pfad | Inhalt |
 |---|---|
 | `assets/branding/` | Logo, App-Icon (SVG, PNG, ICO), Farb-Tokens |
-| `spike/engine/` | Engine-Spike (M0-06): JUCE + Tracktion als Submodule, CLI, Test-VST3, Tests |
-| `src/`, `tests/` | Code und Tests (ab M1) |
+| `src/`, `tests/` | Tracklab-Code (Module `core`, `engine`, `project`, `io`, `cli`, `app`) und Tests |
+| `third_party/` | JUCE 9.0.3, Tracktion Engine (Submodule) – Fremdcode, wird nicht bearbeitet |
+| `spike/engine/` | Engine-Spike (M0-06) als Referenz |
 | `docs/` | Auftrag, Echtzeit-Regeln, Command-Referenz, Testprotokolle |
 | `team/` | Prozess (Agent-Team-Vorlage): Resume, To-do für den PO, Entscheidungen, Design, Plan, Board, Recherche, Reviews |
 | `.claude/` | Agent-Definitionen und Hook-Einstellungen für Claude Code |

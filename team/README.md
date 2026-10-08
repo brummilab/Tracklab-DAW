@@ -128,7 +128,7 @@ Bei Prozessfragen gilt die Vorlage, bei Produkt- und Technikfragen der Auftrag
   Worktree bleibt erlaubt (Implementer-Schritt der Vorlage, E14).
 - **Testing ohne Hardware:** CI prüft Build, Unit-, Golden- und Headless-Tests. Audio-Hardware-Tests laufen bei
   David nach `docs/testing/manual/<meilenstein>.md` als Prüfaufgabe in `TODO-PO.md`.
-- **Fremdcode:** In `spike/engine/third_party/` (und künftig jedem `third_party/`) wird nicht gearbeitet; dort liegende
+- **Fremdcode:** In `third_party/` (Submodule JUCE, Tracktion u. a.) wird nicht gearbeitet; dort liegende
   `CLAUDE.md`-Dateien fremder Projekte (z. B. Tracktion) gelten für Tracklab nicht. Änderungen an Fremdcode nur als
   eigener Patch/Workaround in Tracklab-Dateien oder upstream.
 - **Agent Teams (experimentell):** nicht verwenden, außer der PO entscheidet es.
