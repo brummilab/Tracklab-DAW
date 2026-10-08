@@ -58,6 +58,7 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
 - Reaper-Preset (M0-08) nach F11; Risiko Mint 23 / libstdc++ 15 (O-03).
 
 ## Entscheidungen
+- E43 (08.10.2026): Bei C++ bleiben (kein Rust-Umstieg); Rust höchstens später für abgegrenzte Prozesse.
 - E40–E42 (08.10.2026): Projektdatei `.tracklab`, Autosave 2 min + 10 Backups, Namen Tracklab/tracklab-cli/tracklab-mcp.
 - E39 (08.10.2026): ADR-001 angenommen – JUCE 9.0.3, Tracktion Engine develop, AGPLv3, doctest.
 - E0b (08.10.2026): Vault-Zugriff aus Cloud-Sessions nicht nötig – Obsidian Git Sync aktiv.
