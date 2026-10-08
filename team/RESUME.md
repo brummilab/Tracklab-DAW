@@ -12,6 +12,8 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
   Tracklab-Ergänzungen, Agents `researcher`, `test-writer`, `implementer`, `implementer-rt`, `reviewer`, `cleanup`
   (Modelle/Effort nach Auftrag §3.4), Board als Dateien, `plan/PLAN.md`, `CLAUDE.md` mit Vorlagen-Abschnitt.
   Hook erlaubt jetzt `git merge --ff-only` im eigenen Worktree (F14, Default A).
+- **O-04** gemerged: dauerhafter App-Cache, private Caches pro Benutzer (0700), sicheres Aufräumen (lstat/uid, Lock-Prüfung),
+  Logs ohne Home-Pfad, Tests nie in echten Benutzerordnern. Review 2 Runden (Sicherheitsbefund behoben). Folgekarte O-05.
 - **M1-01** gemerged (`2097ea1`): Submodule unter `third_party/`, `cmake/TracklabDeps.cmake` (JUCE/Tracktion einmal
   kompiliert, Spike + `src/` teilen), `src/engine` Engine-Fabrik (Settings atomar/in-memory, headless UIBehaviour,
   `getUserName()`="Tracklab"), `tracklab_tests`. Gate all grün. Folgekarte O-04.
@@ -45,10 +47,10 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | M1-02 Registry (implementer) · O-04 Nacharbeiten M1-01 (implementer) |
+| in Arbeit | M1-02 Registry (implementer) |
 | Review | – |
-| Backlog | M1-03 … M1-09 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
-| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 |
+| Backlog | M1-03 … M1-09 · O-05 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
+| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 · O-04 |
 
 ## Builds
 
