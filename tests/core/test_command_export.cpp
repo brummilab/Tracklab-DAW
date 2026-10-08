@@ -6,6 +6,10 @@
 
 #include "core/app_commands.h"
 #include "core/command_export.h"
+#include "engine/engine_factory.h"
+#include "io/audio_devices.h"
+
+#include "engine/engine_test_options.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -324,10 +328,13 @@ TEST_SUITE("core")
     //==========================================================================
     TEST_CASE("the checked-in tools.json and docs/commands.md match the registry (all built-in commands)")
     {
-        // The registry as the app builds it: every registerXxxCommands() of src/core. Today: app.version.
+        // The registry as the app builds it: every registerXxxCommands(). Today: app.version (src/core) and the io.*
+        // commands (src/io, M1-06; they need an engine, a headless one without devices is enough).
         // The version is not part of the exports, so any string does.
+        auto engine = tracklab::engine::createEngine(tracklab_test::testOptions());
         CommandRegistry registry;
         REQUIRE(registerAppCommands(registry, "0.0.0").ok);
+        REQUIRE(tracklab::io::registerIoCommands(registry, *engine).ok);
 
         const fs::path root = TRACKLAB_SOURCE_DIR;
         const char* update = std::getenv("TRACKLAB_UPDATE_EXPORTS");

@@ -38,8 +38,15 @@ target_compile_definitions(tracklab_defs INTERFACE
   JUCE_STRICT_REFCOUNTEDPOINTER=1
   TRACKTION_ENABLE_SINGLETONS=0
   TRACKTION_LOG_DEVICES=0)
+# Audio backends (M1-06, DESIGN Rev 2 E36). Set explicitly although some are JUCE defaults, so that a JUCE update
+# cannot drop one silently.
+#   Linux:   JACK API (through pipewire-jack, started with `pw-jack`) is the standard, ALSA the second option.
+#   Windows: ASIO with the SDK bundled in JUCE (GPLv3 option of its dual licence, THIRD_PARTY_NOTICES.md), and WASAPI
+#            (shared, exclusive and low-latency modes are created by JUCE).
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  target_compile_definitions(tracklab_defs INTERFACE JUCE_JACK=1)
+  target_compile_definitions(tracklab_defs INTERFACE JUCE_ALSA=1 JUCE_JACK=1)
+elseif(WIN32)
+  target_compile_definitions(tracklab_defs INTERFACE JUCE_ASIO=1 JUCE_WASAPI=1)
 endif()
 
 # JUCE's recommended config flags add /Zi on MSVC (its directory scope does not see CMP0141 NEW), which would
