@@ -9,7 +9,7 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 > `m1-06-impl` @ `9aafc75` (Umsetzung + Lizenzprüfung committet, RTSan grün, tidy-Befunde offen).
 > **CI (E44):** Actions-Minuten des Kontos aufgebraucht; `gate.yml` läuft nur noch bei Push auf `main` mit Code-Änderung
 > (Debug + RTSan), volle Matrix manuell. Bis neue Minuten da sind, zählt nur das lokale Gate.
-> **Öffentlich (E45):** David stellt das Repo auf öffentlich; offene Punkte F43 (Arbeitgeber-Bezug, Pfade, Marke, CI).
+> **Öffentlich (E45):** David stellt das Repo auf öffentlich; F43 entschieden (E46). Umstellen macht David.
 > Worktrees bleiben liegen. Fortsetzen nur auf Anweisung des PO: Implementer zu Ende führen → Review → Merge.
 
 ## Zuletzt erledigt
