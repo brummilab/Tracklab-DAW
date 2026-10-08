@@ -109,7 +109,9 @@ Bei Prozessfragen gilt die Vorlage, bei Produkt- und Technikfragen der Auftrag
 (`docs/auftrag/Claude-Code-Prompt.md`). Widersprüche entscheidet der PO (`TODO-PO.md`).
 
 - **PO:** David. **Lead:** Hauptsitzung mit `claude-opus-5-5`, Effort hoch.
-- **Nummern:** Meilenstein-Karten `M<n>-<nr>`, Optimierungskarten `O-<nr>`, Entscheidungen `E<nr>`.
+- **Nummern (E15):** Meilenstein-Karten `M<n>-<nr>`, Optimierungskarten `O-<nr>`, Entscheidungen `E<nr>` (auch
+  Vorbereitungen durch den PO), Prüfaufgaben für den PO `V<nr>` (Verifikation, Auftrag), Release/Abnahme `R<nr>`.
+  Weicht von der Vorlage ab (dort `V` = Vorbereitung).
 - **Board-Dateien:** `board/<spalte>/<karte>.md` nach `board/BRIEF-VORLAGE.md`; WIP-Limit 4 in `in-arbeit/`.
 - **Modelle:** Agent-Definitionen pinnen volle Modell-IDs (`claude-sonnet-5-5`, `claude-opus-5-5`,
   `claude-haiku-5-5`) `[VERIFIZIEREN per /model]`. Karten für Audio-Thread, DSP oder Plugin-Sandbox gehen an
@@ -123,7 +125,7 @@ Bei Prozessfragen gilt die Vorlage, bei Produkt- und Technikfragen der Auftrag
   `RESUME.md` nachziehen.
 - **Hook:** `scripts/hooks/guard-git.sh` blockiert in Worktree-Sitzungen `git push`, `git checkout main`, Commits
   auf `main` und `git merge`, solange `HEAD` auf `main` steht. `git merge --ff-only <test-branch>` im eigenen
-  Worktree bleibt erlaubt (Implementer-Schritt der Vorlage, siehe `TODO-PO.md`).
+  Worktree bleibt erlaubt (Implementer-Schritt der Vorlage, E14).
 - **Testing ohne Hardware:** CI prüft Build, Unit-, Golden- und Headless-Tests. Audio-Hardware-Tests laufen bei
   David nach `docs/testing/manual/<meilenstein>.md` als Prüfaufgabe in `TODO-PO.md`.
 - **Agent Teams (experimentell):** nicht verwenden, außer der PO entscheidet es.

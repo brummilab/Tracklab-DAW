@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status: BLOCKED: USER INPUT REQUIRED** (`TODO-PO.md`)
+**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status:** M0-06 Engine-Spike in Arbeit
 
 ## Zuletzt erledigt
 
@@ -12,6 +12,8 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
   Tracklab-Ergänzungen, Agents `researcher`, `test-writer`, `implementer`, `implementer-rt`, `reviewer`, `cleanup`
   (Modelle/Effort nach Auftrag §3.4), Board als Dateien, `plan/PLAN.md`, `CLAUDE.md` mit Vorlagen-Abschnitt.
   Hook erlaubt jetzt `git merge --ff-only` im eigenen Worktree (F14, Default A).
+- Entscheidungsrunden 1+2: „Defaults ok“ → E1–E38; Lizenz AGPLv3 (`LICENSE`); Design Rev 2; ADR-001-Entwurf
+  (`docs/adr/ADR-001-tech-stack.md`); Präfixregel E15 in `team/README.md`.
 - M0-04 Recherche: 10 Themen mit `NOTIZEN.md` (Quellen, Stand 08.10.2026). Wichtigste Befunde: **JUCE 9.0.3 ist
   erschienen** (Auftrag §5 veraltet); Tracktion `develop` = 3.5.0 ungetaggt mit LUFS/Render-Queue/Mehrkanal; MCP-Spec
   2026-07-28 (zustandslos), kein C++-SDK; Claude-API max. 20 strict-Tools, `tool_choice any/tool` auf Opus/Sonnet 5.5 verboten;
@@ -21,26 +23,24 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 ## Wartet auf den PO
 
 - **F0b** Vault-Zugriff (Obsidian-MCP fehlt in Cloud-Sitzungen) und Vault-Sync einrichten.
-- **Entscheidungsrunde 1:** F1–F13, dazu F14 (Hook ↔ Vorlage) und F15 (Präfix `V`).
-- **Entscheidungsrunde 2:** F16–F38 aus der Recherche (MCP, Claude-API, Lizenz, JUCE 9, Marke, Tracktion-Stand, Lautheit,
-  EBU-Quellen, Signing, Plattformen, Songgrenzen, Plugin-Sandbox, CLAP/LV2, Linux-Audio, Barrierefreiheit, Docking/Theme).
+- Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key,
+  F28b EBU-Quellen (optional).
 
 ## Nächster Schritt (Lead)
 
-1. Antworten aus `TODO-PO.md` nach `ENTSCHEIDUNGEN.md`; DESIGN Rev 2 mit den Recherche-Korrekturen (JUCE 9, Tracktion 3.5,
-   MCP 2026-07-28, strict-Limit, `tool_choice`, Linux-Audio, Screenreader, Sandbox-Stufen); Auftrag-Korrekturen als Liste
-   für den PO; Präfix-Regel (F15) in `team/README.md`.
-2. Nach F2/F3/F24/F26: ADR-001 (M0-05), dann M0-06 Engine-Spike starten (Brief-Vorschlag steht), danach M0-07 Gate.
+1. M0-06: test-writer (Gerüst + Tests rot) → implementer-rt (grün) → reviewer → Gate → Merge → CI (Windows) prüfen →
+   Bericht `team/research/engine-spike/BERICHT.md` → ADR-001 dem PO zur Bestätigung vorlegen (M0-05).
+2. M0-07 Gate auf CMake nach dem Spike.
 3. M0-08: `daw-features` (nach F11), `vault-kontext` (nach F0b).
-4. Mit Vault-Zugriff: Vault lesen, `Projektinhalt.md` abgleichen, Vault-Abschnitte *Status*/*Offene Punkte*/*Entscheidungen* patchen.
+4. Mit Vault-Zugriff: Vault lesen, `Projektinhalt.md` abgleichen, Vault-Abschnitte patchen.
 
 ## Offene Karten
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | – |
+| in Arbeit | M0-06 Engine-Spike (test-writer) |
 | Review | – |
-| Backlog | M0-05 ADR-001 · M0-06 Engine-Spike (Brief-Vorschlag steht) · M0-07 Gate CMake (Struktur-Vorschlag steht) · M0-08 Rest-Recherche |
+| Backlog | M0-05 ADR-001 · M0-07 Gate CMake (Struktur-Vorschlag steht) · M0-08 Rest-Recherche |
 | Erledigt | M0-01 · M0-02 · M0-03 · M0-04 |
 
 ## Builds

@@ -28,10 +28,11 @@ Details: [`docs/auftrag/Claude-Code-Prompt.md`](docs/auftrag/Claude-Code-Prompt.
 - Grundgerüst, Branding, Gate (Doku-, Agent- und Secret-Checks) und CI stehen.
 - Agent-Team-Vorlage v1.0.0 ist übernommen: Prozessvertrag `team/README.md`, Sub-Agents in `.claude/agents/`
   (researcher, test-writer, implementer, implementer-rt, reviewer, cleanup), Board als Dateien unter `team/board/`.
-- Recherche-Themen sind angelegt (`team/research/`).
-- **Warte auf Entscheidungsrunde 1** (`team/TODO-PO.md`): Lizenz, Tech-Stack (Vorschlag: C++20, JUCE 8,
-  Tracktion Engine), Reihenfolge, Installer, Vault-Sync u. a.
-- Danach: Recherche, ADR-001 und Engine-Spike (JUCE + Tracktion Engine) mit CI-Build für Windows und Linux.
+- Recherche abgeschlossen (`team/research/*/NOTIZEN.md`), Entscheidungsrunden 1 und 2 entschieden
+  (`team/ENTSCHEIDUNGEN.md`), Design Rev 2.
+- Tech-Stack (ADR-001, Entwurf: [`docs/adr/ADR-001-tech-stack.md`](docs/adr/ADR-001-tech-stack.md)): C++20/CMake,
+  JUCE 9, Tracktion Engine 3.5 – unter Vorbehalt des Engine-Spikes.
+- **Jetzt:** Engine-Spike (JUCE + Tracktion Engine) mit CI-Build für Windows und Linux, danach Gate auf CMake.
 
 Aktueller Arbeitsstand: [`team/RESUME.md`](team/RESUME.md).
 
@@ -61,4 +62,5 @@ Gate lokal: `bash scripts/gate.sh` (Linux) bzw. `pwsh scripts/gate.ps1` (Windows
 
 ## Lizenz
 
-Noch nicht entschieden (Empfehlung: AGPLv3, siehe [`LICENSE`](LICENSE)). Repository privat.
+GNU Affero General Public License v3.0 (`AGPL-3.0-only`, siehe [`LICENSE`](LICENSE)) – Folge aus JUCE (AGPLv3) und
+Tracktion Engine (GPLv3). Wer einen Build erhält, bekommt auch den Quelltext. Repository vorerst privat.

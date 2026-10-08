@@ -42,14 +42,17 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
 - 08.10.2026: Recherche M0-04 abgeschlossen (10 Themen, `team/research/*/NOTIZEN.md`). Kernbefunde: JUCE 9.0.3 ist
   erschienen, Tracktion Engine `develop` 3.5.0 bringt LUFS-Messung und Render-Queue, MCP-Spec 2026-07-28, AGPLv3
   bestätigt, Namenstreffer 2Simple „Tracklab“. Brief-Vorschläge für Engine-Spike (M0-06) und Gate (M0-07).
-- Blockiert: Entscheidungsrunden 1 (F1–F15) und 2 (F16–F38) sowie Vault-Zugriff (`team/TODO-PO.md`).
+- 08.10.2026: Entscheidungsrunden 1 und 2 mit „Defaults ok“ entschieden (E1–E38), Lizenz AGPLv3, Design Rev 2,
+  ADR-001-Entwurf (JUCE 9 + Tracktion 3.5 unter Spike-Vorbehalt). Engine-Spike M0-06 gestartet.
 
 ## Offene Punkte
 - F0b Vault-Zugriff in Cloud-Sessions (Obsidian-MCP fehlt) bzw. Vault-Sync per post-merge-Hook einrichten.
-- Entscheidungsrunde 1 (F1–F13) sowie Widersprüche Vorlage ↔ Auftrag (F14 Hook/merge, F15 Präfix `V`).
-- Entscheidungsrunde 2 (F16–F38) aus der Recherche.
+- Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
 - Rest-Recherche M0-08: DAW-Funktionen (nach F11), Vault-Kontext (nach F0b).
-- Engine-Spike (JUCE + Tracktion Engine) nach Annahme von ADR-001.
+- ADR-001 endgültig bestätigen nach Spike-Bericht.
 
 ## Entscheidungen
+- E1–E38 (08.10.2026): Defaults übernommen – u. a. Lizenz AGPLv3, Stack unter Spike-Vorbehalt, Workflow A zuerst,
+  Sonnet 5.5 als Standardmodell, Inno Setup, Release per Tag nach Freigabe, MCP 2026-07-28 mit eigener C++-Implementierung,
+  JACK über PipeWire unter Linux, Plugin-Sandbox nach Latenz-Spike. Details `team/ENTSCHEIDUNGEN.md`.
 - E0 (08.10.2026): Arbeitsweise mit Agent-Team – ja; Vorlage v1.0.0 übernommen.

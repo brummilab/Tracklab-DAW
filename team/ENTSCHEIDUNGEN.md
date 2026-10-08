@@ -1,9 +1,42 @@
 # Entscheidungsprotokoll
 
-Jede beantwortete Entscheidung aus `TODO-PO.md`, neueste oben. Präfixe laut Vorlage: `E` Entscheidung, `V` Vorbereitung
-durch den PO (Zugang, Einrichtung), `R` Release/Abnahme – Abgleich mit dem Auftrag (dort `V` = Verifikation) offen,
-siehe `TODO-PO.md` F15.
+Jede beantwortete Entscheidung aus `TODO-PO.md`, neueste oben. Präfixe (E15): `E` Entscheidung (auch Vorbereitungen
+durch den PO), `V` Verifikation/Prüfaufgabe durch den PO, `R` Release/Abnahme. E-Nummern folgen den F-Nummern aus
+`TODO-PO.md`; nicht vergebene Nummern (E9–E12, E22) gehören zu Fragen, die noch offen sind.
 
 | Nr | Datum | Frage | Antwort | Folge |
 |---|---|---|---|---|
+| E38 | 08.10.2026 | F38 – Docking und Light-Theme | Default: Docking Eigenbau (Split/Tab-Baum, Screensets als JSON); Light-Theme mit abgedunkelten Akzenten (#B45309, #0369A1, #0F766E, #4F46E5) (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §5 |
+| E37 | 08.10.2026 | F37 – Linux: Screenreader, Wayland | Default: v1 unter Linux ohne Screenreader (Tastatur, Kontrast, Skalierung ja); XWayland akzeptiert (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §5; Auftrag-Korrektur §8 |
+| E36 | 08.10.2026 | F36 – Linux-Standard-Backend | Default: JACK-API über pipewire-jack, Start über `pw-jack`; ALSA Zweitoption (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §2; sudo-Schritte erst bei lokalem Test |
+| E35 | 08.10.2026 | F35 – CLAP/LV2-Umfang | Default: CLAP in v1 als eigener Adapter, Planung nach Sandbox-Entscheidung; LV2 ohne X11-UI über generische Parameteransicht (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §3 |
+| E34 | 08.10.2026 | F34 – Plugin-Sandbox | Default A: M6 Scanner-Isolation + Absturzerkennung; volle Sandbox als eigenes Paket nach Latenz-Spike (Karte vor M6) (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §3; Plan |
+| E33 | 08.10.2026 | F33 – Lokale Test-Mitschnitte | Default: vorerst nur synthetische Fixture (PO im Chat: „Defaults ok“) | – |
+| E32 | 08.10.2026 | F32 – Songgrenzen-Defaults | Default: min 60 s, max 12 min, Vorlauf 1 s, Nachklang 3 s; Ziel F ≥ 0,9 bei ±3 s (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §6 |
+| E31 | 08.10.2026 | F31 – Songgrenzen-Implementierung | Default: Eigenbau ohne Fremdlibrary (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §6 |
+| E30 | 08.10.2026 | F30 – Plattformen, RTSan | Default: nur x64; RTSan nur Linux/Clang ≥ 20 (Runner `ubuntu-26.04` oder `clang-20`) (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §8; M0-07 |
+| E29 | 08.10.2026 | F29 – Code-Signing Windows | Default: vorerst keine Signatur; später ggf. SignPath Foundation (PO im Chat: „Defaults ok“) | – |
+| E28 | 08.10.2026 | F28 – EBU-Testsignale | Default: eigene Signale nach Tech-3341-Beschreibung, bis die Terms geklärt sind; Domain-Freigabe/PDFs weiterhin erwünscht (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §8 |
+| E27 | 08.10.2026 | F27 – Lautheitsmessung | Default: Engine-Messung nutzen, im Spike gegen analytische Signale, in M2 gegen EBU-Signale validieren (PO im Chat: „Defaults ok“) | M0-06 |
+| E26 | 08.10.2026 | F26 – Tracktion-Stand | Default A: fester `develop`-Commit (3.5.0), Upgrade nur per Karte; Spike prüft v3.2.0 als Rückfall (PO im Chat: „Defaults ok“) | ADR-001, M0-06 |
+| E25 | 08.10.2026 | F25 – Marke „Tracklab“ | Default: privat weiter; Registerrecherche vor jeder Veröffentlichung (PO im Chat: „Defaults ok“) | – |
+| E24 | 08.10.2026 | F24 – JUCE 8 oder 9 | Default: Spike prüft JUCE 9.0.3 mit Tracktion `develop`, sonst 8.0.15; Ergebnis in ADR-001 (PO im Chat: „Defaults ok“) | ADR-001, M0-06 |
+| E23 | 08.10.2026 | F23 – Quelltext-Angebot in der App | Default: „Über Tracklab“ mit Lizenz und Quelltext-Link, Akzeptanzkriterium M1 (PO im Chat: „Defaults ok“) | Plan M1 |
+| E21 | 08.10.2026 | F21 – HTTP-Client Streaming | Default: libcurl direkt (eigener Worker-Thread) (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §2 |
+| E20 | 08.10.2026 | F20 – Planvorschlag erzwingen | Default: über System-Prompt, `tool_choice: auto` (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §4 |
+| E19 | 08.10.2026 | F19 – `strict` für Tools | Default: strict nur für Kern-Tools + destruktive Commands, immer lokale Schema-Validierung (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §4 |
+| E18 | 08.10.2026 | F18 – MCP-Auth | Default: statisches Bearer-Token (Umgebung/Schlüsselbund), Origin- + Host-Prüfung, nur 127.0.0.1, 403 (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §4; ADR später |
+| E17 | 08.10.2026 | F17 – MCP-Implementierung | Default A: eigene C++-JSON-RPC-Implementierung + C++-stdio-Shim, Conformance-Suite im Gate (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §4 |
+| E16 | 08.10.2026 | F16 – MCP-Spec-Version | Default: 2026-07-28 primär, 2025-11-25 Fallback (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §4 |
+| E15 | 08.10.2026 | F15 – Präfix `V` | Default A: Auftrag gilt – `V` = Verifikation durch den PO, Vorbereitungen als `E`, `R` = Release (PO im Chat: „Defaults ok“) | `team/README.md`, Kopf dieses Protokolls |
+| E14 | 08.10.2026 | F14 – Hook ↔ Vorlage (`git merge`) | Default A: Merge/Commit in Worktrees nur blocken, solange `HEAD` auf `main`; Push und `checkout main` immer blocken (PO im Chat: „Defaults ok“) | bereits umgesetzt (M0-03) |
+| E13 | 08.10.2026 | F13 – Push-Weg Cloud | Default: Arbeitsbranch und `main` pushen, `main` führend (PO im Chat: „Defaults ok“) | – |
+| E8 | 08.10.2026 | F8 – Agent Teams (experimentell) | Default: nein (PO im Chat: „Defaults ok“) | – |
+| E7 | 08.10.2026 | F7 – Release-Schema | Default A: Tag `vJJJJ.MM.N` nach Freigabe im Chat; Push auf `main` prüft nur; strikte Regex-Prüfung im Release-Workflow (PO im Chat: „Defaults ok“) | DESIGN §8 |
+| E6 | 08.10.2026 | F6 – Windows-Installer | Default: Inno Setup 6.7.x (auf `windows-2025` vorinstalliert) (PO im Chat: „Defaults ok“) | DESIGN §8 |
+| E5 | 08.10.2026 | F5 – Standardmodell Claude-Panel | Default: `claude-sonnet-5-5`; Opus für Analyse/Planung; Haiku 5.5 (kann Tool Search); Fable nur auf Wunsch (PO im Chat: „Defaults ok“) | DESIGN Rev 2 §4 |
+| E4 | 08.10.2026 | F4 – Reihenfolge | Default: Workflow A zuerst (M1 → M2 → M3), dann Recording/Mixing (PO im Chat: „Defaults ok“) | Plan |
+| E3 | 08.10.2026 | F3 – Tech-Stack | Default: Vorschlag angenommen unter Vorbehalt des Engine-Spikes; ADR-001 nach Spike zur Bestätigung (PO im Chat: „Defaults ok“) | ADR-001 (Entwurf), M0-06 |
+| E2 | 08.10.2026 | F2 – Lizenz | Default: AGPLv3 (SPDX `AGPL-3.0-only`) (PO im Chat: „Defaults ok“) | `LICENSE` ersetzt |
+| E1 | 08.10.2026 | F1 – Repo-Ort/Sichtbarkeit | Default: `brummilab/Tracklab-DAW`, privat (PO im Chat: „Defaults ok“) | – |
 | E0 | 08.10.2026 | Arbeitsweise mit Agent-Team einführen? | Ja (Auftrag §3) | M0: `team/`, `.claude/agents/`, Gate; Vorlage v1.0.0 vom PO als ZIP bereitgestellt und übernommen (M0-03) |
