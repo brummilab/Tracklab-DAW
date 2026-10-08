@@ -1,0 +1,64 @@
+# RealtimeSanitizer suppressions (docs/realtime.md, section "RealtimeSanitizer").
+#
+# ONLY third-party code is listed here: Tracktion Engine (tracktion::) and the JUCE code it calls. Our own code
+# (spike::, the SpikeGain plug-in, later src/) never gets an entry: a finding there is a bug to fix, not to suppress.
+# The negative test (spike.rtsan_negative) fails if one of the patterns below ever covers an own callback.
+#
+# How a pattern works: `call-stack-contains:<pattern>` suppresses a report if ANY frame of its stack matches. The
+# patterns therefore name the innermost Tracktion function of each known finding (the site) and no namespace as a
+# whole. Limit: a finding that is reported below one of these functions is suppressed as well. This matters for the
+# few entry points (HostedAudioDevice::processBlock, DeviceManager::audioDeviceIOCallbackInternal): an own plug-in
+# that Tracktion calls from the record path would be covered by them. Own callbacks are therefore also tested
+# on their own (vst3 suite, negative test), without a Tracktion frame in their stack.
+#
+# Origin: engine spike M0-06, team/research/engine-spike/BERICHT.md section 7 (Tracktion's record path allocates and
+# locks in the audio callback: 12 inputs, 5 s -> several hundred findings, 20 distinct sites). Every line is a TODO
+# for the recording card (M4-01): fix upstream or in our fork, then delete the line. Do not add entries without
+# a comment of the same kind (what happens, why it is unavoidable for now).
+#
+# Found with: RTSAN_OPTIONS=halt_on_error=false over ctest of the preset linux-clang-rtsan (Clang 20.1).
+
+# --- Device layer: CriticalSection / shared mutex around device state, buffers resized per block size -------------
+# HostedAudioDevice::processBlock: CriticalSection around the hosted callback and a HeapBlock allocation when the
+# buffer size changes (first block and the short last block).
+call-stack-contains:tracktion::engine::HostedAudioDevice::processBlock
+# DeviceManager::audioDeviceIOCallbackInternal: read lock (std::shared_mutex) on the device list per block.
+call-stack-contains:tracktion::engine::DeviceManager::audioDeviceIOCallbackInternal
+# DeviceManager::broadcastStreamTimeToMidiDevices: read lock on the device list per block.
+call-stack-contains:tracktion::engine::DeviceManager::broadcastStreamTimeToMidiDevices
+# HostedMidiInputDevice::processBlock: CriticalSection around the hosted MIDI buffer.
+call-stack-contains:tracktion::engine::HostedMidiInputDevice::processBlock
+# MidiNoteDispatcher::dispatchPendingMessagesForDevices: read lock on the device list per block.
+call-stack-contains:tracktion::engine::MidiNoteDispatcher::dispatchPendingMessagesForDevices
+
+# --- Edit / graph --------------------------------------------------------------------------------------------------
+# Edit::updateModifierTimers: CriticalSection per block.
+call-stack-contains:tracktion::engine::Edit::updateModifierTimers
+# LiveMidiInjectingNode::process: CriticalSection around the live MIDI queue.
+call-stack-contains:tracktion::engine::LiveMidiInjectingNode::process
+# RetrospectiveRecordBuffer::syncToEdit: allocation when the edit's channel/size configuration changes.
+call-stack-contains:tracktion::engine::RetrospectiveRecordBuffer::syncToEdit
+# AudioFifo::setSize: reallocation of the FIFO when the block size changes (choc buffer).
+call-stack-contains:tracktion::engine::AudioFifo::setSize
+# LevelMeasurer::Client::ensureNumChannels: allocation when the channel count of a meter changes (warm-up).
+call-stack-contains:tracktion::engine::LevelMeasurer::Client::ensureNumChannels
+
+# --- Wave input / recording (12 inputs: the heaviest part) --------------------------------------------------------
+# WaveInputDevice::consumeNextAudioBlock: CriticalSection per input and block.
+call-stack-contains:tracktion::engine::WaveInputDevice::consumeNextAudioBlock
+# WaveInputDeviceInstance::acceptInputBuffer: CriticalSection (consumer lock) and read lock on the context list.
+call-stack-contains:tracktion::engine::WaveInputDeviceInstance::acceptInputBuffer
+# WaveInputDeviceInstance::copyIncomingDataIntoBuffer: HeapBlock allocation when the input block size changes.
+call-stack-contains:tracktion::engine::WaveInputDeviceInstance::copyIncomingDataIntoBuffer
+# WaveInputDeviceInstance::getContextForID, shouldTrackContentsBeMuted: read lock on the context list.
+call-stack-contains:tracktion::engine::WaveInputDeviceInstance::getContextForID
+call-stack-contains:tracktion::engine::WaveInputDeviceInstance::shouldTrackContentsBeMuted
+# WaveRecordingContext::addBlockToRecord: std::mutex around the hand-over to the writer thread.
+call-stack-contains:tracktion::engine::WaveInputDeviceInstance::WaveRecordingContext::addBlockToRecord
+# WaveInputRecordingThread::addBlockToRecord: std::mutex and condition variable (wakes the writer thread).
+call-stack-contains:tracktion::engine::WaveInputRecordingThread::addBlockToRecord
+# BlockQueue: CriticalSection around the free/pending block lists; QueuedBlock::load allocates when the pool of
+# 32 blocks is exhausted or the block size changes.
+call-stack-contains:tracktion::engine::WaveInputRecordingThread::BlockQueue::findFreeBlock
+call-stack-contains:tracktion::engine::WaveInputRecordingThread::BlockQueue::addToPendingQueue
+call-stack-contains:tracktion::engine::WaveInputRecordingThread::BlockQueue::QueuedBlock::load

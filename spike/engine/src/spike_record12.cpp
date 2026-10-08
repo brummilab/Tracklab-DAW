@@ -48,7 +48,7 @@ public:
 
     /** Feeds `numFrames` frames: the input signals from frame `startFrame` on, or silence if `silent`.
         Runs on the "audio thread" of the simulated device: no allocation, no locks, no IO in this function. */
-    void feed(std::int64_t startFrame, int numFrames, bool silent) SPIKE_NONBLOCKING
+    void feed(std::int64_t startFrame, int numFrames, bool silent) noexcept SPIKE_NONBLOCKING
     {
         float* const* channels = block.getArrayOfWritePointers();
         for (int c = 0; c < kRecordNumInputs; ++c)

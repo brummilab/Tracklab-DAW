@@ -1,21 +1,25 @@
 #!/usr/bin/env bash
 # Tracklab gate (Linux / Git Bash). Green = exit 0.
 #
-# Usage: scripts/gate.sh [static|build|tidy|all]   (default: all)
+# Usage: scripts/gate.sh [static|build|tidy|rtsan|all]   (default: all)
 #   static  required files, secrets, audio files, clang-format (no compiler needed)
 #   build   CMake Debug + Release (-Werror for our own sources) and ctest; GCC by default (GATE_COMPILER=clang)
 #   tidy    clang-tidy over our own sources (needs the compile database of the linux-clang-debug preset)
-#   all     static + build + tidy
+#   rtsan   RealtimeSanitizer run with Clang >= 20 (docs/realtime.md); SKIP if there is no such Clang,
+#           FAIL instead of SKIP when GATE_REQUIRE_RTSAN=1 (CI)
+#   all     static + build + tidy + rtsan
 #
 # Environment:
 #   GATE_BUILD_DIR      build output, default ${TMPDIR:-/tmp}/tracklab-gate (one sub directory per CMake preset)
 #   GATE_COMPILER       gcc (default) or clang, selects the presets of the build stage
 #   GATE_CONFIGS        configurations of the build stage, default "debug release"
 #   GATE_CC, GATE_CXX   compiler override for the build/tidy stage (e.g. gcc-14 / g++-14), the preset's name otherwise
+#   GATE_CLANG          clang (>= 20) for the rtsan stage, default: first of clang-22, clang-21, clang-20, clang
+#   GATE_REQUIRE_RTSAN  1 = a missing Clang >= 20 is a failure
 #   CLANG_FORMAT, CLANG_TIDY   tool names, default clang-format / clang-tidy
 #
 # Rule from agent-team-vorlage: the gate never writes into the working tree. A missing tool is a failure,
-# never a silent skip.
+# never a silent skip (exception: rtsan locally, see above).
 set -u
 cd "$(dirname "$0")/.."
 
@@ -94,7 +98,7 @@ stage_static() {
            team/README.md team/RESUME.md team/TODO-PO.md team/ENTSCHEIDUNGEN.md \
            team/plan/PLAN.md team/board/BRIEF-VORLAGE.md \
            team/design/DESIGN.md docs/realtime.md docs/commands.md \
-           CMakeLists.txt CMakePresets.json .clang-format .clang-tidy \
+           CMakeLists.txt CMakePresets.json .clang-format .clang-tidy scripts/rtsan.supp \
            assets/branding/tracklab-icon.svg assets/branding/tracklab.ico \
            assets/branding/png/tracklab-logo-light.png; do
     [ -f "$f" ] && ok "$f" || bad "$f fehlt"
@@ -200,7 +204,7 @@ stage_tidy() {
   [ -n "$files" ] || { skip "keine C++-Quellen"; return; }
   # Only our headers are reported (system headers are never reported), one clang-tidy process per core.
   # shellcheck disable=SC2016
-  if timed "clang-tidy" bash -c 'printf "%s\n" "$1" | xargs -P "$(nproc)" -n 1 "$2" -p "$3" --quiet --header-filter="$4" 2> >(grep -Ev "^[0-9]+ warnings? generated\.$" >&2)' \
+  if timed "clang-tidy" bash -c 'printf "%s\n" "$1" | xargs -P "$(nproc)" -n 1 "$2" -p "$3" --quiet --header-filter="$4"' \
        _ "$files" "$CLANG_TIDY" "$bd" "^$(pwd)/(spike/engine/)?(src|tests)/"; then
     ok "clang-tidy: $(echo "$files" | wc -l) Quellen ohne Befund"
   else
@@ -208,12 +212,67 @@ stage_tidy() {
   fi
 }
 
+# Prints "<clang> <clang++> <major>" of the first Clang >= 20, empty if there is none.
+find_rtsan_clang() {
+  local c major cxx
+  for c in "${GATE_CLANG:-}" clang-22 clang-21 clang-20 clang; do
+    [ -n "$c" ] && command -v "$c" >/dev/null || continue
+    major=$(echo | "$c" -dM -E -x c - 2>/dev/null | awk '/__clang_major__/ {print $3}')
+    if [ -n "$major" ] && [ "$major" -ge 20 ]; then
+      cxx="${c/clang/clang++}"
+      command -v "$cxx" >/dev/null || continue
+      echo "$c $cxx $major"
+      return 0
+    fi
+  done
+  return 1
+}
+
+stage_rtsan() {
+  echo "== RealtimeSanitizer (Clang >= 20, docs/realtime.md)"
+  local found cc cxx major symbolizer s bd="$GATE_BUILD_DIR/linux-clang-rtsan" missing=0
+  if ! found=$(find_rtsan_clang); then
+    if [ "${GATE_REQUIRE_RTSAN:-0}" = 1 ]; then
+      bad "kein Clang >= 20 gefunden (GATE_REQUIRE_RTSAN=1)"
+    else
+      skip "kein Clang >= 20 gefunden (Ubuntu: sudo apt install clang-20 libclang-rt-20-dev llvm-20; in CI Pflicht)"
+    fi
+    return
+  fi
+  read -r cc cxx major <<<"$found"
+  echo "-- Compiler: $cc ($($cc --version | head -n 1))"
+  # RTSan reports are matched against scripts/rtsan.supp by function name, so the symbolizer is mandatory.
+  symbolizer=""
+  for s in "llvm-symbolizer-$major" "/usr/lib/llvm-$major/bin/llvm-symbolizer" llvm-symbolizer; do
+    if command -v "$s" >/dev/null; then symbolizer=$(command -v "$s"); break; fi
+  done
+  [ -n "$symbolizer" ] || { bad "llvm-symbolizer nicht gefunden (Ubuntu: sudo apt install llvm-$major)"; missing=1; }
+  for t in cmake ninja ctest; do
+    command -v "$t" >/dev/null || { bad "$t nicht installiert"; missing=1; }
+  done
+  require_submodules || missing=1
+  [ "$missing" -eq 0 ] || return
+
+  mkdir -p "$GATE_BUILD_DIR"
+  logged "configure linux-clang-rtsan" "$bd.configure.log" \
+    cmake --preset linux-clang-rtsan -B "$bd" "-DCMAKE_C_COMPILER=$cc" "-DCMAKE_CXX_COMPILER=$cxx" \
+    "-DTRACKLAB_RTSAN_SYMBOLIZER=$symbolizer" \
+    || { bad "configure linux-clang-rtsan (Log: $bd.configure.log)"; return; }
+  logged "build linux-clang-rtsan" "$bd.build.log" cmake --build "$bd" --parallel \
+    || { bad "build linux-clang-rtsan (Log: $bd.build.log)"; return; }
+  ok "build linux-clang-rtsan"
+  # RTSAN_OPTIONS and the suppressions file are set per test in spike/engine/CMakeLists.txt.
+  timed "ctest linux-clang-rtsan" ctest --test-dir "$bd" --output-on-failure --output-junit "$bd/junit.xml" \
+    && ok "ctest linux-clang-rtsan" || bad "ctest linux-clang-rtsan (Bericht: $bd/junit.xml)"
+}
+
 case "$stage" in
   static) stage_static ;;
   build)  stage_build ;;
   tidy)   stage_tidy ;;
-  all)    stage_static; stage_build; stage_tidy ;;
-  *) echo "Usage: $0 [static|build|tidy|all]" >&2; exit 2 ;;
+  rtsan)  stage_rtsan ;;
+  all)    stage_static; stage_build; stage_tidy; stage_rtsan ;;
+  *) echo "Usage: $0 [static|build|tidy|rtsan|all]" >&2; exit 2 ;;
 esac
 
 echo

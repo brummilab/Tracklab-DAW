@@ -34,6 +34,9 @@ endif()
 # The runtime has to be linked into every executable; instrumenting all compilation units is harmless because only
 # annotated functions are affected. Third-party findings are filtered by scripts/rtsan.supp at run time.
 option(TRACKLAB_RTSAN "Build with -fsanitize=realtime (Clang >= 20, Linux)" OFF)
+# llvm-symbolizer of the same LLVM version (scripts/gate.sh rtsan finds it). Without symbol names the suppressions
+# in scripts/rtsan.supp cannot match, so the sanitizer tests treat a missing symbolizer as an error.
+set(TRACKLAB_RTSAN_SYMBOLIZER "" CACHE FILEPATH "llvm-symbolizer for RTSan reports")
 if(TRACKLAB_RTSAN)
   if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_VERSION VERSION_LESS 20)
     message(FATAL_ERROR "TRACKLAB_RTSAN needs Clang >= 20 (found ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION})")

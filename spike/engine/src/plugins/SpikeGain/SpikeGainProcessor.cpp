@@ -42,7 +42,7 @@ public:
     void releaseResources() override {}
 
     // Audio thread: reads one atomic parameter value and scales the buffer in place. No allocation, no locks.
-    void processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&) SPIKE_NONBLOCKING override
+    void processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&) noexcept SPIKE_NONBLOCKING override
     {
         const float gain = std::pow(10.0f, gainDb->get() / 20.0f);
         const int numChannels = buffer.getNumChannels();
