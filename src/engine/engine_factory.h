@@ -6,6 +6,7 @@
 
 #include <tracktion_engine/tracktion_engine.h>
 
+#include <cstdint>
 #include <memory>
 
 namespace tracklab::engine
@@ -14,14 +15,14 @@ namespace tracklab::engine
 namespace te = tracktion;
 
 /** Whether the engine opens audio devices on its own. */
-enum class DeviceMode
+enum class DeviceMode : std::uint8_t
 {
     none,      ///< CLI and tests: no system audio device is opened or scanned (headless CI).
     automatic  ///< App: the engine initialises the device manager and the system device types.
 };
 
 /** Where the engine keeps its settings (te::PropertyStorage). */
-enum class SettingsStorage
+enum class SettingsStorage : std::uint8_t
 {
     inMemory,  ///< Nothing is written to the user's settings folders. Prefs/cache folders are private temporary
                ///< folders that are deleted together with the engine. `settingsDirectory` is ignored.
