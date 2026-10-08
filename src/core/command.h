@@ -4,9 +4,11 @@
 
 #include <nlohmann/json.hpp>
 
+#include <cstddef>
 #include <functional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace tracklab::core
 {
@@ -31,6 +33,7 @@ inline constexpr std::string_view invalidParams = "invalid_params";    ///< para
 inline constexpr std::string_view invalidResult = "invalid_result";    ///< handler result violates resultSchema
 inline constexpr std::string_view handlerFailed = "handler_failed";    ///< the handler threw a std::exception
 inline constexpr std::string_view notOnMessageThread = "not_on_message_thread";  ///< called from another thread
+inline constexpr std::string_view noEdit = "no_edit";  ///< an undoable command needs an open project (M1-03)
 }  // namespace error_code
 
 /** Structured error, serialised as {"code":..., "message":..., "pointer":...}. All three are strings.
@@ -56,6 +59,22 @@ struct CommandResult
 
     /** ok: {"ok":true,"result":<result>}; otherwise {"ok":false,"error":{"code","message","pointer"}}. */
     Json toJson() const;
+};
+
+/** One step of CommandRegistry::executeBatch. */
+struct BatchStep
+{
+    std::string id;
+    Json params = Json::object();
+};
+
+/** Outcome of CommandRegistry::executeBatch (M1-03). */
+struct BatchResult
+{
+    bool ok = false;
+    std::vector<Json> results;    ///< ok: one validated result per step, in order
+    CommandError error;           ///< !ok: the error of the failing step (same codes as execute)
+    std::size_t failedIndex = 0;  ///< !ok: index of the failing step in the list
 };
 
 /** Outcome of CommandRegistry::registerCommand. */
