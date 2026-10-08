@@ -6,6 +6,7 @@ durch den PO), `V` Verifikation/Prüfaufgabe durch den PO, `R` Release/Abnahme. 
 
 | Nr | Datum | Frage | Antwort | Folge |
 |---|---|---|---|---|
+| E45 | 08.10.2026 | F1 neu – Repo öffentlich? | Ja, David stellt `brummilab/Tracklab-DAW` auf öffentlich (PO: „ich werde umsteigen auf öffentliche repo“). Ersetzt E1 (privat). Vorher Prüfung durch den Lead, offene Punkte als F43 | README, `Projektinhalt.md`; Folge für CI siehe F43 d |
 | E44 | 08.10.2026 | GitHub-Actions-Minuten aufgebraucht – CI sparsam? | Ja, Option 1 (PO: „1 jetzt“): CI nur bei Push auf `main` und nur, wenn sich mehr als `team/`, `docs/`, `*.md` ändert; Push = Debug-Beine (Linux GCC/Clang, Windows MSVC) + RTSan; Release-Beine nur manuell mit `full`. Lokales Gate bleibt Pflicht vor jedem Merge. Repo öffentlich machen (kostenlose Minuten) offen, entscheidet der PO | `gate.yml`; O-01/M1-09 Doppelläufe erledigt |
 | E43 | 08.10.2026 | Wechsel auf Rust? (PO-Frage im Chat) | Nein – bei C++ bleiben (PO: „ok, bei C++ bleiben“) | ADR-001 bestätigt; Rust höchstens für abgegrenzte Prozesse (Plugin-Sandbox-Host, MCP-stdio-Shim) per eigener Entscheidung, frühestens beim Sandbox-Spike vor M6 |
 | E42 | 08.10.2026 | F42 – Programmnamen | Default: `Tracklab` (Binary `tracklab`/`Tracklab.exe`), `tracklab-cli`, `tracklab-mcp` (PO im Chat: „Defaults ok“) | M1-Karten |

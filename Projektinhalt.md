@@ -15,7 +15,7 @@ Ohne Claude voll nutzbar.
 | | |
 |---|---|
 | Product Owner | David |
-| Repo | `brummilab/Tracklab-DAW` (privat), Branch `main` |
+| Repo | `brummilab/Tracklab-DAW` (wird öffentlich, E45), Branch `main` |
 | Arbeitsweise | Agent-Team-Vorlage (Team Lead + Sub-Agents), Loop aus Auftrag §3.2 |
 | Vorlage | `agent-team-vorlage` **v1.0.0**, übernommen am 08.10.2026 (per ZIP vom PO) |
 | Stack (Vorschlag ADR-001) | C++20, CMake, JUCE 8, Tracktion Engine 3.x, VST3 (MVP), LV2/CLAP (v1) |
@@ -54,6 +54,7 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
   JUCE/Tracktion-Bibliothek unter `third_party/`, Engine-Fabrik mit atomaren Einstellungen.
 - 08.10.2026: GitHub-Actions-Minuten aufgebraucht → CI sparsam (E44): nur `main`, nur bei Code-Änderung, Debug-Beine +
   RTSan; volle Matrix manuell. M1-03/M1-06 auf PO-Wunsch angehalten.
+- 08.10.2026: Umstieg auf öffentliches Repo beschlossen (E45); Prüfung ohne Secrets-/Audio-Funde, Restfragen F43.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.

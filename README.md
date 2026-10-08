@@ -69,4 +69,4 @@ Gate lokal: `bash scripts/gate.sh` (Linux) bzw. `pwsh scripts/gate.ps1` (Windows
 ## Lizenz
 
 GNU Affero General Public License v3.0 (`AGPL-3.0-only`, siehe [`LICENSE`](LICENSE)) – Folge aus JUCE (AGPLv3) und
-Tracktion Engine (GPLv3). Wer einen Build erhält, bekommt auch den Quelltext. Repository vorerst privat.
+Tracktion Engine (GPLv3). Wer einen Build erhält, bekommt auch den Quelltext. Das Repository wird öffentlich (E45).

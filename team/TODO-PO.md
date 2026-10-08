@@ -10,6 +10,21 @@ Infos und Zugänge ohne Default.
 
 ## Offen
 
+### F43 – Vor dem Umstellen auf öffentlich (E45)
+Geprüft vom Lead (aktueller Stand + **gesamte Git-Historie**): keine Secrets/Tokens, keine Audiodateien, Commit-Adressen
+nur `noreply` (Claude, GitHub, `brummilab@users.noreply`). Öffentlich würden aber:
+- **a) Arbeitgeber-Bezug:** `agent-team-vorlage` wird in `docs/auftrag/Claude-Code-Prompt.md`, `team/README.md`,
+  `team/TODO-PO.md`, `team/RESUME.md`, `Projektinhalt.md`, `CLAUDE.md`-Historie genannt. Prozessvertrag und
+  `.claude/agents/` stammen aus dieser Vorlage. **Bist du berechtigt, diese Inhalte zu veröffentlichen?**
+  Default: Ja, Vorlage ist deine eigene Arbeit; Nennungen im aktuellen Stand auf „agent-team-vorlage (privat)“ kürzen.
+- **b) Private Pfade:** Vault-Struktur (`Tracklab/…`, `…`, `…`) und `<Vault>/…` im
+  Auftrag. Default: im aktuellen Stand lassen (harmlos), **keine** Historie umschreiben (Force-Push auf `main`).
+- **c) Name „Tracklab“:** Der Auftrag (§ Start, Punkt 5) verlangt vor „öffentlich“ eine Markenprüfung; bekannt ist
+  2Simple „Tracklab“ (Musik-Lernsoftware). Default: Name bleibt bis v1, Prüfung vor dem ersten Release (eigene Karte).
+- **d) CI nach dem Umstieg:** Öffentliche Repos haben unbegrenzte Standard-Runner-Minuten. Default: E44 (nur `main`,
+  nur Code-Änderungen) bleibt; Release-Beine laufen wieder bei jedem Code-Push auf `main`.
+- **Antwort:**
+
 
 ### F9 – Info: Audio-Interface der Band
 Modell, Anzahl Eingänge, Treiber (ASIO unter Windows? class-compliant unter Linux?).
