@@ -2,7 +2,12 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 08.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01, M1-02, O-04 erledigt – M1-03 + M1-06 in Arbeit
+**Stand:** 08.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01, M1-02, O-04 erledigt – M1-03 + M1-06 **angehalten (PO: „alle stoppen“)**
+
+> **Angehalten 08.10.2026:** Beide Implementer auf Wunsch des PO gestoppt, ungeprüft, nichts gemerged.
+> Stand: `m1-03-impl` @ `99c56ca` (Umsetzung committet, Build/Format-Lauf unterbrochen),
+> `m1-06-impl` @ `9aafc75` (Umsetzung + Lizenzprüfung committet, RTSan grün, tidy-Befunde offen).
+> Worktrees bleiben liegen. Fortsetzen nur auf Anweisung des PO: Implementer zu Ende führen → Review → Merge.
 
 ## Zuletzt erledigt
 
