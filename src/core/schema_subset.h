@@ -4,6 +4,8 @@
 // maximum, items, anyOf, $ref (only internal, "#/..."), $defs, description, default.
 // Every schema that describes an object (type "object", or any of properties/required/additionalProperties) must
 // have "additionalProperties": false. The root of a command schema is an object schema.
+// Further rules (lead decision 6): "type" is a single type name (no list); an internal "$ref" must resolve inside the
+// same schema and must not be a pure reference cycle; every name in "required" must be declared in "properties".
 // Property names (keys of "properties" and "$defs"), the values of "enum" and "default" are data, not keywords.
 #pragma once
 

@@ -5,7 +5,7 @@
 namespace tracklab::core
 {
 
-RegisterResult registerAppCommands(CommandRegistry& registry, std::string appVersion)
+RegisterResult registerAppCommands(CommandRegistry& registry, std::string versionText)
 {
     Command version;
     version.id = "app.version";
@@ -19,7 +19,7 @@ RegisterResult registerAppCommands(CommandRegistry& registry, std::string appVer
         "additionalProperties": false
     })");
     version.flags.readOnly = true;
-    version.handler = [appVersion = std::move(appVersion)](const Json&) { return Json{{"version", appVersion}}; };
+    version.handler = [text = std::move(versionText)](const Json&) { return Json{{"version", text}}; };
     return registry.registerCommand(std::move(version));
 }
 
