@@ -9,11 +9,11 @@ target_include_directories(tracklab_tests PRIVATE
 target_compile_definitions(tracklab_tests PRIVATE
   TRACKLAB_EXPECTED_VERSION="${PROJECT_VERSION}"
   TRACKLAB_SOURCE_DIR="${CMAKE_SOURCE_DIR}")  # checked-in tools.json / docs/commands.md (tests/core)
-target_link_libraries(tracklab_tests PRIVATE tracklab_core tracklab_engine tracklab_config_flags)
+target_link_libraries(tracklab_tests PRIVATE tracklab_core tracklab_io tracklab_engine tracklab_config_flags)
 
 # Suite name per module. engine_readonly needs a file system that enforces folder permissions (not as root):
 # it is skipped (exit 77) otherwise, in its own CTest entry so that the other suites stay meaningful.
-set(TRACKLAB_TEST_SUITES core engine engine_readonly)
+set(TRACKLAB_TEST_SUITES core io engine engine_readonly)
 foreach(suite IN LISTS TRACKLAB_TEST_SUITES)
   add_test(NAME tracklab.${suite} COMMAND tracklab_tests --test-suite=${suite})
   set_tests_properties(tracklab.${suite} PROPERTIES
