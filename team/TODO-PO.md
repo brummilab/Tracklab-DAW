@@ -23,12 +23,14 @@ Name/Repo – als Designreferenz für `research/mcp-server/`.
 ### F11 – Info: Reaper-Shortcuts und Custom Actions
 Bitte `reaper-kb.ini` exportieren und lokal bereitlegen (nicht ins Repo, falls Persönliches drin ist) –
 Grundlage für das Reaper-kompatible Shortcut-Preset.
+**Ergänzt (M0-08):** Die Reaper-Standardbelegung ist aus der Cloud nicht belegbar (reaper.fm gesperrt, Quellen
+widersprüchlich). Ideal: zwei Exporte – (a) `reaper-kb.ini` einer **frischen Standardinstallation** (Actions → Key map →
+Export), (b) deine eigene Belegung. Optional `whatsnew.txt` aus dem Reaper-Programmordner.
 - **Antwort:**
 
 ### F12 – Info: Entwicklung lokal oder in Cloud-Sessions?
 Wichtig für Vault-Sync (lokal: post-commit-Hook; Cloud: post-merge + geplanter Pull) und Tag-Push
 (Cloud: 403 → du setzt Tags).
-- **Hinweis:** In dieser Cloud-Session fehlt der Obsidian-MCP (F0b).
 - **Antwort:**
 
 ### F22 – Test mit echtem API-Key

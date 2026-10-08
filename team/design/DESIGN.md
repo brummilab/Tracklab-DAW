@@ -196,3 +196,6 @@ Diese Revision geht dem Auftrag vor (Stand der Recherche 08.10.2026):
 5. §7.7: MCP-Spec 2026-07-28 ist aktuell.
 6. §8: Screenreader nur unter Windows; Linux-Screenshots ohne Xvfb.
 7. §10.2: Apple/YouTube/Amazon/Tidal/Deezer-Werte sind nicht offiziell belegt; SoundCloud ergänzt.
+8. §9 Herkunftsspalte (Features bleiben, `team/research/daw-features/NOTIZEN.md`): Z. 408 → „Cubase Slice-Quantize/Audio
+   Alignment, Pro Tools Beat Detective“; Z. 467 ohne Studio Pro; Z. 500 ohne Reaper; Z. 501 unbelegt; Z. 513
+   Plattform-Presets = Tracklab-eigen; Z. 427 „Bitwig (Marketing)“; Z. 394 Loopback-Messung halbautomatisch.

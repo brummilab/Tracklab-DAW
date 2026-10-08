@@ -30,7 +30,7 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 1. M0-06: test-writer (Gerüst + Tests rot) → implementer-rt (grün) → reviewer → Gate → Merge → CI (Windows) prüfen →
    Bericht `team/research/engine-spike/BERICHT.md` → ADR-001 dem PO zur Bestätigung vorlegen (M0-05).
 2. M0-07 Gate auf CMake nach dem Spike.
-3. M0-08: `daw-features` (Teil 1 läuft; Reaper-Preset nach F11). `vault-kontext` entfällt (E0b).
+3. M0-08: `daw-features` Teil 1 erledigt (`NOTIZEN.md`); Reaper-Preset und Rest nach F11. `vault-kontext` entfällt (E0b).
 
 ## Offene Karten
 
