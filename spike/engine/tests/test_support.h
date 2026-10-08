@@ -44,7 +44,10 @@ struct CliRun
     juce::var get(const char* key) const { return json.getProperty(key, juce::var()); }
     bool has(const char* key) const { return json.hasProperty(key); }
     double number(const char* key) const { return static_cast<double>(get(key)); }
-    std::int64_t integer(const char* key) const { return static_cast<std::int64_t>(static_cast<juce::int64>(get(key))); }
+    std::int64_t integer(const char* key) const
+    {
+        return static_cast<std::int64_t>(static_cast<juce::int64>(get(key)));
+    }
     std::string text(const char* key) const { return get(key).toString().toStdString(); }
 };
 
@@ -57,29 +60,29 @@ CliRun runCliProcess(const std::vector<std::string>& args);
 }  // namespace spike_test
 
 /** A failing operation must say why, and must not be the stub's placeholder. */
-#define SPIKE_REQUIRE_IMPLEMENTED(result)                                                              \
-    do                                                                                                 \
-    {                                                                                                  \
-        INFO("error: " << (result).error);                                                             \
-        REQUIRE_MESSAGE((result).error != ::spike::kNotImplemented, "operation is not implemented"); \
+#define SPIKE_REQUIRE_IMPLEMENTED(result)                                                                              \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        INFO("error: " << (result).error);                                                                             \
+        REQUIRE_MESSAGE((result).error != ::spike::kNotImplemented, "operation is not implemented");                   \
     } while (false)
 
 /** Skips the current test case (reports it, returns from the enclosing function) if `condition` is false. */
-#define SPIKE_SKIP_UNLESS(condition, reason)           \
-    do                                                 \
-    {                                                  \
-        if (!(condition))                              \
-        {                                              \
-            ::spike_test::skipTest(reason);            \
-            return;                                    \
-        }                                              \
+#define SPIKE_SKIP_UNLESS(condition, reason)                                                                           \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        if (!(condition))                                                                                              \
+        {                                                                                                              \
+            ::spike_test::skipTest(reason);                                                                            \
+            return;                                                                                                    \
+        }                                                                                                              \
     } while (false)
 
 /** |actual - expected| <= tolerance, with the three numbers in the failure message. */
-#define SPIKE_CHECK_NEAR(actual, expected, tolerance)                                                   \
-    do                                                                                                  \
-    {                                                                                                   \
-        const double spikeActual_ = (actual);                                                           \
-        INFO(#actual " = " << spikeActual_ << ", expected " << (expected) << " +- " << (tolerance));    \
-        CHECK(std::abs(spikeActual_ - (expected)) <= (tolerance));                                      \
+#define SPIKE_CHECK_NEAR(actual, expected, tolerance)                                                                  \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        const double spikeActual_ = (actual);                                                                          \
+        INFO(#actual " = " << spikeActual_ << ", expected " << (expected) << " +- " << (tolerance));                   \
+        CHECK(std::abs(spikeActual_ - (expected)) <= (tolerance));                                                     \
     } while (false)

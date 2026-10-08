@@ -1,33 +1,11 @@
 cmake_minimum_required(VERSION 3.25)
 
-# MSVC: embed debug info in the object files (/Z7) so that sccache can cache MSVC builds (CMP0141),
-# static runtime so that spike_cli.exe and SpikeGain.vst3 need no redistributable.
-if(POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-endif()
-set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
+# The compiler settings (C++20, MSVC debug info and runtime, ccache, RTSan) live in the root CMakeLists.txt:
+# build through the root project (CMakePresets.json), not from this directory.
 project(TracklabEngineSpike VERSION 0.1.0 LANGUAGES C CXX)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
-endif()
 
 option(SPIKE_WERROR "Treat warnings in spike/engine/src as errors" ON)
 
-# Use ccache automatically if present and no launcher was requested (CI passes sccache/ccache itself).
-find_program(SPIKE_CCACHE ccache)
-if(SPIKE_CCACHE AND NOT CMAKE_CXX_COMPILER_LAUNCHER AND NOT MSVC)
-  set(CMAKE_C_COMPILER_LAUNCHER "${SPIKE_CCACHE}")
-  set(CMAKE_CXX_COMPILER_LAUNCHER "${SPIKE_CCACHE}")
-endif()
-
-include(CTest)
 include(cmake/Deps.cmake)
 
 # Warning flags for our own sources only (never for JUCE/Tracktion module code).
@@ -38,6 +16,11 @@ if(SPIKE_WERROR)
     target_compile_options(spike_warnings INTERFACE /W4 /WX /external:W0)
   else()
     target_compile_options(spike_warnings INTERFACE -Wall -Wextra -Werror)
+    # Clang >= 20 verifies [[clang::nonblocking]] functions at compile time: every call from such a function must go
+    # to another verified (or nonblocking) function. Own sources only; calls into JUCE/Tracktion headers are reported
+    # as well, which is the point (docs/realtime.md).
+    target_compile_options(spike_warnings INTERFACE
+      "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_GREATER_EQUAL:$<CXX_COMPILER_VERSION>,20>>:-Wfunction-effects>")
   endif()
 endif()
 
@@ -116,3 +99,43 @@ foreach(suite IN ITEMS import render record12 vst3 mp3 cli)
     TIMEOUT 300
     LABELS "spike;${suite}")
 endforeach()
+
+#==============================================================================
+# RealtimeSanitizer (TRACKLAB_RTSAN, see the root CMakeLists.txt and docs/realtime.md).
+if(TRACKLAB_RTSAN)
+  # SpikeGain.so is a shared module: clang does not link the static RTSan runtime into shared libraries and JUCE
+  # links plugins with --no-undefined. The runtime lives in the host process (spike_tests, spike_cli), which exports
+  # its __rtsan_* symbols, so the plugin resolves them when the host loads it. That way the annotated
+  # SpikeGain processBlock is checked like our other audio callbacks.
+  target_link_options(SpikeGain_VST3 PRIVATE -Wl,-z,undefs)
+  foreach(host IN ITEMS spike_tests spike_cli)
+    target_link_options(${host} PRIVATE "-Wl,--export-dynamic-symbol=__rtsan_*")
+  endforeach()
+
+  # Every finding stops the test (halt_on_error). Third-party findings are filtered by scripts/rtsan.supp. Leak
+  # detection is not the point of this run (JUCE keeps singletons until exit).
+  set(SPIKE_RTSAN_OPTIONS "halt_on_error=true:detect_leaks=0:suppressions=${CMAKE_SOURCE_DIR}/scripts/rtsan.supp")
+  if(TRACKLAB_RTSAN_SYMBOLIZER)
+    string(APPEND SPIKE_RTSAN_OPTIONS ":external_symbolizer_path=${TRACKLAB_RTSAN_SYMBOLIZER}")
+  endif()
+  # Matching every report against the suppressions symbolizes its stack, which makes the record12 and cli suites
+  # about 30 times slower (4 s -> 2 min on 4 cores): the timeout is raised for this preset.
+  foreach(suite IN ITEMS import render record12 vst3 mp3 cli)
+    set_property(TEST spike.${suite} APPEND PROPERTY ENVIRONMENT "RTSAN_OPTIONS=${SPIKE_RTSAN_OPTIONS}")
+    set_tests_properties(spike.${suite} PROPERTIES TIMEOUT 1500)
+  endforeach()
+
+  # Negative test: a deliberately allocating callback (tests/test_rtsan.cpp) must stop the process with an RTSan
+  # report. The test case is skipped unless --no-skip is given, so a normal run of all suites never aborts. The wrapper
+  # script succeeds only if the process failed AND the output is an RTSan finding in the callback: a crash for any other
+  # reason, or a missing/ineffective sanitizer, turns this test red. (CTest's WILL_FAIL cannot tell these cases apart.)
+  add_test(NAME spike.rtsan_negative
+    COMMAND "${CMAKE_COMMAND}"
+      "-DTEST_EXE=$<TARGET_FILE:spike_tests>"
+      "-DTEST_ARGS=--test-suite=rtsan_negative;--no-skip"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/rtsan_expect_failure.cmake")
+  set_tests_properties(spike.rtsan_negative PROPERTIES
+    ENVIRONMENT "RTSAN_OPTIONS=${SPIKE_RTSAN_OPTIONS}"
+    TIMEOUT 120
+    LABELS "spike;rtsan_negative")
+endif()

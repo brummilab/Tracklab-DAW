@@ -1,0 +1,25 @@
+# Tracklab code style (M0-07). Close to JUCE/LLVM: 4 spaces, Allman braces, 120 columns. The engine spike was
+# written in this style, so a single formatting pass leaves it readable. Only our own sources are checked
+# (src/, tests/, spike/engine/src, spike/engine/tests), never third_party/.
+# Keep the options within what clang-format 18 understands: the gate runs on ubuntu-24.04 (clang-format 18),
+# newer versions must produce the same output.
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++20
+IndentWidth: 4
+ColumnLimit: 120
+BreakBeforeBraces: Allman
+NamespaceIndentation: None
+AccessModifierOffset: -4
+PointerAlignment: Left
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortLambdasOnASingleLine: All
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerIndentWidth: 4
+SpacesBeforeTrailingComments: 2
+FixNamespaceComments: true
+SortIncludes: CaseSensitive
+IncludeBlocks: Preserve
+ReflowComments: false

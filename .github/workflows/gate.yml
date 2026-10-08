@@ -1,25 +1,330 @@
 name: gate
 
+# One workflow for the whole gate (DESIGN section 8). Every job calls scripts/gate.sh or scripts/gate.ps1, so the
+# same checks run locally and in CI:
+#   static             required files, secrets, audio files, clang-format
+#   build-test-linux   CMake Debug + Release with GCC and Clang 18, ctest; clang-tidy on the Clang Debug leg
+#   rtsan-linux        RealtimeSanitizer (Clang >= 20, Linux only) over the engine tests, see docs/realtime.md
+#   build-test-windows CMake Debug + Release with MSVC, ctest
+#   mp3-compare        MP3 decoding compared across platforms (engine spike M0-06)
+# Packaging and release get their own workflows in later cards.
+
 on:
   push:
-  pull_request:
   workflow_dispatch:
+    inputs:
+      xvfb:
+        description: "Run the Linux tests under xvfb-run (to find out whether the VST3 test needs a display)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
+concurrency:
+  group: gate-${{ github.ref }}
+  # A newer push to a branch replaces the running gate; on main every commit keeps its own run and artefacts.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  # A missing lame/ffmpeg is a failure in CI, never a silent skip (gate.sh sets it as well).
+  SPIKE_REQUIRE_TOOLS: "1"
+  # Only the two pinned submodules; Tracktion's own nested JUCE submodule is never initialised.
+  SPIKE_SUBMODULES: spike/engine/third_party/JUCE spike/engine/third_party/tracktion_engine
+  # JUCE "Linux Dependencies" without WebKit, plus the tools the tests need.
+  LINUX_PACKAGES: >-
+    ninja-build lame ffmpeg xvfb
+    libasound2-dev libjack-jackd2-dev ladspa-sdk libcurl4-openssl-dev
+    libfreetype-dev libfontconfig1-dev
+    libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libxi-dev
+    libglu1-mesa-dev mesa-common-dev libegl-dev
+
 jobs:
-  gate-linux:
+  static:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Gate
-        run: bash scripts/gate.sh
+      - name: Install clang-format
+        run: sudo apt-get update && sudo apt-get install -y clang-format-18
+      - name: Gate static
+        run: bash scripts/gate.sh static
+        env:
+          CLANG_FORMAT: clang-format-18
 
-  gate-windows:
-    runs-on: windows-latest
+  mp3-fixture:
+    # Encodes the MP3 once; every build job decodes the same file (the encoder version does not matter).
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Gate
+      - name: Install lame
+        run: sudo apt-get update && sudo apt-get install -y lame
+      - name: Create fixture (synthetic, not committed)
+        run: python3 spike/engine/tests/fixtures-gen/make_mp3_fixture.py mp3-fixture
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp3-fixture
+          path: mp3-fixture/fixture.mp3
+          retention-days: 7
+
+  build-test-linux:
+    needs: [static, mp3-fixture]
+    name: linux-${{ matrix.compiler }} ${{ matrix.config }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+        config: [debug, release]
+        include:
+          # GCC 14 and Clang 18 are preinstalled on ubuntu-24.04 (DESIGN section 8).
+          - compiler: gcc
+            cc: gcc-14
+            cxx: g++-14
+          - compiler: clang
+            cc: clang-18
+            cxx: clang++-18
+    env:
+      GATE_COMPILER: ${{ matrix.compiler }}
+      GATE_CONFIGS: ${{ matrix.config }}
+      GATE_CC: ${{ matrix.cc }}
+      GATE_CXX: ${{ matrix.cxx }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build directory (outside the checkout)
+        run: echo "GATE_BUILD_DIR=$RUNNER_TEMP/gate-build" >> "$GITHUB_ENV"
+
+      - name: Submodules (JUCE 9.0.3, Tracktion develop; not recursive)
+        run: git submodule update --init --depth 1 -- $SPIKE_SUBMODULES
+
+      - name: Install build dependencies (apt)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y $LINUX_PACKAGES clang-18 clang-tidy-18 clang-format-18
+      - name: ccache
+        # v1.2.24: node24, @actions/cache 6 (v1.2.9 used the retired legacy cache service). One cache per
+        # compiler and configuration (Debug and Release objects never match).
+        uses: hendrikmuhs/ccache-action@v1.2.24
+        with:
+          key: gate-linux-${{ matrix.compiler }}-${{ matrix.config }}
+          max-size: 1500M
+
+      - name: Gate build (configure, build, ctest)
+        run: |
+          start=$(date +%s)
+          if [ "${{ inputs.xvfb }}" = "true" ]; then
+            xvfb-run -a bash scripts/gate.sh build
+          else
+            bash scripts/gate.sh build
+          fi
+          {
+            echo "### linux-${{ matrix.compiler }} ${{ matrix.config }}"
+            echo "- gate build + ctest: $(( $(date +%s) - start )) s"
+            echo "- runner: $RUNNER_OS $RUNNER_ARCH, $(nproc) cores"
+            echo "- build dir size: $(du -sh "$GATE_BUILD_DIR" | cut -f1)"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Gate tidy (clang-tidy, own sources only)
+        if: matrix.compiler == 'clang' && matrix.config == 'debug'
+        run: bash scripts/gate.sh tidy
+        env:
+          CLANG_TIDY: clang-tidy-18
+      - name: Cache statistics
+        if: always()
+        run: ccache -s || true
+
+      - name: Test reports and logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-linux-${{ matrix.compiler }}-${{ matrix.config }}
+          path: |
+            ${{ env.GATE_BUILD_DIR }}/*/junit.xml
+            ${{ env.GATE_BUILD_DIR }}/*.log
+            ${{ env.GATE_BUILD_DIR }}/*/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      #-- MP3 platform comparison input ---------------------------------------------------------
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp3-fixture
+          path: mp3-fixture
+      - name: Decode the shared MP3 fixture
+        run: |
+          mkdir -p pcm
+          "$GATE_BUILD_DIR/linux-${{ matrix.compiler }}-${{ matrix.config }}/spike/engine/spike_cli" \
+            dump-pcm mp3-fixture/fixture.mp3 --out pcm/decoded.f32
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pcm-linux-${{ matrix.compiler }}-${{ matrix.config }}
+          path: pcm/decoded.f32
+          retention-days: 7
+
+      #-- Artefacts (test binaries of main, 14 days) ----------------------------------------------
+      - uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: spike-linux-${{ matrix.compiler }}-${{ matrix.config }}
+          path: |
+            ${{ env.GATE_BUILD_DIR }}/linux-${{ matrix.compiler }}-${{ matrix.config }}/spike/engine/spike_cli
+            ${{ env.GATE_BUILD_DIR }}/linux-${{ matrix.compiler }}-${{ matrix.config }}/spike/engine/SpikeGain_artefacts/*/VST3/SpikeGain.vst3
+          if-no-files-found: error
+          retention-days: 14
+
+  rtsan-linux:
+    # RealtimeSanitizer needs Clang >= 20; ubuntu-26.04 ships Clang 20/21/22 (RTSan is Linux only, E30). Pinned to clang-20.
+    needs: static
+    runs-on: ubuntu-26.04
+    timeout-minutes: 150
+    env:
+      # In CI a missing Clang >= 20 is a failure, locally the stage is skipped.
+      GATE_REQUIRE_RTSAN: "1"
+      # scripts/rtsan.supp was verified with Clang 20.1.2 only; newer versions may report other frames.
+      GATE_CLANG: clang-20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build directory (outside the checkout)
+        run: echo "GATE_BUILD_DIR=$RUNNER_TEMP/gate-build" >> "$GITHUB_ENV"
+      - name: Submodules (JUCE 9.0.3, Tracktion develop; not recursive)
+        run: git submodule update --init --depth 1 -- $SPIKE_SUBMODULES
+      - name: Install build dependencies (apt)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y $LINUX_PACKAGES ccache
+          # Sanitizer runtime and symbolizer for the pinned clang-20 (GATE_CLANG).
+          command -v clang-20 >/dev/null || sudo apt-get install -y clang-20
+          sudo apt-get install -y libclang-rt-20-dev llvm-20
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2.24
+        with:
+          key: gate-linux-rtsan
+          max-size: 1500M
+      - name: Gate rtsan
+        run: bash scripts/gate.sh rtsan
+      - name: Cache statistics
+        if: always()
+        run: ccache -s || true
+      - name: Test reports and logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-linux-rtsan
+          path: |
+            ${{ env.GATE_BUILD_DIR }}/*/junit.xml
+            ${{ env.GATE_BUILD_DIR }}/*.log
+            ${{ env.GATE_BUILD_DIR }}/*/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+  build-test-windows:
+    needs: [static, mp3-fixture]
+    name: windows-msvc ${{ matrix.config }}
+    runs-on: windows-2025
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [debug, release]
+    env:
+      GATE_CONFIGS: ${{ matrix.config }}
+      SCCACHE_GHA_ENABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build directory (outside the checkout)
         shell: pwsh
-        run: ./scripts/gate.ps1
+        run: '"GATE_BUILD_DIR=$env:RUNNER_TEMP\gate-build" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV'
+
+      - name: Submodules (JUCE 9.0.3, Tracktion develop; not recursive)
+        shell: bash
+        run: git submodule update --init --depth 1 -- $SPIKE_SUBMODULES
+
+      - name: Install lame and ffmpeg (choco)
+        shell: pwsh
+        run: choco install lame ffmpeg -y --no-progress
+      - name: sccache
+        # v0.0.11: node24 (v0.0.9 ran on node20)
+        uses: Mozilla-Actions/sccache-action@v0.0.11
+      - name: MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Gate build (configure, build, ctest)
+        shell: pwsh
+        run: |
+          $sw = [System.Diagnostics.Stopwatch]::StartNew()
+          ./scripts/gate.ps1 build
+          $code = $LASTEXITCODE
+          @(
+            "### windows-msvc ${{ matrix.config }}",
+            "- gate build + ctest: $([int]$sw.Elapsed.TotalSeconds) s",
+            "- runner: $env:RUNNER_OS $env:RUNNER_ARCH, $env:NUMBER_OF_PROCESSORS cores"
+          ) | Add-Content $env:GITHUB_STEP_SUMMARY
+          exit $code
+      - name: Cache statistics
+        if: always()
+        shell: bash
+        run: sccache --show-stats || true
+
+      - name: Test reports and logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-windows-msvc-${{ matrix.config }}
+          path: |
+            ${{ env.GATE_BUILD_DIR }}\*\junit.xml
+            ${{ env.GATE_BUILD_DIR }}\*\Testing\Temporary\LastTest.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      #-- MP3 platform comparison input ---------------------------------------------------------
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp3-fixture
+          path: mp3-fixture
+      - name: Decode the shared MP3 fixture
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force pcm | Out-Null
+          & "$env:GATE_BUILD_DIR\windows-msvc-${{ matrix.config }}\spike\engine\spike_cli.exe" dump-pcm mp3-fixture/fixture.mp3 --out pcm/decoded.f32
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pcm-windows-msvc-${{ matrix.config }}
+          path: pcm/decoded.f32
+          retention-days: 7
+
+      #-- Artefacts (test binaries of main, 14 days) ----------------------------------------------
+      - uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: spike-windows-msvc-${{ matrix.config }}
+          path: |
+            ${{ env.GATE_BUILD_DIR }}\windows-msvc-${{ matrix.config }}\spike\engine\spike_cli.exe
+            ${{ env.GATE_BUILD_DIR }}\windows-msvc-${{ matrix.config }}\spike\engine\SpikeGain_artefacts\*\VST3\SpikeGain.vst3
+          if-no-files-found: error
+          retention-days: 14
+
+  mp3-compare:
+    # Windows vs Linux (and GCC vs Clang, Debug vs Release): same MP3, sample-equal or deviation reported.
+    needs: [build-test-linux, build-test-windows]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pcm-*
+          path: pcm
+      - name: Compare decodings
+        shell: bash
+        run: |
+          {
+            echo "### MP3 decoding: platform comparison"
+            python3 spike/engine/tests/mp3_platform_compare.py \
+              pcm/pcm-linux-gcc-release/decoded.f32 \
+              pcm/pcm-linux-gcc-debug/decoded.f32 \
+              pcm/pcm-linux-clang-release/decoded.f32 \
+              pcm/pcm-linux-clang-debug/decoded.f32 \
+              pcm/pcm-windows-msvc-release/decoded.f32 \
+              pcm/pcm-windows-msvc-debug/decoded.f32
+          } | tee -a "$GITHUB_STEP_SUMMARY"

@@ -98,8 +98,10 @@ TEST_SUITE("import")
         double worst = 0.0;
         for (int n = 0; n < 48000; ++n)
             for (int ch = 0; ch < 2; ++ch)
-                worst = std::max(worst, std::abs(static_cast<double>(values[static_cast<std::size_t>(n) * 2 + static_cast<std::size_t>(ch)])
-                                                 - expected.samples.getSample(ch, n)));
+                worst = std::max(worst,
+                                 std::abs(static_cast<double>(
+                                              values[static_cast<std::size_t>(n) * 2 + static_cast<std::size_t>(ch)]) -
+                                          expected.samples.getSample(ch, n)));
         CHECK(worst <= 1.0e-6);  // 24 bit quantisation step is 1.2e-7
     }
 }

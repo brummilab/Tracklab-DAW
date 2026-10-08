@@ -63,8 +63,8 @@ int findLag(const std::vector<float>& a, const std::vector<float>& b, int numCha
         double err = 0.0;
         for (int n = start; n < start + window; ++n)
         {
-            const double d = static_cast<double>(a[static_cast<std::size_t>(n * numChannels)])
-                             - static_cast<double>(b[static_cast<std::size_t>((n + lag) * numChannels)]);
+            const double d = static_cast<double>(a[static_cast<std::size_t>(n * numChannels)]) -
+                             static_cast<double>(b[static_cast<std::size_t>((n + lag) * numChannels)]);
             err += d * d;
         }
         if (err < bestErr)
@@ -144,7 +144,8 @@ TEST_SUITE("mp3")
         CHECK(a == b);
     }
 
-    TEST_CASE("baseline: the JUCE MP3 reader equals the ffmpeg reference within -70 dB (validates the comparison itself)")
+    TEST_CASE(
+        "baseline: the JUCE MP3 reader equals the ffmpeg reference within -70 dB (validates the comparison itself)")
     {
         TempDir dir;
         const auto mp3 = makeMp3(dir, 44100.0, "stereo-44k1");
@@ -157,12 +158,14 @@ TEST_SUITE("mp3")
         std::vector<float> interleaved(static_cast<std::size_t>(juceDecoded.lengthSamples) * 2);
         for (int n = 0; n < juceDecoded.lengthSamples; ++n)
             for (int ch = 0; ch < 2; ++ch)
-                interleaved[static_cast<std::size_t>(n) * 2 + static_cast<std::size_t>(ch)] = juceDecoded.samples.getSample(ch, n);
+                interleaved[static_cast<std::size_t>(n) * 2 + static_cast<std::size_t>(ch)] =
+                    juceDecoded.samples.getSample(ch, n);
 
         checkAgainstFfmpeg(mp3, interleaved);
     }
 
-    TEST_CASE("mp3 decoded samples of dump-pcm equal the ffmpeg reference within -70 dB after aligning the start offset")
+    TEST_CASE(
+        "mp3 decoded samples of dump-pcm equal the ffmpeg reference within -70 dB after aligning the start offset")
     {
         TempDir dir;
         const auto mp3 = makeMp3(dir, 44100.0, "stereo-44k1");

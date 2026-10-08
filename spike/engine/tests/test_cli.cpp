@@ -13,8 +13,8 @@ const double kAmp20 = 0.1;
 /** Output must be exactly one line of JSON terminated by '\n'. */
 bool isSingleJsonLine(const CliRun& run)
 {
-    return !run.out.empty() && run.out.back() == '\n' && std::count(run.out.begin(), run.out.end(), '\n') == 1
-           && run.json.isObject();
+    return !run.out.empty() && run.out.back() == '\n' && std::count(run.out.begin(), run.out.end(), '\n') == 1 &&
+           run.json.isObject();
 }
 
 std::filesystem::path makeStereoWav(const TempDir& dir, const char* name, double seconds, double amplitude)
@@ -92,7 +92,8 @@ TEST_SUITE("cli")
         const auto file = makeStereoWav(dir, "in.wav", 10.0, kAmp20);
         const auto out = dir.file("region.wav");
 
-        const auto run = runCli({"render-region", file.string(), "--start", "2", "--end", "8.5", "--out", out.string()});
+        const auto run =
+            runCli({"render-region", file.string(), "--start", "2", "--end", "8.5", "--out", out.string()});
 
         CHECK(run.exitCode == 0);
         REQUIRE_MESSAGE(run.ok(), run.out);
@@ -124,7 +125,8 @@ TEST_SUITE("cli")
         TempDir dir;
         const auto file = makeStereoWav(dir, "in.wav", 2.0, kAmp20);
 
-        const auto run = runCli({"render-region", file.string(), "--start", "abc", "--end", "1", "--out", dir.file("o.wav").string()});
+        const auto run = runCli(
+            {"render-region", file.string(), "--start", "abc", "--end", "1", "--out", dir.file("o.wav").string()});
 
         CHECK(run.exitCode == 2);
         CHECK(isSingleJsonLine(run));

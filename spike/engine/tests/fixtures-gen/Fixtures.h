@@ -94,7 +94,7 @@ std::vector<float> readRawFloat32(const std::filesystem::path& file);
 double rmsDb(const juce::AudioBuffer<float>& buffer, int channel, int start, int num);
 
 /** Largest |a[offsetA+i] - b[offsetB+i]| over i in [0, num) for one channel. */
-double maxAbsDiff(const juce::AudioBuffer<float>& a, int channelA, int offsetA,
-                  const juce::AudioBuffer<float>& b, int channelB, int offsetB, int num);
+double maxAbsDiff(const juce::AudioBuffer<float>& a, int channelA, int offsetA, const juce::AudioBuffer<float>& b,
+                  int channelB, int offsetB, int num);
 
 }  // namespace spike_test

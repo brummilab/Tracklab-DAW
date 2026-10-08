@@ -140,8 +140,7 @@ int runRender(const std::vector<std::string>& args, std::ostream& out)
     auto parsed = parse(args, {"start", "end", "out"});
     const auto start = parsed.number("start");
     const auto end = parsed.number("end");
-    if (parsed.error.empty()
-        && (parsed.positional.size() != 1 || !start || !end || parsed.options.count("out") == 0))
+    if (parsed.error.empty() && (parsed.positional.size() != 1 || !start || !end || parsed.options.count("out") == 0))
         parsed.error = "usage: render-region <file> --start S --end E --out O";
     if (!parsed.error.empty())
         return fail(out, kExitUsage, parsed.error);
@@ -174,7 +173,7 @@ int runRecord12(const std::vector<std::string>& args, std::ostream& out)
 
     std::error_code ec;
     const auto outDir = parsed.options.count("out-dir") != 0 ? pathFromArg(parsed.options["out-dir"])
-                                                              : std::filesystem::current_path(ec) / "record-12";
+                                                             : std::filesystem::current_path(ec) / "record-12";
     const auto r = record12(*seconds, outDir);
     if (!r.ok)
         return fail(out, kExitFailed, r.error);

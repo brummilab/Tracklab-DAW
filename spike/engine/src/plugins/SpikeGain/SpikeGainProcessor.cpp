@@ -24,8 +24,7 @@ public:
     {
         auto param = std::make_unique<juce::AudioParameterFloat>(
             juce::ParameterID{"gainDb", 1}, "gainDb", juce::NormalisableRange<float>(kMinGainDb, kMaxGainDb),
-            static_cast<float>(spike::kSpikeGainDefaultDb),
-            juce::AudioParameterFloatAttributes().withLabel("dB"));
+            static_cast<float>(spike::kSpikeGainDefaultDb), juce::AudioParameterFloatAttributes().withLabel("dB"));
         gainDb = param.get();
         addParameter(param.release());
     }
@@ -35,15 +34,15 @@ public:
     bool isBusesLayoutSupported(const BusesLayout& layouts) const override
     {
         const auto out = layouts.getMainOutputChannelSet();
-        return (out == juce::AudioChannelSet::mono() || out == juce::AudioChannelSet::stereo())
-               && layouts.getMainInputChannelSet() == out;
+        return (out == juce::AudioChannelSet::mono() || out == juce::AudioChannelSet::stereo()) &&
+               layouts.getMainInputChannelSet() == out;
     }
 
     void prepareToPlay(double, int) override {}
     void releaseResources() override {}
 
     // Audio thread: reads one atomic parameter value and scales the buffer in place. No allocation, no locks.
-    void processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&) SPIKE_NONBLOCKING override
+    void processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&) noexcept SPIKE_NONBLOCKING override
     {
         const float gain = std::pow(10.0f, gainDb->get() / 20.0f);
         const int numChannels = buffer.getNumChannels();
