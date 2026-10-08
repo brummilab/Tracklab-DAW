@@ -39,8 +39,8 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | M0-07 Gate auf CMake (implementer) |
-| Review | – |
+| in Arbeit | – |
+| Review | M0-07 Gate (Runde 1: Nacharbeit -Wfunction-effects) |
 | Backlog | M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 |
 | Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 |
 
