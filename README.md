@@ -23,13 +23,15 @@ Details: [`docs/auftrag/Claude-Code-Prompt.md`](docs/auftrag/Claude-Code-Prompt.
 
 ## Status
 
-**Meilenstein M0 – Projektstart.** Es gibt noch keinen lauffähigen Code.
+**Meilenstein M0 – Einrichtung.** Es gibt noch keinen lauffähigen Code.
 
-- Grundgerüst, Branding, Gate (Doku- und Secret-Checks) und CI stehen.
+- Grundgerüst, Branding, Gate (Doku-, Agent- und Secret-Checks) und CI stehen.
+- Agent-Team-Vorlage v1.0.0 ist übernommen: Prozessvertrag `team/README.md`, Sub-Agents in `.claude/agents/`
+  (researcher, test-writer, implementer, implementer-rt, reviewer, cleanup), Board als Dateien unter `team/board/`.
 - Recherche-Themen sind angelegt (`team/research/`).
-- **Warte auf Entscheidungsrunde 1** (`team/TODO-PO.md`): Agent-Team-Vorlage, Lizenz, Tech-Stack
-  (Vorschlag: C++20, JUCE 8, Tracktion Engine), Reihenfolge, Installer, Vault-Sync.
-- Danach: Engine-Spike (JUCE + Tracktion Engine) mit CI-Build für Windows und Linux.
+- **Warte auf Entscheidungsrunde 1** (`team/TODO-PO.md`): Lizenz, Tech-Stack (Vorschlag: C++20, JUCE 8,
+  Tracktion Engine), Reihenfolge, Installer, Vault-Sync u. a.
+- Danach: Recherche, ADR-001 und Engine-Spike (JUCE + Tracktion Engine) mit CI-Build für Windows und Linux.
 
 Aktueller Arbeitsstand: [`team/RESUME.md`](team/RESUME.md).
 
@@ -46,13 +48,15 @@ in den GitHub-Actions-Läufen (Workflow `gate`). Den jeweils aktuellen Link trä
 | `assets/branding/` | Logo, App-Icon (SVG, PNG, ICO), Farb-Tokens |
 | `src/`, `tests/` | Code und Tests (ab M1) |
 | `docs/` | Auftrag, Echtzeit-Regeln, Command-Referenz, Testprotokolle |
-| `team/` | Prozess: Board, Entscheidungen, Design, Recherche, Reviews, Resume |
+| `team/` | Prozess (Agent-Team-Vorlage): Resume, To-do für den PO, Entscheidungen, Design, Plan, Board, Recherche, Reviews |
+| `.claude/` | Agent-Definitionen und Hook-Einstellungen für Claude Code |
 | `scripts/` | Gate (`gate.sh`/`gate.ps1`), Claude-Code-Hooks |
 | `.github/workflows/` | CI (`gate.yml`, Matrix Windows + Linux) |
 
 ## Mitarbeit
 
-Entwicklung mit Claude Code als Team Lead und Sub-Agents; Regeln in [`CLAUDE.md`](CLAUDE.md).
+Entwicklung mit Claude Code als Team Lead und Sub-Agents nach der Agent-Team-Vorlage v1.0.0; Regeln in
+[`CLAUDE.md`](CLAUDE.md), Prozessvertrag in [`team/README.md`](team/README.md).
 Gate lokal: `bash scripts/gate.sh` (Linux) bzw. `pwsh scripts/gate.ps1` (Windows).
 
 ## Lizenz

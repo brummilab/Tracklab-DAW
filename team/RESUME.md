@@ -1,35 +1,42 @@
-# RESUME
+# Resume-Board
 
-**Status: BLOCKED: USER INPUT REQUIRED** – siehe `team/TODO-PO.md` (F0, F0b, Entscheidungsrunde 1 F1–F13).
-Kurz: **Warte auf Entscheidungsrunde 1.**
+Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-Stand: 08.10.2026, Session 1 (Cloud-Session), Meilenstein **M0**.
+**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status: BLOCKED: USER INPUT REQUIRED** (`TODO-PO.md`)
 
-## Erledigt in Session 1
-- Auftrag gelesen und als `docs/auftrag/Claude-Code-Prompt.md` ins Repo gelegt.
-- Grundgerüst: `.gitignore`, `LICENSE` (Platzhalter), `CLAUDE.md`, `README.md` (mit Logo),
-  `Projektinhalt.md`, `src/`, `tests/`, `docs/` (`realtime.md`, `commands.md`, `testing/manual/`).
-- `.claude/settings.json` mit `PreToolUse`-Hook `scripts/hooks/guard-git.sh` (lokal getestet:
-  blockt push/merge/checkout main in Worktrees, lässt die Hauptsession durch).
-- Gate `scripts/gate.sh` / `scripts/gate.ps1` (Pflichtdateien, CLAUDE.md < 200 Zeilen, Secret-Scan,
-  keine Audiodateien, kein lokales `core.hooksPath`, clang-format) und CI `.github/workflows/gate.yml`
-  (Matrix ubuntu-24.04 + windows-latest). Lokal grün.
-- Branding unverändert aus dem hochgeladenen ZIP nach `assets/branding/` (17 Dateien).
-- `team/`: BOARD, ENTSCHEIDUNGEN, TODO-PO (Entscheidungsrunde 1), design/DESIGN.md Rev 1,
-  research/ mit 12 Themen (inkl. `vault-kontext`).
+## Zuletzt erledigt
 
-## Nicht erledigt / Abweichungen
-- **Vault (R2/R5):** kein Obsidian-MCP in der Cloud-Session → Vault weder gelesen noch gepatcht (F0b).
-- **Vorlage (§3.1):** `agent-team-vorlage` nicht erreichbar (F0) → kein Prozessvertrag,
-  keine `.claude/agents/`, `CLAUDE.md` mit Platzhalter für den Vorlagen-Abschnitt.
-- **Repo:** existierte bereits als `brummilab/Tracklab-DAW` (privat) – kein neues Repo angelegt (F1).
-- **Vault-Sync (R6):** nicht eingerichtet; Befehle in F0b.
+- M0-01 Grundgerüst, Branding, Gate (Doku/Secrets), CI, Git-Hook (Commit `192753d`).
+- M0-02 Recherche-Themen, Entscheidungsrunde 1, Design Rev 1.
+- M0-03 Vorlage `agent-team-vorlage` **v1.0.0** übernommen (PO-ZIP): Prozessvertrag `team/README.md` mit
+  Tracklab-Ergänzungen, Agents `researcher`, `test-writer`, `implementer`, `implementer-rt`, `reviewer`, `cleanup`
+  (Modelle/Effort nach Auftrag §3.4), Board als Dateien, `plan/PLAN.md`, `CLAUDE.md` mit Vorlagen-Abschnitt.
+  Hook erlaubt jetzt `git merge --ff-only` im eigenen Worktree (F14, Default A).
 
-## Nächster Schritt bei „weiter“
-1. `team/TODO-PO.md` lesen; Antworten als E-Einträge in `ENTSCHEIDUNGEN.md`, DESIGN Rev 2.
-2. Mit Vorlage: §3.1 Schritte 1–5 (M0-03), Agents nach Auftrag §3.4 ergänzen, Session neu starten.
-3. Mit Vault-Zugriff: Vault lesen, `research/vault-kontext/README.md` füllen, `Projektinhalt.md` abgleichen.
-4. Danach Recherche (M0-04), ADR-001 (M0-05), Engine-Spike (M0-06), Gate auf CMake (M0-07).
+## Wartet auf den PO
+
+- **F0b** Vault-Zugriff (Obsidian-MCP fehlt in Cloud-Sitzungen) und Vault-Sync einrichten.
+- **Entscheidungsrunde 1:** F1–F13, dazu F14 (Hook ↔ Vorlage) und F15 (Präfix `V`).
+- **Neue Claude-Code-Sitzung starten**, damit die Agent-Definitionen geladen werden (Vorlage, Schritt 6), dann „weiter“.
+
+## Nächster Schritt (Lead)
+
+1. Antworten aus `TODO-PO.md` nach `ENTSCHEIDUNGEN.md`, DESIGN Rev 2, Präfix-Regel (F15) in `team/README.md`.
+2. M0-04 Recherche starten: `researcher` je Thema, max. 4 parallel; zuerst `engine-spike`, `lizenz-und-name`,
+   `claude-api`, `mcp-server` (geht auch ohne Antworten).
+3. Mit Vault-Zugriff: Vault lesen, `research/vault-kontext/README.md` füllen, `Projektinhalt.md` abgleichen,
+   Vault-Abschnitte *Status*/*Offene Punkte*/*Entscheidungen* patchen.
+4. Nach F2/F3 + Recherche: ADR-001 (M0-05), Brief für den Engine-Spike (M0-06), Gate auf CMake (M0-07).
+
+## Offene Karten
+
+| Spalte | Karten |
+|---|---|
+| in Arbeit | – |
+| Review | – |
+| Backlog | M0-04 Recherche · M0-05 ADR-001 · M0-06 Engine-Spike (Entwurf) · M0-07 Gate CMake (Entwurf) |
+| Erledigt | M0-01 · M0-02 · M0-03 |
 
 ## Builds
+
 Noch keine.

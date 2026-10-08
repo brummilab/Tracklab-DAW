@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Tracklab gate (Linux / Git Bash). Green = exit 0.
+# Rule from agent-team-vorlage: the gate never writes into the working tree.
 # M0 stage: documentation and secret checks only. The CMake/ctest/RTSan/
 # clang-tidy steps are activated together with the engine spike (see
 # team/design/DESIGN.md, section "Gate").
@@ -13,11 +14,19 @@ skip() { printf '  [SKIP] %s\n' "$1"; }
 
 echo "== Pflichtdateien"
 for f in README.md CLAUDE.md Projektinhalt.md LICENSE .gitignore \
-         team/RESUME.md team/TODO-PO.md team/ENTSCHEIDUNGEN.md team/BOARD.md \
+         team/README.md team/RESUME.md team/TODO-PO.md team/ENTSCHEIDUNGEN.md \
+         team/plan/PLAN.md team/board/BRIEF-VORLAGE.md \
          team/design/DESIGN.md docs/realtime.md docs/commands.md \
          assets/branding/tracklab-icon.svg assets/branding/tracklab.ico \
          assets/branding/png/tracklab-logo-light.png; do
   [ -f "$f" ] && ok "$f" || bad "$f fehlt"
+done
+
+echo "== Agent-Definitionen (model, effort)"
+for a in researcher test-writer implementer implementer-rt reviewer cleanup; do
+  f=".claude/agents/$a.md"
+  if [ ! -f "$f" ]; then bad "$f fehlt"; continue; fi
+  head -n 12 "$f" | grep -q '^model: ' && head -n 12 "$f" | grep -q '^effort: ' && ok "$f" || bad "$f ohne model/effort"
 done
 
 echo "== CLAUDE.md unter 200 Zeilen"

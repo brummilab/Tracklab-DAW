@@ -1,5 +1,10 @@
 # Tracklab – Design
 
+Die Spezifikation. Jede Änderung am Soll-Verhalten bekommt eine neue **Revision** (Rev n) mit Eintrag im
+Änderungslog. Briefs verweisen auf Revision und Abschnitt.
+
+## Änderungslog
+
 | Rev | Datum | Inhalt | Entscheidungen |
 |---|---|---|---|
 | 1 | 08.10.2026 | Kurzfassung von §4–§12 des Auftrags (`docs/auftrag/Claude-Code-Prompt.md`) | – (Entscheidungsrunde 1 offen) |

@@ -1,5 +1,6 @@
 # Tracklab gate (Windows PowerShell). Green = exit 0.
 # M0 stage: documentation and secret checks only, same as scripts/gate.sh.
+# Rule from agent-team-vorlage: the gate never writes into the working tree.
 $ErrorActionPreference = 'Continue'
 Set-Location (Join-Path $PSScriptRoot '..')
 
@@ -10,11 +11,20 @@ function Skip($m) { Write-Host "  [SKIP] $m" }
 
 Write-Host '== Pflichtdateien'
 $required = @('README.md','CLAUDE.md','Projektinhalt.md','LICENSE','.gitignore',
-  'team/RESUME.md','team/TODO-PO.md','team/ENTSCHEIDUNGEN.md','team/BOARD.md',
+  'team/README.md','team/RESUME.md','team/TODO-PO.md','team/ENTSCHEIDUNGEN.md',
+  'team/plan/PLAN.md','team/board/BRIEF-VORLAGE.md',
   'team/design/DESIGN.md','docs/realtime.md','docs/commands.md',
   'assets/branding/tracklab-icon.svg','assets/branding/tracklab.ico',
   'assets/branding/png/tracklab-logo-light.png')
 foreach ($f in $required) { if (Test-Path $f) { Ok $f } else { Bad "$f fehlt" } }
+
+Write-Host '== Agent-Definitionen (model, effort)'
+foreach ($a in @('researcher','test-writer','implementer','implementer-rt','reviewer','cleanup')) {
+  $f = ".claude/agents/$a.md"
+  if (-not (Test-Path $f)) { Bad "$f fehlt"; continue }
+  $h = Get-Content $f -TotalCount 12
+  if (($h -match '^model: ') -and ($h -match '^effort: ')) { Ok $f } else { Bad "$f ohne model/effort" }
+}
 
 Write-Host '== CLAUDE.md unter 200 Zeilen'
 $n = (Get-Content CLAUDE.md -ErrorAction SilentlyContinue | Measure-Object -Line).Lines

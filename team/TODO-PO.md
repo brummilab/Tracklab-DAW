@@ -1,20 +1,13 @@
 # TODO für David (Product Owner)
 
-Hier stehen nur Entscheidungen und Prüfaufgaben. Antwort direkt unter die Frage schreiben
-(`**Antwort:** …`) oder im Chat. Ergebnisse werden zu E-Einträgen in `ENTSCHEIDUNGEN.md`.
+Nur **Entscheidungen** und **Reviews/Prüfungen**. Antwort direkt unter die Frage schreiben (`**Antwort:** …`) oder
+im Chat. Der Lead überträgt sie nach `ENTSCHEIDUNGEN.md` und streicht den Punkt.
+
+F0 (Vorlage) ist erledigt: v1.0.0 per ZIP übernommen (E0).
 
 ---
 
-## Blocker aus Session 1 (08.10.2026)
-
-### F0 – Agent-Team-Vorlage bereitstellen
-Kein Zugriff auf `agent-team-vorlage` aus dieser Session (GitHub-App nicht für die
-Organisation freigegeben bzw. Repo nicht sichtbar). Ohne Vorlage kann ich §3.1 (Prozessvertrag,
-Agents, Gate-Gerüst) nicht übernehmen.
-- **Empfehlung:** Claude-GitHub-App für die Organisation bzw. das Repo freigeben, damit ich es per
-  `add_repo` einbinden kann. Alternativ: Inhalt von `vorlage/` als ZIP in den Chat hochladen.
-- **Default ohne Antwort:** nichts – die Agents (`.claude/agents/`) lege ich erst mit der Vorlage an.
-- **Antwort:**
+## Blocker (08.10.2026)
 
 ### F0b – Vault-Zugriff und Vault-Sync für Cloud-Sessions
 In dieser Cloud-Session ist kein Obsidian-MCP-Server verbunden; den Vault konnte ich weder lesen (R2)
@@ -75,8 +68,10 @@ nlohmann/json; Alternativen Ardour-Fork, Rust-Stack, JUCE ohne Tracktion (`DESIG
 - **Default:** Inno Setup.
 - **Antwort:**
 
-### F7 – Release-Schema
-- **Empfehlung:** `vJJJJ.MM.N` wie in meinen anderen Projekten, Releases gebündelt.
+### F7 – Release-Schema und wann ein Stand „live“ ist (deckt Vorlagen-Frage E1 ab)
+- **A (Empfehlung):** Release per Tag `vJJJJ.MM.N` wie in meinen anderen Projekten, Releases gebündelt; Push auf `main` prüft nur
+  (Gate) und erzeugt Test-Builds. Tag erst nach ausdrücklicher Freigabe im Chat (Cloud: du setzt den Tag).
+- B: jeder Push auf `main` gilt als Release.
 - **Default:** bestätigt.
 - **Antwort:**
 
@@ -101,7 +96,7 @@ Grundlage für das Reaper-kompatible Shortcut-Preset.
 ### F12 – Info: Entwicklung lokal oder in Cloud-Sessions?
 Wichtig für Vault-Sync (lokal: post-commit-Hook; Cloud: post-merge + geplanter Pull) und Tag-Push
 (Cloud: 403 → du setzt Tags).
-- **Hinweis:** In dieser Cloud-Session fehlen Obsidian-MCP und Zugriff auf die Vorlage (F0, F0b).
+- **Hinweis:** In dieser Cloud-Session fehlt der Obsidian-MCP (F0b).
 - **Antwort:**
 
 ### F13 – Push-Weg in Cloud-Sessions
@@ -109,6 +104,22 @@ Die Cloud-Session ist auf den Arbeitsbranch `claude/new-session-mymk20` konfigur
 zusätzlich direkt auf `main` (Fast-Forward, kein PR).
 - **Empfehlung:** so beibehalten.
 - **Default:** beide pushen, `main` ist führend.
+- **Antwort:**
+
+### F14 – Widerspruch Hook ↔ Vorlage: `git merge` in Worktrees
+Auftrag §3.6: der Hook blockt `git merge` in Worktree-Sitzungen. Vorlage: der Implementer holt die Tests per
+`git merge --ff-only <test-branch>` in seinem Worktree – ein pauschales Verbot würde die Schleife brechen.
+- **A (Empfehlung, umgesetzt als Default):** Merge/Commit in Worktrees nur blocken, solange `HEAD` auf `main` steht;
+  `git push` und `git checkout main` immer blocken. `main` bleibt geschützt.
+- B: `git merge` pauschal blocken; der Implementer cherry-pickt die Test-Commits stattdessen.
+- **Antwort:**
+
+### F15 – Widerspruch Nummernpräfix `V`
+Vorlage: `V` = Vorbereitung durch den PO (Zugang, Einrichtung), `R` = Release/Abnahme. Auftrag: `V` = Verifikation
+durch dich (Prüfaufgabe).
+- **A (Empfehlung):** Auftrag gilt (Produktprozess wie in meinen anderen Projekten): `V` = Verifikation; Vorbereitungen als `E` mit Folge
+  „PO richtet ein“; `R` = Release wie in der Vorlage.
+- B: Vorlage gilt; Verifikationen werden `R`.
 - **Antwort:**
 
 ---

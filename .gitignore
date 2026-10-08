@@ -47,3 +47,6 @@ claude-log.jsonl
 # Python
 __pycache__/
 *.pyc
+
+# Claude Code agent worktrees
+.claude/worktrees/

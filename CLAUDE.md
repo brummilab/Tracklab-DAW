@@ -9,12 +9,30 @@ Design: `team/design/DESIGN.md`. Aktueller Stand und nächster Schritt: `team/RE
 - **Team Lead:** Hauptsession – Recherche, Design, Plan, Briefs, Gate, Merge, Commit, Push, Aufzeichnungen.
   Schreibt keinen Produktionscode (außer trivialen Merge-Konflikt-Fixes), bewertet keine eigene Arbeit.
 - **Team Members:** Sub-Agents (`.claude/agents/`) – ein Paket je Brief, eigener Worktree, nie `main`.
-- Höchstens **4 Sub-Agents gleichzeitig** (WIP-Limit 4 auf `team/BOARD.md`).
+- Höchstens **4 Sub-Agents gleichzeitig** (WIP-Limit 4 in `team/board/in-arbeit/`).
 
-## Vorlage
-<!-- PLATZHALTER: Hier wird CLAUDE-abschnitt.md aus agent-team-vorlage eingesetzt
-     (§3.1 Schritt 2). Die Vorlage war in Session 1 nicht erreichbar – siehe team/TODO-PO.md F0. -->
-Bis zur Übernahme gilt der Loop aus `docs/auftrag/Claude-Code-Prompt.md` §3.2.
+## Agent Team Process
+<!-- From agent-team-vorlage v1.0.0 (CLAUDE-abschnitt.md), adopted 08.10.2026. -->
+
+This repo is worked on by an agent team. **Read `team/README.md` (the process contract) before any task.** Short version:
+
+- David is the product owner. The main session is the **team lead** (orchestrator): research, design, plan, briefs,
+  gate, merge, commit, keep every record. It never grades its own work: every code change goes through the `reviewer`
+  sub-agent.
+- Work is done by sub-agents in `.claude/agents/` (`researcher`, `test-writer`, `implementer`, `implementer-rt`,
+  `reviewer`, `cleanup`), each with a pinned model and effort. `test-writer`, `implementer(-rt)` and `cleanup` run in
+  their own git worktree and never touch `main`. Max 4 at once.
+- All state lives in `team/`: `RESUME.md`, `TODO-PO.md` (decisions and reviews only), `ENTSCHEIDUNGEN.md`,
+  `design/DESIGN.md` (numbered revisions), `research/<topic>/`, `plan/PLAN.md`, `board/` (one brief per card), `reviews/`.
+- When the PO says **"weiter"**: read `team/RESUME.md`, then `team/TODO-PO.md`, then the cards in `board/in-arbeit/` and
+  `board/review/`, and continue. Update `team/RESUME.md` before ending.
+- Anything needing a decision, sudo, server access or credentials goes to `team/TODO-PO.md`, flagged in chat as
+  **USER INPUT REQUIRED**. Never guess.
+- **Gate:** `./scripts/gate.sh` must be green before merging to `main`.
+- **Release:** only after the PO explicitly releases in the current conversation.
+
+Bei Prozessfragen gilt die Vorlage, bei Produkt- und Technikfragen der Auftrag. Tracklab-Ergänzungen zum Prozess:
+`team/README.md` → „Tracklab-Ergänzungen“.
 
 ## Arbeitsregeln (Kurzfassung, Details §2 im Auftrag)
 - **R1** `Projektinhalt.md` bei jedem neuen Eintrag aktualisieren; Inhalte in den Vault
@@ -54,7 +72,7 @@ Handoff an den Team Lead erst, wenn das Gate lokal grün ist. DoD: `team/design/
 
 ## Hooks
 `.claude/settings.json`: `PreToolUse` auf Bash → `scripts/hooks/guard-git.sh` blockiert in
-Worktree-Sessions `git push`, `git merge`, `git checkout main` und Commits auf `main`.
+Worktree-Sessions `git push`, `git checkout main` sowie Commit/Merge, solange `HEAD` auf `main` steht.
 
 ## USER INPUT REQUIRED
 1. Eintrag in `team/TODO-PO.md`. 2. `team/RESUME.md` auf `BLOCKED: USER INPUT REQUIRED` setzen,

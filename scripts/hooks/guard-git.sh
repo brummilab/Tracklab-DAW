@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # PreToolUse hook for the Bash tool (see .claude/settings.json).
 # Blocks git operations that only the Team Lead may run on main, as soon as the
-# session runs inside a git worktree (sub-agent isolation).
+# session runs inside a git worktree (sub-agent isolation): push, checkout of
+# main, and commit or merge while HEAD is main.
 # Exit 2 = block the tool call; stderr is shown to Claude.
 set -u
 
@@ -27,12 +28,14 @@ cmd="$(printf '%s' "$input" | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\(\
 [ -z "$cmd" ] && cmd="$input"
 
 printf '%s' "$cmd" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+([^;&|]*[[:space:]])?push([[:space:]]|$)' && block "git push"
-printf '%s' "$cmd" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+([^;&|]*[[:space:]])?merge([[:space:]]|$)' && block "git merge"
 printf '%s' "$cmd" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+(checkout|switch)[[:space:]]+(-[^[:space:]]+[[:space:]]+)*main([[:space:]]|$)' && block "git checkout main"
 
-if printf '%s' "$cmd" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+([^;&|]*[[:space:]])?commit([[:space:]]|$)'; then
-  branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
-  [ "$branch" = "main" ] && block "git commit on main"
+# Commits and merges are fine on the agent's own branch (the implementer pulls the
+# test-writer's branch via 'git merge --ff-only'), but never on main.
+branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+if [ "$branch" = "main" ]; then
+  printf '%s' "$cmd" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+([^;&|]*[[:space:]])?commit([[:space:]]|$)' && block "git commit on main"
+  printf '%s' "$cmd" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+([^;&|]*[[:space:]])?merge([[:space:]]|$)' && block "git merge on main"
 fi
 
 exit 0

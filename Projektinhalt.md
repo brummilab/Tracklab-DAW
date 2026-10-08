@@ -17,7 +17,7 @@ Ohne Claude voll nutzbar.
 | Product Owner | David |
 | Repo | `brummilab/Tracklab-DAW` (privat), Branch `main` |
 | Arbeitsweise | Agent-Team-Vorlage (Team Lead + Sub-Agents), Loop aus Auftrag §3.2 |
-| Vorlage | `agent-team-vorlage` – **noch nicht übernommen**, Version: offen |
+| Vorlage | `agent-team-vorlage` **v1.0.0**, übernommen am 08.10.2026 (per ZIP vom PO) |
 | Stack (Vorschlag ADR-001) | C++20, CMake, JUCE 8, Tracktion Engine 3.x, VST3 (MVP), LV2/CLAP (v1) |
 | Lizenz (Vorschlag) | AGPLv3 |
 | Branding | `assets/branding/` (Logo, Icon, Farben; Akzent `#F59E0B`) |
@@ -37,13 +37,15 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
 ## Status
 - 08.10.2026: M0 begonnen. Grundgerüst (CLAUDE.md, README, Gate, CI, Hook `guard-git.sh`),
   Branding nach `assets/branding/`, Design Rev 1, Recherche-Themen, Entscheidungsrunde 1 angelegt.
-- Blockiert: Entscheidungsrunde 1 und Zugriff auf Agent-Team-Vorlage + Vault (`team/TODO-PO.md`).
+- 08.10.2026: Agent-Team-Vorlage v1.0.0 übernommen (M0-03): Prozessvertrag, 6 Sub-Agents (inkl. `implementer-rt`
+  für Echtzeit-Code), Board als Dateien, Plan; Gate prüft zusätzlich die Agent-Definitionen.
+- Blockiert: Entscheidungsrunde 1 (F1–F15) und Vault-Zugriff (`team/TODO-PO.md`).
 
 ## Offene Punkte
-- F0 Agent-Team-Vorlage bereitstellen (Repo-Zugriff fehlt).
 - F0b Vault-Zugriff in Cloud-Sessions (Obsidian-MCP fehlt) bzw. Vault-Sync per post-merge-Hook einrichten.
-- Entscheidungsrunde 1 (F1–F12) in `team/TODO-PO.md`.
+- Entscheidungsrunde 1 (F1–F13) sowie Widersprüche Vorlage ↔ Auftrag (F14 Hook/merge, F15 Präfix `V`).
+- Neue Claude-Code-Sitzung starten, damit die Agents geladen werden.
 - Engine-Spike (JUCE + Tracktion Engine) nach Annahme von ADR-001.
 
 ## Entscheidungen
-- Noch keine (siehe `team/ENTSCHEIDUNGEN.md`).
+- E0 (08.10.2026): Arbeitsweise mit Agent-Team – ja; Vorlage v1.0.0 übernommen.
