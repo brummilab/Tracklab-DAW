@@ -1,6 +1,10 @@
 # Command-Referenz
 
-> Diese Datei wird ab M1 automatisch aus der Command-Registry erzeugt (`tracklab-cli export-tools`)
-> und in der CI auf Aktualität geprüft. Nicht von Hand bearbeiten, sobald der Generator existiert.
+> Diese Datei wird automatisch aus der Command-Registry erzeugt (`tracklab-cli export-tools`) und in der CI auf
+> Aktualität geprüft. Nicht von Hand bearbeiten.
 
-Noch keine Commands registriert.
+## app
+
+| ID | Tool-Name | Titel | Beschreibung | Flags | Shortcut | Menüpfad |
+|---|---|---|---|---|---|---|
+| `app.version` | `app_version` | Version anzeigen | Returns the version of Tracklab. | readOnly | - | - |
