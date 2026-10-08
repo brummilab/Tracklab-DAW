@@ -34,7 +34,9 @@ Details: [`docs/auftrag/Claude-Code-Prompt.md`](docs/auftrag/Claude-Code-Prompt.
   Tracktion Engine 3.5 (develop), AGPLv3.
 - Engine-Spike (`spike/engine/`) unter Linux erfolgreich: JUCE 9.0.3 + Tracktion Engine bauen zusammen, Import,
   Render mit Lautheitsmessung, 12-Kanal-Aufnahme und VST3 laufen (57 Tests) – unter Linux und Windows grün.
-- **Jetzt:** Gate auf CMake umbauen (M0-07), dann Abschluss M0 und Planung M1.
+- Gate auf C++/CMake umgebaut: Build (GCC, Clang, MSVC), clang-format/-tidy, RealtimeSanitizer – lokal
+  `./scripts/gate.sh all`, in der CI `gate.yml`.
+- **Jetzt:** Abschluss M0 und Planung M1.
 
 Aktueller Arbeitsstand: [`team/RESUME.md`](team/RESUME.md).
 

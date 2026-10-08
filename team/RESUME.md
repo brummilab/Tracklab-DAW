@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status:** M0-07 Gate auf CMake in Arbeit · ADR-001 angenommen (E39)
+**Stand:** 08.10.2026 · **Meilenstein:** M0 (Einrichtung) · **Status:** M0-07 gemerged – warte auf ersten CI-Lauf des neuen Gates · danach M0-Abschluss
 
 ## Zuletzt erledigt
 
@@ -12,6 +12,9 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
   Tracklab-Ergänzungen, Agents `researcher`, `test-writer`, `implementer`, `implementer-rt`, `reviewer`, `cleanup`
   (Modelle/Effort nach Auftrag §3.4), Board als Dateien, `plan/PLAN.md`, `CLAUDE.md` mit Vorlagen-Abschnitt.
   Hook erlaubt jetzt `git merge --ff-only` im eigenen Worktree (F14, Default A).
+- **M0-07 Gate auf CMake** gemerged (`f0d26f0`): Root-CMake + Presets; `gate.sh static|build|tidy|rtsan|all`,
+  `gate.ps1` (MSVC); clang-format/-tidy nur eigener Code; RTSan (Clang 20) mit 20 Fremdcode-Suppressions, Negativtest,
+  `-Wfunction-effects`; ein Workflow `gate.yml`. Review 2 Runden (`team/reviews/M0-07.md`). Folgekarte O-02.
 - **M0-06 Engine-Spike** gemerged (`33c5eff`): JUCE 9.0.3 + Tracktion `develop` bauen zusammen; 57/57 Tests grün
   (GCC/Clang); Bericht `team/research/engine-spike/BERICHT.md`; Review 2 Runden (`team/reviews/M0-06.md`).
   **CI grün** inkl. Windows/MSVC, MP3 auf 6 Kombinationen bitidentisch (Run 37762180378).
@@ -31,8 +34,9 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 ## Nächster Schritt (Lead)
 
-1. M0-07: implementer läuft → reviewer → Gate → Merge → CI prüfen.
-2. Danach M0-Abschluss: Rückblick `team/RUECKBLICK-M0.md`, M1 planen (Briefs).
+1. Ersten CI-Lauf von `gate.yml` auf `main` prüfen (static, build-test-linux ×4, rtsan-linux auf ubuntu-26.04,
+   build-test-windows, mp3-compare). Bei Fehlern Nacharbeit.
+2. M0-Abschluss: Rückblick `team/RUECKBLICK-M0.md`, PLAN M0 ✅, M1 planen (Design-Abschnitte, Briefs M1-xx).
 3. M0-08: Reaper-Preset nach F11.
 
 ## Offene Karten
@@ -40,9 +44,9 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 | Spalte | Karten |
 |---|---|
 | in Arbeit | – |
-| Review | M0-07 Gate (Runde 1: Nacharbeit -Wfunction-effects) |
-| Backlog | M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 |
-| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 |
+| Review | – |
+| Backlog | M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 |
+| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 |
 
 ## Builds
 

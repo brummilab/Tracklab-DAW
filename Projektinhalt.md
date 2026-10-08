@@ -45,7 +45,9 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
 - 08.10.2026: Entscheidungsrunden 1 und 2 mit „Defaults ok“ entschieden (E1–E38), Lizenz AGPLv3, Design Rev 2,
   ADR-001-Entwurf (JUCE 9 + Tracktion 3.5 unter Spike-Vorbehalt).
 - 08.10.2026: Engine-Spike M0-06 gemerged – JUCE 9.0.3 + Tracktion `develop` bauen zusammen; Import WAV/MP3, Render +
-  Lautheit, 12-Kanal-Aufnahme, VST3 laufen headless (57/57 Tests, Linux). Windows-CI ausstehend.
+  Lautheit, 12-Kanal-Aufnahme, VST3 laufen headless (57/57 Tests, Linux). Windows-CI grün, MP3 plattformgleich.
+- 08.10.2026: ADR-001 angenommen (E39). Gate auf C++/CMake umgebaut (M0-07): Build GCC/Clang/MSVC, clang-format/-tidy,
+  RealtimeSanitizer (Clang 20) mit Negativtest.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
