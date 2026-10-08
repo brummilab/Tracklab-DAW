@@ -10,6 +10,29 @@ Infos und Zugänge ohne Default.
 
 ## Offen
 
+## Entscheidungsrunde 3 (M1-Planung, 08.10.2026)
+
+### F40 – Endung der Projektdatei
+Projektordner `<Projekt>/<Projekt>.<endung>` plus `Audio/`, `Renders/`, `Backups/`, `Peaks/` (Auftrag §6.4).
+- **A (Empfehlung):** `.tracklab` – eindeutig, gut lesbar, Kollision mit anderen Programmen unwahrscheinlich.
+- B: `.tlab` – kürzer, aber gebräuchlicher (Kollisionen möglich `[VERIFIZIEREN]`).
+- **Default:** A.
+- **Antwort:**
+
+### F41 – Autosave und Backups
+- **Empfehlung:** Autosave alle **2 Minuten** in eine Recovery-Datei (nicht die Projektdatei); bei jedem Speichern rotierende
+  Backups, **10 Versionen** in `Backups/`; beides einstellbar.
+- **Default:** wie empfohlen.
+- **Antwort:**
+
+### F42 – Programmnamen
+- **Empfehlung:** Anwendung `Tracklab` (Binary `tracklab` / `Tracklab.exe`), Kommandozeile `tracklab-cli`, MCP-Shim `tracklab-mcp`
+  (wie im Auftrag).
+- **Default:** wie empfohlen.
+- **Antwort:**
+
+---
+
 
 ### F9 – Info: Audio-Interface der Band
 Modell, Anzahl Eingänge, Treiber (ASIO unter Windows? class-compliant unter Linux?).

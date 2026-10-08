@@ -29,12 +29,14 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 
 ## Wartet auf den PO
 
+- **Entscheidungsrunde 3 (M1):** F40 Projekt-Endung, F41 Autosave/Backups, F42 Programmnamen (Defaults vorhanden).
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key,
   F28b EBU-Quellen (optional).
 
 ## Nächster Schritt (Lead)
 
-1. M1 planen: DESIGN-Abschnitte für Registry v1, Projektformat, Undo, CLI präzisieren (Rev 3), M1 in kleine Karten
+1. Recherche `m1-fundament` läuft (Edit/Undo/Speichern, JSON-Schema-Lib, Headless, Geräte). Danach
+   M1 planen: DESIGN-Abschnitte für Registry v1, Projektformat, Undo, CLI präzisieren (Rev 3), M1 in kleine Karten
    schneiden (Rückblick-Lehre), Briefs nach `board/backlog/`. Vor M1-Karten mit eigenen Graph-Nodes: O-02.
 2. M0-08 (Reaper-Preset) ruht bis F11; Umsetzung erst M9.
 
