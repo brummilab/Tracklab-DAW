@@ -168,8 +168,13 @@ Vorlauf 1 s, Nachklang 3 s. Bewertung: Boundary-F ±3 s ≥ 0,9; Fixture `mitsch
 CMake Release + Debug ohne Warnungen in `src/` (`-Werror`) · ctest grün · Golden + LUFS grün ·
 RTSan ohne Befund · clang-format/clang-tidy sauber · Secret-Scan sauber · nur Brief-Dateien geändert ·
 Doku nachgezogen (DESIGN, README, `Projektinhalt.md`, `docs/commands.md`) · reviewer `APPROVE` ·
-GUI-Screenshots. **Stand Rev 1:** `scripts/gate.sh`/`.ps1` prüfen Pflichtdateien, CLAUDE.md-Länge,
-Secrets, Audio-Dateien, `core.hooksPath`, clang-format; Build-Schritte folgen mit dem Spike (M0-07).
+GUI-Screenshots. **Stand (M0-07):** `scripts/gate.sh` (Stufen `static|build|tidy|rtsan|all`) und `scripts/gate.ps1`
+(`static|build|all`) prüfen Pflichtdateien, CLAUDE.md-Länge, Secrets, Audio-Dateien, `core.hooksPath` und
+clang-format und bauen über `CMakePresets.json` Debug + Release (GCC/Clang bzw. MSVC, `-Werror`/`/WX` für eigene
+Quellen) mit ctest. clang-tidy (`.clang-tidy`) und RTSan (`linux-clang-rtsan`, `scripts/rtsan.supp`, Negativtest) laufen
+unter Linux; `gate.yml` ruft dieselben Skripte auf (Jobs static, build-test-linux, rtsan-linux, build-test-windows,
+mp3-compare). Bis M1 ein eigenes `src/` anlegt, ist `spike/engine/` das gebaute Projekt. Golden/LUFS folgen mit den
+ersten Renderern.
 
 ## 9. Roadmap (Auftrag §12)
 | M | Ziel |
