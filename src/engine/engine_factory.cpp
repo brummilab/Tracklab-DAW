@@ -97,6 +97,11 @@ juce::File defaultSettingsDirectory()
     return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile("Tracklab");
 }
 
+juce::File defaultCacheDirectory()
+{
+    return {};  // TODO(O-04): stub, to be implemented
+}
+
 std::unique_ptr<te::Engine> createEngine(const EngineOptions& options)
 {
     std::unique_ptr<te::PropertyStorage> storage;

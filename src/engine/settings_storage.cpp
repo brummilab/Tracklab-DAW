@@ -77,6 +77,12 @@ bool decodeValue(const juce::XmlElement& element, juce::String& name, juce::var&
 }  // namespace
 
 //==============================================================================
+juce::String pathForLog(const juce::File& file)
+{
+    return file.getFullPathName();  // TODO(O-04): stub, to be implemented
+}
+
+//==============================================================================
 bool writeFileAtomically(const juce::File& target, const juce::String& content)
 {
     if (!target.getParentDirectory().createDirectory())

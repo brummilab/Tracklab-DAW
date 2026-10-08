@@ -29,10 +29,31 @@ enum class SettingsStorage : std::uint8_t
     file       ///< `<settingsDirectory>/settings.xml`, written atomically (see EngineOptions).
 };
 
+/** Where Tracktion keeps its cache (te::PropertyStorage::getAppCacheFolder(): throw-away files such as thumbnails and
+    file-mapping data). Independent of DeviceMode and SettingsStorage: the app sets it explicitly, so that tests can
+    check it headlessly. */
+enum class CacheMode : std::uint8_t
+{
+    privateTemporary,  ///< CLI and tests (default): a private folder `tracklab-engine-cache*` in the temp folder,
+                       ///< deleted together with the engine.
+    persistent         ///< App: a permanent folder (EngineOptions::cacheDirectory) that survives the engine.
+};
+
 struct EngineOptions
 {
     DeviceMode devices = DeviceMode::none;
     SettingsStorage storage = SettingsStorage::inMemory;
+    CacheMode cache = CacheMode::privateTemporary;
+
+    /** CacheMode::persistent: the cache folder itself (getAppCacheFolder() returns exactly this folder). Empty =
+        defaultCacheDirectory(). Created when missing, never deleted by the engine. Ignored for privateTemporary. */
+    juce::File cacheDirectory;
+
+    /** Base folder of the private `tracklab-engine-cache*` folders. Empty = the system temp folder. Tests point it at
+        a temporary folder. When an engine with file storage is created, every `tracklab-engine-cache*` folder in
+        this folder that no running engine uses (left behind by a crash) is deleted, whatever the cache mode. Other
+        entries are never touched. */
+    juce::File tempDirectory;
 
     /** Folder of `settings.xml` for SettingsStorage::file. Empty = defaultSettingsDirectory().
 
@@ -50,6 +71,11 @@ struct EngineOptions
 /** `userApplicationDataDirectory/Tracklab`: folder of settings.xml when EngineOptions::settingsDirectory is empty.
     Does not create the folder. */
 juce::File defaultSettingsDirectory();
+
+/** Permanent cache folder of the app, taken from the environment (not created):
+    - Linux: `$XDG_CACHE_HOME/Tracklab`; if the variable is unset or empty `~/.cache/Tracklab`.
+    - Windows: `%LOCALAPPDATA%\Tracklab\cache`. */
+juce::File defaultCacheDirectory();
 
 /** Creates a Tracktion Engine with Tracklab's behaviours. Never returns null.
 

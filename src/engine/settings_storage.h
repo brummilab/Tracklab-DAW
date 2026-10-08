@@ -22,6 +22,11 @@ namespace te = tracktion;
     Creates the folder of `target` if it is missing. Allocates and does IO: never call it from the audio thread. */
 [[nodiscard]] bool writeFileAtomically(const juce::File& target, const juce::String& content);
 
+/** `file` as shown in a log: the user's home folder (File::userHomeDirectory) at the start of the path is replaced by
+    `~` (only as a whole path component: a sibling that merely starts with the same characters is left alone). Paths
+    outside the home folder are unchanged. Log files can be shared; the home path contains the account name. */
+[[nodiscard]] juce::String pathForLog(const juce::File& file);
+
 /** Base of the two variants: all PropertyStorage accessors on top of one map.
     A lock guards the map because background jobs may read settings while the message thread writes them. */
 class TracklabPropertyStorage : public te::PropertyStorage
