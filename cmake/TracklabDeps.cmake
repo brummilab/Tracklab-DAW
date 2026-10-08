@@ -145,3 +145,32 @@ if(TRACKLAB_WERROR)
       "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_GREATER_EQUAL:$<CXX_COMPILER_VERSION>,20>>:-Wfunction-effects>")
   endif()
 endif()
+
+# --- JSON + schema validation (M1-02, DESIGN Rev 3 section 3) ------------------------------------
+# nlohmann/json v3.12.0 and pboettch/json-schema-validator 2.4.0 (both MIT, JSON Schema draft 7), git submodules
+# with fixed tags. Used by src/core (command registry). Their headers are SYSTEM includes so that -Werror only
+# applies to our own code; the validator's own sources keep the warning flags of its CMakeLists (no -Werror).
+set(TRACKLAB_NLOHMANN_JSON_DIR "${TRACKLAB_THIRD_PARTY_DIR}/nlohmann_json")
+set(TRACKLAB_JSON_VALIDATOR_DIR "${TRACKLAB_THIRD_PARTY_DIR}/json-schema-validator")
+foreach(dir IN ITEMS "${TRACKLAB_NLOHMANN_JSON_DIR}" "${TRACKLAB_JSON_VALIDATOR_DIR}")
+  if(NOT EXISTS "${dir}/CMakeLists.txt")
+    message(FATAL_ERROR
+      "Submodule missing: ${dir}\n"
+      "Run: git submodule update --init --depth 1 third_party/nlohmann_json third_party/json-schema-validator")
+  endif()
+endforeach()
+
+set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
+set(JSON_Install OFF CACHE BOOL "" FORCE)
+set(JSON_SystemInclude ON CACHE BOOL "" FORCE)
+set(JSON_VALIDATOR_INSTALL OFF CACHE BOOL "" FORCE)
+set(JSON_VALIDATOR_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(JSON_VALIDATOR_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(JSON_VALIDATOR_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+add_subdirectory("${TRACKLAB_NLOHMANN_JSON_DIR}" "${CMAKE_BINARY_DIR}/_deps/nlohmann_json" EXCLUDE_FROM_ALL)
+add_subdirectory("${TRACKLAB_JSON_VALIDATOR_DIR}" "${CMAKE_BINARY_DIR}/_deps/json-schema-validator" EXCLUDE_FROM_ALL)
+set_target_properties(nlohmann_json_schema_validator PROPERTIES SYSTEM TRUE)
+
+# One target for our code: `#include <nlohmann/json.hpp>` and `#include <nlohmann/json-schema.hpp>`.
+add_library(tracklab_json INTERFACE)
+target_link_libraries(tracklab_json INTERFACE nlohmann_json::nlohmann_json nlohmann_json_schema_validator)

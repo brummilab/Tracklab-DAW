@@ -1,0 +1,95 @@
+// Command model of Tracklab (M1-02): the types every input path (GUI, shortcuts, Claude panel, MCP, CLI) shares.
+// A Command is one action with a JSON Schema for its parameters and its result; see command_registry.h.
+#pragma once
+
+#include <nlohmann/json.hpp>
+
+#include <functional>
+#include <string>
+#include <string_view>
+
+namespace tracklab::core
+{
+
+using Json = nlohmann::json;
+
+/** Machine-readable values of CommandError::code. */
+namespace error_code
+{
+// Registration (CommandRegistry::registerCommand)
+inline constexpr std::string_view invalidId = "invalid_id";               ///< id does not match the id rules
+inline constexpr std::string_view invalidToolName = "invalid_tool_name";  ///< derived tool name breaks the API rules
+inline constexpr std::string_view duplicateId = "duplicate_id";           ///< id already registered
+inline constexpr std::string_view toolNameCollision = "tool_name_collision";  ///< another id maps to the same tool name
+inline constexpr std::string_view invalidSchema = "invalid_schema";           ///< schema outside the allowed subset
+inline constexpr std::string_view missingHandler = "missing_handler";         ///< Command::handler is empty
+// Execution (CommandRegistry::execute)
+inline constexpr std::string_view unknownCommand = "unknown_command";  ///< no command with this id
+inline constexpr std::string_view invalidParams = "invalid_params";    ///< params violate paramsSchema
+inline constexpr std::string_view invalidResult = "invalid_result";    ///< handler result violates resultSchema
+inline constexpr std::string_view notOnMessageThread = "not_on_message_thread";  ///< called from another thread
+}  // namespace error_code
+
+/** Structured error, serialised as {"code":..., "message":..., "pointer":...}. All three are strings.
+    `pointer` is an RFC 6901 JSON Pointer ("" = the whole document) to the offending place:
+    - execution errors: into the params / the result,
+    - registration errors: into the Command ("/id", "/paramsSchema/properties/x/pattern", "/resultSchema", ...). */
+struct CommandError
+{
+    std::string code;
+    std::string message;
+    std::string pointer;
+
+    /** {"code":..., "message":..., "pointer":...} */
+    Json toJson() const;
+};
+
+/** Outcome of CommandRegistry::execute. */
+struct CommandResult
+{
+    bool ok = false;
+    Json result;         ///< valid if ok (validated against resultSchema)
+    CommandError error;  ///< valid if !ok
+
+    /** ok: {"ok":true,"result":<result>}; otherwise {"ok":false,"error":{"code","message","pointer"}}. */
+    Json toJson() const;
+};
+
+/** Outcome of CommandRegistry::registerCommand. */
+struct RegisterResult
+{
+    bool ok = false;
+    CommandError error;  ///< valid if !ok
+};
+
+struct CommandFlags
+{
+    bool readOnly = false;     ///< does not change the project
+    bool undoable = false;     ///< changes the project through the undo manager
+    bool destructive = false;  ///< always needs a confirmation (also for Claude), see CLAUDE.md
+    bool longRunning = false;  ///< runs as a job, may report progress
+
+    friend bool operator==(const CommandFlags&, const CommandFlags&) = default;
+};
+
+struct Command
+{
+    /** "<namespace>.<name>", e.g. "track.create" or "assistant.propose_plan". Rules: isValidCommandId(). */
+    std::string id;
+    std::string titleDe;        ///< Menu / action list (German)
+    std::string descriptionEn;  ///< Tool description for Claude/MCP (English)
+
+    /** Both schemas are JSON Schema draft 7 restricted to the subset of schema_subset.h; the root is an object. */
+    Json paramsSchema;
+    Json resultSchema;
+
+    CommandFlags flags;
+    std::string shortcut;  ///< Default shortcut, may be empty
+    std::string menuPath;  ///< e.g. "Spur/Neu", may be empty
+
+    /** Runs on the message thread with params that passed paramsSchema; the returned Json is checked against
+        resultSchema. */
+    std::function<Json(const Json& params)> handler;
+};
+
+}  // namespace tracklab::core
