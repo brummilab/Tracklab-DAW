@@ -83,6 +83,7 @@ nlohmann/json; Alternativen Ardour-Fork, Rust-Stack, JUCE ohne Tracktion (`DESIG
 
 ### F9 – Info: Audio-Interface der Band
 Modell, Anzahl Eingänge, Treiber (ASIO unter Windows? class-compliant unter Linux?).
+Wichtig für F36: Kanalnamen, Pro-Audio-Profil unter PipeWire und ASIO-Treiber hängen am Modell.
 - **Antwort:**
 
 ### F10 – Info: welcher Reaper-MCP-Server läuft heute?
@@ -125,7 +126,7 @@ durch dich (Prüfaufgabe).
 
 ---
 
-## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026) – F16–F35
+## Entscheidungsrunde 2 (aus Recherche M0-04, 08.10.2026) – F16–F36
 
 Details jeweils in `team/research/<thema>/NOTIZEN.md`.
 
@@ -269,6 +270,14 @@ zeigt nur X11-Plugin-Oberflächen.
 - **Empfehlung:** CLAP in v1 lassen, aber erst nach der Sandbox-Entscheidung planen; LV2-Plugins ohne X11-Oberfläche über
   die generische Parameteransicht bedienen.
 - **Default:** wie empfohlen.
+- **Antwort:**
+
+### F36 – Linux-Audio: JACK über PipeWire als Standard (`audio-backends-linux`)
+Mint 22 nutzt PipeWire. JUCEs ALSA-Backend bekommt unter Linux keinen Echtzeit-Thread, und PipeWire belegt die Karte.
+- **A (Empfehlung):** Standard ist die JACK-Schnittstelle über `pipewire-jack`; Tracklab startet über `pw-jack`
+  (Starter/`.desktop`), Puffergröße wird über PipeWire gesetzt. ALSA bleibt Zweitoption.
+- B: ALSA direkt als Standard (PipeWire müsste gestoppt werden).
+- **Default:** A. Die nötigen `sudo apt install …`-Schritte stelle ich erst, wenn lokal gebaut/getestet wird.
 - **Antwort:**
 
 ---
