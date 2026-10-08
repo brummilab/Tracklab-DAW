@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="assets/branding/png/tracklab-logo-light.png" alt="Tracklab" width="480">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/branding/png/tracklab-logo-dark.png">
+    <img src="assets/branding/png/tracklab-logo-light.png" alt="Tracklab" width="480">
+  </picture>
 </p>
 
 # Tracklab
