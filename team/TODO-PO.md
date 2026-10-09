@@ -10,6 +10,14 @@ Infos und Zugänge ohne Default.
 
 ## Offen
 
+### F46 – JUCE-Undo-Fehler dauerhaft beheben (O-09, Recherche `team/research/juce-undo-stash/NOTIZEN.md`)
+Upstream (JUCE develop, 08.10.2026) nicht behoben. Fix = 2 Zeilen in JUCE.
+- **Default (a):** kleiner Patch, den der Build beim Konfigurieren automatisch auf JUCE anwendet; ein Test schlägt an,
+  falls er fehlt. Danach Rollback ohne Historienverlust → F44 erledigt. Zusätzlich JUCE-Meldung (Text in der Notiz;
+  du postest im JUCE-Forum/GitHub).
+- (b) eigener JUCE-Fork – lohnt erst bei mehreren Patches. (c) Abwarten. (d) Zwischenlösung behalten.
+- **Antwort:**
+
 ### F45 – Eigene Plugins erstellen (PO-Wunsch 09.10.2026, Beispiel Goodhertz Vulf Compressor)
 **Fremde Plugins nutzen** ist schon geplant: VST3-Hosting mit Sandbox in M6 (CLAP/LV2 später). Vulf Comp gibt es laut
 goodhertz.com/faq (Stand 09.10.2026) als VST3/AAX für Windows und AU/AAX/VST3 für macOS – **nicht für Linux**. Unter
