@@ -22,6 +22,70 @@ endforeach()
 
 set(TE_ADD_EXAMPLES OFF CACHE BOOL "Tracktion examples are not built" FORCE)
 
+# --- Tracklab patch for JUCE (E49, O-09 part C) ---------------------------------------------------
+# JUCE 9.0.3 (and develop, checked 09.10.2026) lets a stale "stash" of former redo steps come back as a ghost redo
+# after UndoManager::undoCurrentTransactionOnly(), which Transaction::rollback() relies on (team/research/
+# juce-undo-stash/NOTIZEN.md). The patch is a few lines in juce_UndoManager.cpp (clear the stash when a new
+# transaction starts and in clearUndoHistory()). It is applied here, idempotently, so that the submodule pin stays
+# untouched.
+# Windows: the JUCE sources have CRLF line endings, so the patch file does too (.gitattributes: -text). If a checkout
+# changed them anyway, the second attempt ignores whitespace differences in the context lines.
+# When JUCE fixes this upstream: bump the pin, delete the patch and this block (the tests in
+# tests/engine/test_juce_undo_patch.cpp tell whether the patch is missing or the fix is in).
+set(TRACKLAB_JUCE_PATCH "${TRACKLAB_THIRD_PARTY_DIR}/patches/juce-undomanager-stale-stash.patch")
+find_program(TRACKLAB_GIT_EXECUTABLE git)
+if(NOT TRACKLAB_GIT_EXECUTABLE)
+  message(FATAL_ERROR
+    "git not found: it is needed to apply third_party/patches/juce-undomanager-stale-stash.patch to JUCE.\n"
+    "Install git and configure again.")
+endif()
+# Configure again when the patch or the patched JUCE file changes (a reset submodule must get the patch back).
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+  "${TRACKLAB_JUCE_PATCH}"
+  "${TRACKLAB_JUCE_DIR}/modules/juce_data_structures/undomanager/juce_UndoManager.cpp")
+
+function(_tracklab_git_apply out_ok)
+  # Runs `git apply <args>` inside the JUCE submodule; out_ok is TRUE if git exits with 0. The stderr of the last call
+  # stays in _tracklab_git_apply_error for the error message.
+  execute_process(
+    COMMAND "${TRACKLAB_GIT_EXECUTABLE}" -C "${TRACKLAB_JUCE_DIR}" apply ${ARGN} "${TRACKLAB_JUCE_PATCH}"
+    RESULT_VARIABLE _rc OUTPUT_QUIET ERROR_VARIABLE _err)
+  set(_tracklab_git_apply_error "${_err}" PARENT_SCOPE)
+  if(_rc EQUAL 0)
+    set(${out_ok} TRUE PARENT_SCOPE)
+  else()
+    set(${out_ok} FALSE PARENT_SCOPE)
+  endif()
+endfunction()
+
+set(_tracklab_patch_done FALSE)
+foreach(_flags IN ITEMS "" "--ignore-whitespace")
+  _tracklab_git_apply(_already --check --reverse ${_flags})
+  if(_already)
+    set(_tracklab_patch_done TRUE)  # reverse applies cleanly = the patch is already in
+    break()
+  endif()
+  _tracklab_git_apply(_fits --check ${_flags})
+  if(_fits)
+    _tracklab_git_apply(_applied ${_flags})
+    if(_applied)
+      message(STATUS "Tracklab: applied ${TRACKLAB_JUCE_PATCH} to JUCE")
+      set(_tracklab_patch_done TRUE)
+      break()
+    endif()
+  endif()
+endforeach()
+if(NOT _tracklab_patch_done)
+  message(FATAL_ERROR
+    "The Tracklab patch for JUCE does not apply: ${TRACKLAB_JUCE_PATCH}\n"
+    "JUCE in ${TRACKLAB_JUCE_DIR} is neither the pinned version (9.0.3, be29c81) nor already patched.\n"
+    "Last message of git apply:\n${_tracklab_git_apply_error}\n"
+    "Reset the submodule and configure again:\n"
+    "  git -C third_party/JUCE checkout -- .\n"
+    "  (or: git submodule update --init --force third_party/JUCE)\n"
+    "After a JUCE pin update, check whether the patch is still needed or must be regenerated.")
+endif()
+
 # JUCE first, then Tracktion (which then finds juce::juce_core and skips its own JUCE).
 add_subdirectory("${TRACKLAB_JUCE_DIR}" "${CMAKE_BINARY_DIR}/_deps/juce" EXCLUDE_FROM_ALL)
 add_subdirectory("${TRACKLAB_TRACKTION_DIR}" "${CMAKE_BINARY_DIR}/_deps/tracktion" EXCLUDE_FROM_ALL)

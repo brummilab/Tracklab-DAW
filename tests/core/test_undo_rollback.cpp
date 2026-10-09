@@ -1,7 +1,8 @@
 // Rollback and the undo history (M1-03, review round 1).
 // JUCE's UndoManager::undoCurrentTransactionOnly() appends a "stash" of former redo steps to the redo stack. The stash
-// is only emptied when a step is performed while redo steps exist, so it can hold steps that were discarded long ago.
-// A rollback must never bring such steps back; and edit.undo/edit.redo must not run inside an open Transaction.
+// is only emptied when a step is performed while redo steps exist, so unpatched JUCE can hold steps that were discarded
+// long ago; the Tracklab JUCE patch (O-09 part C) empties it. A rollback must never bring such steps back; and
+// edit.undo/edit.redo must not run inside an open Transaction.
 #include "core/transaction.h"
 #include "core/undo_contract.h"
 #include "core/undo_fixture.h"
@@ -100,7 +101,7 @@ TEST_SUITE("core")
         UndoFixture f;
         registerFailingTestCommands(f.registry, f.context);
         makeDiscardedRedoStep(f);
-        // Stale redo steps may sit in JUCE's stash; clearing the history does not touch them.
+        // Unpatched JUCE would keep stale redo steps in its stash across clearUndoHistory(); the patch empties it.
         f.setProperty("c", 3);
         settle(*f.edit);
         REQUIRE(f.undoManager().undo());

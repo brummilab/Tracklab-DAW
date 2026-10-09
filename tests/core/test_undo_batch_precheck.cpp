@@ -1,7 +1,8 @@
 // CommandRegistry::executeBatch up-front check (O-09 part B): before the first step runs, every step is checked for a
 // known command id and valid params (schema). A bad step k >= 1 refuses the whole batch: no handler runs, nothing is
 // written, the undo history (including the redo stack) is untouched. This also holds after "A, undo, B", where JUCE's
-// stash of former redo steps is stale and a rollback after a write would have to drop the whole history.
+// stash of former redo steps would be stale (the Tracklab JUCE patch empties it; a refused batch does not even need
+// a rollback).
 // Error addressing is the existing format: `failedIndex` names the step, `error.pointer` points into that step's params.
 #include "core/undo_contract.h"
 #include "core/undo_fixture.h"
@@ -77,7 +78,7 @@ struct CountingCommands
     }
 };
 
-/** A, undo, B: A was discarded from the redo stack by B (JUCE keeps a stale copy in its stash). */
+/** A, undo, B: A was discarded from the redo stack by B (unpatched JUCE would keep a stale copy in its stash). */
 void makeDiscardedRedoStep(UndoFixture& f)
 {
     f.setProperty("a", 1);

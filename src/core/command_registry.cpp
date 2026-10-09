@@ -246,8 +246,8 @@ BatchResult CommandRegistry::executeBatch(std::string_view nameDe, const std::ve
 
     // Up-front check of EVERY step before any handler runs or a transaction opens: whatever can be known without
     // running (unknown id, params schema, no Edit for an undoable step) refuses the whole batch with no write at all.
-    // Why: a rollback after a write can cost the whole undo history when JUCE's redo stash is stale (see
-    // Transaction::rollback), so a batch that is bound to fail must never write. The step with the smallest index is
+    // Why: a batch that is bound to fail should not write at all, not even write and take it back (the rollback is
+    // exact, see Transaction::rollback, but a refusal leaves no trace in the manager). The step with the smallest index is
     // reported (within a step in the order of execute(): unknown_command, invalid_params, no_edit), so the answer
     // does not depend on which problem happens to be found first.
     tracktion::Edit* edit = currentEdit();

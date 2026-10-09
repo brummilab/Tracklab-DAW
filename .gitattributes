@@ -3,3 +3,5 @@
 * text=auto
 tools.json text eol=lf
 docs/commands.md text eol=lf
+# The JUCE patch must stay byte for byte (CRLF context lines, like the JUCE sources it applies to).
+third_party/patches/*.patch -text
