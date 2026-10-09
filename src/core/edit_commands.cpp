@@ -1,5 +1,7 @@
 #include "core/edit_commands.h"
 
+#include "core/transaction.h"
+
 #include <tracktion_engine/tracktion_engine.h>
 
 #include <string>
@@ -31,7 +33,15 @@ tracktion::Edit& requireEdit(const EditContext& context)
     stack. An empty history is not an error, a shortcut on it is no mistake of the caller. */
 Json historyStep(const EditContext& context, bool undo)
 {
-    auto& manager = requireEdit(context).getUndoManager();
+    auto& edit = requireEdit(context);
+    // UndoManager::undo()/redo() start a new transaction: inside an open one (a batch or a macro command) they would
+    // cut it in two. The wording is meant for Claude, who can then run undo as a separate call.
+    if (Transaction::isOpen(edit))
+        throw CommandFailure(error_code::undoInTransaction,
+                             std::string(undo ? "undo" : "redo") +
+                                 " is not possible inside a batch or macro that changes the project; call edit." +
+                                 (undo ? "undo" : "redo") + " on its own");
+    auto& manager = edit.getUndoManager();
     const bool possible = undo ? manager.canUndo() : manager.canRedo();
     const juce::String name = undo ? manager.getUndoDescription() : manager.getRedoDescription();
     const bool done = possible && (undo ? manager.undo() : manager.redo());

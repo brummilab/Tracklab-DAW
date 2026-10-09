@@ -36,6 +36,8 @@ inline constexpr std::string_view invalidResult = "invalid_result";    ///< hand
 inline constexpr std::string_view handlerFailed = "handler_failed";    ///< the handler threw a std::exception
 inline constexpr std::string_view notOnMessageThread = "not_on_message_thread";  ///< called from another thread
 inline constexpr std::string_view noEdit = "no_edit";  ///< an undoable command needs an open project (M1-03)
+inline constexpr std::string_view undoInTransaction =
+    "undo_in_transaction";  ///< edit.undo/edit.redo while an undo transaction is open (batch, macro; M1-03)
 }  // namespace error_code
 
 /** Structured error, serialised as {"code":..., "message":..., "pointer":...}. All three are strings.

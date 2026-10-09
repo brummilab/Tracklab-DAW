@@ -23,10 +23,19 @@ public:
     Transaction(const Transaction&) = delete;
     Transaction& operator=(const Transaction&) = delete;
 
-    /** Takes back everything done since construction: the Edit state is as before, no undo entry remains, and the
-        redo stack is as it was before the transaction (UndoManager::undoCurrentTransactionOnly). Does nothing if
-        nothing was changed, and nothing for a Transaction that joined an outer one. */
+    /** Takes back everything done since construction: the Edit state is as before and no undo entry remains. The redo
+        steps that existed when the Transaction began are back too (UndoManager::undoCurrentTransactionOnly), with one
+        exception forced by JUCE: its stash of former redo steps can be stale, and then the undo history is cleared
+        completely (see transaction.cpp) rather than let a redo come back that no longer fits the state. A redo that
+        existed at the beginning is never lost by a rollback, one that did not exist is never created.
+        Does nothing if nothing was changed, and nothing for a Transaction that joined an outer one.
+        It ends the transaction: later changes before the destructor are not part of it and not rolled back, and a
+        second rollback() does nothing. */
     void rollback();
+
+    /** True while a Transaction (not a joined one) is alive on `edit` on this thread. edit.undo/edit.redo check this:
+        UndoManager::undo() starts a new transaction and would cut the open one in two. */
+    static bool isOpen(const tracktion::Edit& edit);
 
 private:
     struct Impl;

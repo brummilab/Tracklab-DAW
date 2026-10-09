@@ -13,6 +13,8 @@ namespace tracklab::core
       description "" and nothing changes (no error: a shortcut on an empty history is not a mistake).
       description = name of the undone step.
     - `edit.redo`  (no flags): same for the last undone step.
+      edit.undo and edit.redo give error undo_in_transaction while a core::Transaction is open on the Edit (nested in
+      an undoable command's handler, or a step of a batch that has an undoable step).
     - `edit.get_undo_state` (readOnly): no params, result {"can_undo": bool, "can_redo": bool,
       "undo_description": string, "redo_description": string}; the descriptions are the names of the next undo/redo
       step ("" if there is none).
