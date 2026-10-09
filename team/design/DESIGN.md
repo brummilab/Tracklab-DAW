@@ -129,6 +129,8 @@ Message-Thread. Kein Signal-Handler-Abfang im Audio-Thread. PDC; FX-Chains/Conta
 - **Akzeptanzbefehle:** Tabelle §7.8 des Auftrags → `tests/assistant/`.
 
 ## 5. GUI/UX (Auftrag §8)
+- **Leitbild (E50):** modern und aufgeräumt, Apple-inspiriert – viel Weißraum, ein Akzent (Bernstein), klare
+  Typografie, feine Linien, dezente Schatten; jede Leiste nur mit dem Nötigsten.
 - Views: Arrange (Lanes), Mixer, Editor (Audio, Piano-Roll, Drum), Browser, Inspector, Transport,
   Region-Manager, Mastering-Seite, Claude-Panel, Render-Queue.
 - Design-Tokens in `themes/*.json`; Dark (Standard) + Light ohne Neustart; HiDPI 100–300 %, SVG-Icons.
