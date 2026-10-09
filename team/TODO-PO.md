@@ -10,6 +10,15 @@ Infos und Zugänge ohne Default.
 
 ## Offen
 
+### F44 – Undo: Historienverlust in einem Sonderfall (M1-03), vorerst hinnehmen?
+JUCE hat einen Fehler im Undo-Zwischenspeicher. Ohne Eingriff in JUCE ist ein gescheiterter Befehl nur sicher
+zurückzunehmen, wenn in einem Fall die **ganze Undo-Historie** verworfen wird: nach „Rückgängig, dann neue Änderung“
+scheitert später ein Befehl mitten im Schreiben. Das Projekt selbst bleibt korrekt, nur „Rückgängig“ ist danach leer.
+- **Default:** so übernehmen (sicher, keine falschen Wiederholen-Schritte); dauerhafte Lösung mit O-09 vor M3
+  (JUCE-Fehler melden, kleiner Patch oder Upstream-Fix).
+- Alternative: jetzt schon JUCE patchen (Eingriff in Fremdcode, mehr Pflegeaufwand).
+- **Antwort:**
+
 
 ### F9 – Info: Audio-Interface der Band
 Modell, Anzahl Eingänge, Treiber (ASIO unter Windows? class-compliant unter Linux?).
