@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 08.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01, M1-02, O-04 erledigt – M1-03 + M1-06 **angehalten (PO: „alle stoppen“)**
+**Stand:** 08.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01, M1-02, O-04 erledigt – M1-03 + M1-06 **fortgesetzt 09.10.2026 (PO: „weiter“)** – `main` in beide Branches gemergt, Implementer schließen ab
 
 > **Angehalten 08.10.2026:** Beide Implementer auf Wunsch des PO gestoppt, ungeprüft, nichts gemerged.
 > Stand: `m1-03-impl` @ `99c56ca` (Umsetzung committet, Build/Format-Lauf unterbrochen),
