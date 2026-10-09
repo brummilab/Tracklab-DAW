@@ -20,7 +20,7 @@ namespace tracklab::cli
     the exports. Returns the first failure (e.g. duplicate_id if called twice on one registry).
     Does NOT call registry.setEditContext(): the caller decides which context the registry's undo handling uses. */
 [[nodiscard]] core::RegisterResult registerBuiltInCommands(core::CommandRegistry& registry, tracktion::Engine& engine,
-                                                           core::EditContext& context,
-                                                           project::ProjectSession& session, std::string appVersion);
+                                                           core::EditContext& context, project::ProjectSession& session,
+                                                           std::string appVersion);
 
 }  // namespace tracklab::cli

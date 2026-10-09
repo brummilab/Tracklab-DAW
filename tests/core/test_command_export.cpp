@@ -337,7 +337,8 @@ TEST_SUITE("core")
         EditContext editContext;
         tracklab::project::ProjectSession session(*engine, editContext);
         // The same function as tracklab-cli export-tools uses (src/cli/builtin_commands.h): one list of commands.
-        const auto registered = tracklab::cli::registerBuiltInCommands(registry, *engine, editContext, session, "0.0.0");
+        const auto registered =
+            tracklab::cli::registerBuiltInCommands(registry, *engine, editContext, session, "0.0.0");
         INFO(registered.error.code << " " << registered.error.message);
         REQUIRE(registered.ok);
 

@@ -94,9 +94,9 @@ TEST_SUITE("cli")
         const auto commands = writeCommands(dir.dir(), Json::array({noteStep(1), noteStep(2)}));
         juce::String description;
 
-        const auto run = runCli({"run-commands", path(project), path(commands), "--save-as",
-                                 path(dir.dir().getChildFile("Kopie"))},
-                                hooksWithNote(description));
+        const auto run =
+            runCli({"run-commands", path(project), path(commands), "--save-as", path(dir.dir().getChildFile("Kopie"))},
+                   hooksWithNote(description));
 
         REQUIRE_MESSAGE(run.ok(), run.out);
         CHECK(description == "CLI: run-commands");

@@ -107,12 +107,10 @@ Json renderProject(te::Engine& engine, te::Edit& edit, const juce::File& destina
     if (!temporary.overwriteTargetFileWithTemporary())
         throw operationFailed("write_failed", "cannot write " + toStd(destination.getFullPathName()));
 
-    return Json{{"out", toStd(destination.getFullPathName())},
-                {"format", "wav24"},
-                {"sample_rate", format->sampleRate},
-                {"channels", format->channels},
-                {"bits_per_sample", format->bitsPerSample},
-                {"length_samples", static_cast<std::int64_t>(format->length)}};
+    return Json{
+        {"out", toStd(destination.getFullPathName())}, {"format", "wav24"},
+        {"sample_rate", format->sampleRate},           {"channels", format->channels},
+        {"bits_per_sample", format->bitsPerSample},    {"length_samples", static_cast<std::int64_t>(format->length)}};
 }
 
 Json measureLoudness(te::Engine& engine, const juce::File& file, const Measurements& wanted)
@@ -124,8 +122,8 @@ Json measureLoudness(te::Engine& engine, const juce::File& file, const Measureme
     const std::unique_ptr<juce::AudioFormatReader> reader(
         te::AudioFileUtils::createReaderFindingFormat(engine, file, format));
     if (reader == nullptr)
-        throw operationFailed("unreadable_audio", "not an audio file the engine can read: " +
-                                                      toStd(file.getFullPathName()));
+        throw operationFailed("unreadable_audio",
+                              "not an audio file the engine can read: " + toStd(file.getFullPathName()));
 
     constexpr int blockSize = 4096;
     const auto numChannels = static_cast<int>(reader->numChannels);

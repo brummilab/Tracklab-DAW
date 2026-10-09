@@ -39,8 +39,8 @@ constexpr const char* runCommandsTransactionName = "CLI: run-commands";
 
 struct ArgSpec
 {
-    std::set<std::string> flags;          ///< options without a value
-    std::set<std::string> valueOptions;   ///< options with exactly one value
+    std::set<std::string> flags;         ///< options without a value
+    std::set<std::string> valueOptions;  ///< options with exactly one value
     std::size_t minPositionals;
     std::size_t maxPositionals;
     const char* usage;
@@ -131,8 +131,8 @@ public:
         registry.setEditContext(&context);
         const auto registered = registerBuiltInCommands(registry, *engine, context, *session, TRACKLAB_VERSION_STRING);
         if (!registered.ok)
-            throw operationFailed("internal_error", "registering the commands failed: " + registered.error.code +
-                                                        " " + registered.error.message);
+            throw operationFailed("internal_error", "registering the commands failed: " + registered.error.code + " " +
+                                                        registered.error.message);
     }
 
     Workspace(const Workspace&) = delete;
@@ -173,8 +173,8 @@ Json commandRender(Workspace& workspace, const ParsedArgs& args)
 /** The temporary render of a project for `analyze`: next to the engine's private folders if the caller set one. */
 juce::File temporaryRenderFile(const std::string& engineTempDir)
 {
-    const auto folder = engineTempDir.empty() ? juce::File::getSpecialLocation(juce::File::tempDirectory)
-                                              : fileFromArg(engineTempDir);
+    const auto folder =
+        engineTempDir.empty() ? juce::File::getSpecialLocation(juce::File::tempDirectory) : fileFromArg(engineTempDir);
     folder.createDirectory();
     return folder.getNonexistentChildFile("tracklab-analyze", ".wav", false);
 }
@@ -232,7 +232,12 @@ std::vector<core::BatchStep> loadCommands(const juce::File& file)
             throw operationFailed("invalid_commands_file", where + " has to be an object with a string \"id\"");
         for (const auto& [key, value] : item.items())
             if (key != "id" && key != "params")
-                throw operationFailed("invalid_commands_file", where + " has the unknown key \"" + key + "\"");
+            {
+                std::string message = where + " has the unknown key \"";
+                message += key;
+                message += '"';
+                throw operationFailed("invalid_commands_file", message);
+            }
         core::BatchStep step;
         step.id = item["id"].get<std::string>();
         if (item.contains("params"))
@@ -273,7 +278,7 @@ Json commandRunCommands(Workspace& workspace, const ParsedArgs& args, const CliH
     {
         const auto target = fileFromArg(*saveAs);
         info = workspace.run("project.save_as", Json{{"folder", pathOf(target.getParentDirectory())},
-                                                    {"name", target.getFileName().toStdString()}});
+                                                     {"name", target.getFileName().toStdString()}});
     }
     else
     {
@@ -391,10 +396,9 @@ Json dispatch(const std::vector<std::string>& args, const CliHooks& hooks)
 
     if (command == "render")
     {
-        const auto parsed = parseArgs(
-            args, next + 1,
-            makeSpec({}, {"--out", "--format"}, 1, 1,
-                     "usage: tracklab-cli render <project> --out <file> [--format wav24]"));
+        const auto parsed = parseArgs(args, next + 1,
+                                      makeSpec({}, {"--out", "--format"}, 1, 1,
+                                               "usage: tracklab-cli render <project> --out <file> [--format wav24]"));
         if (parsed.value("--out") == nullptr)
             throw usageError("render needs --out <file>");
         Workspace workspace(engineTempDir);
@@ -411,10 +415,10 @@ Json dispatch(const std::vector<std::string>& args, const CliHooks& hooks)
     }
     if (command == "run-commands")
     {
-        const auto parsed = parseArgs(
-            args, next + 1,
-            makeSpec({}, {"--save-as"}, 2, 2,
-                     "usage: tracklab-cli run-commands <project> <commands.json> [--save-as <out>]"));
+        const auto parsed =
+            parseArgs(args, next + 1,
+                      makeSpec({}, {"--save-as"}, 2, 2,
+                               "usage: tracklab-cli run-commands <project> <commands.json> [--save-as <out>]"));
         Workspace workspace(engineTempDir);
         return commandRunCommands(workspace, parsed, hooks);
     }
