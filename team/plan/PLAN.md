@@ -17,6 +17,10 @@ Details zu Zielen und Akzeptanz: Auftrag §12, `team/design/DESIGN.md` Abschnitt
 | M8 | Mastering & Export komplett | ⏳ | Workflow B Ende-zu-Ende exportiert, Messbericht korrekt |
 | M9 = 1.0 | Interop & Politur | ⏳ | Akzeptanztest A + B durch David |
 
+**Nach 1.0 (E53):** restlicher Feature-Katalog Auftrag §9 (v2, dann „später“) in eigenen Meilensteinen M10 ff.,
+Ziel: Funktionsumfang der großen DAWs. Alleinstellung: Claude + MCP, Live-Mitschnitt-Automatik, Open Source
+Windows/Linux, eigene Plugins/DSP. Nicht-Ziele Auftrag §4.2 bleiben.
+
 Optimierungsrunden (O-Karten) nach M2, M5 und M8. Rückblick `team/RUECKBLICK-<M>.md` nach jedem Meilenstein.
 
 Zusätzlich vor M6: Karte **Sandbox-Latenz-Spike** (E34). LV2/CLAP in M9 (E35).

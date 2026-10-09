@@ -16,6 +16,11 @@ nutzbar.
 
 ## Was Tracklab können soll
 
+Tracklab soll eine eigenständige DAW werden, die nach und nach alles kann, was die großen DAWs können. Was es so
+sonst nicht gibt: Claude ist eingebaut, jede Aktion lässt sich auch per Claude oder von außen per MCP auslösen
+(mit Rückgängig und Bestätigung); Konzertmitschnitte werden fast automatisch in fertige Songs zerlegt; Tracklab ist
+Open Source und läuft vollwertig unter Windows und Linux; eigene Effekte sind dabei.
+
 **Aufnehmen**
 - Mehrspuraufnahme mit 12 und mehr Eingängen gleichzeitig, Latenzausgleich, Aufnahme in Lanes für mehrere Takes.
 - Audio-Treiber: ASIO und WASAPI unter Windows, JACK/PipeWire und ALSA unter Linux.
