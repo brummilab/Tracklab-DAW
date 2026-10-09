@@ -66,6 +66,9 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
 - 09.10.2026: **M1-03 Undo/Redo gemerged** – Transaktionen über die Registry (ein Befehl bzw. Batch = ein Undo-Schritt),
   Rollback bei Fehlern, `edit.undo`/`edit.redo`/`edit.get_undo_state`, 200 Stufen, Vertragstest für alle undoable Commands.
   Bekannte Einschränkung F44 (JUCE-Stash) → O-09.
+- 09.10.2026: **M1-06 Audio-Geräte gemerged** – `io.list_device_types`/`list_devices`/`get_device`/`set_device` für ALSA,
+  JACK/PipeWire, WASAPI, ASIO; Persistenz; belegte Geräte → klarer Fehler statt stummem Ausgang. Windows-CI grün.
+  Handtest V1 nach `docs/testing/manual/M1.md` (David). Folgekarte O-10.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.

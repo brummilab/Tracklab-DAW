@@ -64,9 +64,9 @@ Meilenstein **M1 (Fundament)** läuft.
   Fehlermeldungen. Die Liste ist in [`docs/commands.md`](docs/commands.md) dokumentiert.
 - **Undo/Redo fertig:** Jeder Befehl und jedes Befehlspaket ist genau ein Undo-Schritt; scheitert ein Befehl, wird
   er vollständig zurückgenommen.
-- **In Arbeit:**
-  - Audio-Geräteauswahl (ALSA, JACK/PipeWire, WASAPI, ASIO).
-  - Danach Projektformat, automatisches Speichern, Kommandozeile und das erste Programmfenster.
+- **Audio-Geräte fertig:** Treiber und Gerät wählen (ALSA, JACK/PipeWire unter Linux; WASAPI, ASIO unter Windows),
+  Samplerate, Puffer und Kanäle; die Wahl bleibt über Neustarts erhalten. Handtest an echter Hardware steht noch aus.
+- **Als Nächstes:** Projektformat, automatisches Speichern, Kommandozeile und das erste Programmfenster.
 
 Arbeitsstand im Detail: [`team/RESUME.md`](team/RESUME.md) · Plan: [`team/plan/PLAN.md`](team/plan/PLAN.md).
 
