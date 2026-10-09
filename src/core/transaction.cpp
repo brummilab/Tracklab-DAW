@@ -35,7 +35,9 @@ struct Transaction::Impl
 
         // The inhibitor first: from here on Tracktion's 350 ms timer must not start a new transaction.
         inhibitor.emplace(edit);
+#if JUCE_DEBUG
         redoAtBegin = edit.getUndoManager().getRedoDescriptions();
+#endif
         edit.getUndoManager().beginNewTransaction(juce::String::fromUTF8(nameDe.c_str()));
         open.push_back(&edit);
     }
@@ -44,7 +46,9 @@ struct Transaction::Impl
     {
         if (!inhibitor)
             return;
+#if JUCE_DEBUG
         assertRedoStackUntouched();
+#endif
         auto& open = openEdits();
         open.erase(std::remove(open.begin(), open.end(), &edit), open.end());
     }
@@ -52,21 +56,28 @@ struct Transaction::Impl
     Impl(const Impl&) = delete;
     Impl& operator=(const Impl&) = delete;
 
-    /** The rollback logic relies on the redo stack being changed only by the first write of this Transaction: JUCE
-        then moves the redo steps that existed at the beginning into its stash, so the stack is either still what it
-        was (nothing written yet) or empty (stashed). Anything else means an undo()/redo() or a second manager user
-        cut into the open transaction (edit.undo/edit.redo refuse that via isOpen), and rollback() could no longer
-        tell a stale stash from a right one. Debug-only on purpose: a release build keeps the safe fallback. */
+#if JUCE_DEBUG
+    /** Rollback hands the redo steps back through JUCE's stash, which only works if the redo stack is changed by the
+        first write of this Transaction alone: JUCE then moves the redo steps that existed at the beginning into its
+        stash, so the stack is either still what it was (nothing written yet) or empty (stashed). Anything else means
+        an undo()/redo() or a second manager user cut into the open transaction (edit.undo/edit.redo refuse that via
+        isOpen). Debug builds only (the whole check, also the copy of the names at the beginning, is compiled out in a
+        release build): it costs a string array per Transaction, and in the destructor it reads the UndoManager, so
+        it is the one place that would trip over an Edit destroyed before its Transaction. That breaks the documented
+        contract (transaction.h) anyway, and a debug build should say so here, not crash later. */
     void assertRedoStackUntouched() const
     {
         const auto now = edit.getUndoManager().getRedoDescriptions();
         jassert(now.isEmpty() || now == redoAtBegin);
         juce::ignoreUnused(now);
     }
+#endif
 
     tracktion::Edit& edit;
     std::optional<tracktion::Edit::UndoTransactionInhibitor> inhibitor;  // empty = joined an outer Transaction
-    juce::StringArray redoAtBegin;  // names of the redo steps when the Transaction began (rollback check)
+#if JUCE_DEBUG
+    juce::StringArray redoAtBegin;  // names of the redo steps when the Transaction began (debug check only)
+#endif
 };
 
 Transaction::Transaction(tracktion::Edit& edit, const std::string& nameDe) : impl(std::make_unique<Impl>(edit, nameDe))
@@ -86,23 +97,14 @@ void Transaction::rollback()
     // A joined Transaction cannot roll back on its own: its changes belong to the outer one.
     if (!impl->inhibitor)
         return;
+#if JUCE_DEBUG
     impl->assertRedoStackUntouched();
-    auto& manager = impl->edit.getUndoManager();
-    // Only the current transaction: earlier steps stay as they were. False = nothing was changed, nothing to do.
-    if (!manager.undoCurrentTransactionOnly())
-        return;
-
-    // JUCE 9.0.3 puts its "stash" of former redo steps back on the redo stack here. The stash is replaced only when a
-    // step is performed while redo steps exist, otherwise it keeps steps that were discarded long ago (or that
-    // clearUndoHistory() dropped), and they would come back as a redo that no longer fits the state. There is no
-    // public call that removes redo steps alone. So: if the redo stack is not exactly what it was when the
-    // Transaction began (right stash, or none needed), the stash was stale and the only safe way out is to drop the
-    // whole history. The Edit state is already restored at this point.
-    if (manager.getRedoDescriptions() != impl->redoAtBegin)
-    {
-        manager.clearUndoHistory();
-        manager.beginNewTransaction();
-    }
+#endif
+    // Only the current transaction: earlier steps stay as they were. The redo steps that existed at the beginning come
+    // back from JUCE's stash; that this stash is not stale depends on the Tracklab patch in
+    // third_party/patches/juce-undomanager-stale-stash.patch (applied by cmake/TracklabDeps.cmake, E49). The return
+    // value is false if nothing was changed, then there is nothing to do.
+    impl->edit.getUndoManager().undoCurrentTransactionOnly();
 }
 
 }  // namespace tracklab::core

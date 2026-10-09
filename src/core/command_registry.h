@@ -77,8 +77,8 @@ public:
         - no entry for commands without the flag (readOnly, edit.undo, ...), and none if the command changed nothing;
         - no Edit in the EditContext (none set, or edit() null) -> error no_edit, the handler is not run;
         - a failed command (invalid_result, handler_failed, CommandFailure) leaves no trace: what the handler already
-          changed is rolled back (Transaction::rollback), no undo entry, and the redo stack is as before (exception:
-          see Transaction::rollback, a stale JUCE stash clears the whole history);
+          changed is rolled back (Transaction::rollback), no undo entry, and the redo stack and the earlier undo
+          history are as before (needs the Tracklab JUCE patch, see Transaction::rollback);
         - execute() called from inside a handler (a macro command) joins the transaction of the outer command
           instead of starting its own: one outer command = one undo step, named after the outer command. A nested
           command that fails is NOT rolled back on its own (its writes belong to the outer transaction); the outer
@@ -96,8 +96,8 @@ public:
         written nothing: state, undo history and redo stack are untouched, and no transaction was ever open. The
         error carries `failedIndex` and the params-relative pointer of that step (not "/steps/<i>/...").
         Run-time errors (handler_failed, CommandFailure, invalid_result) can only be found by running: the steps
-        already run are rolled back (Transaction::rollback: state as before, no undo entry, redo stack as before;
-        see there for the stale-stash exception) and the result carries the error and the index of the failing
+        already run are rolled back (Transaction::rollback: state as before, no undo entry, redo stack and earlier undo
+        history as before) and the result carries the error and the index of the failing
         step; later steps are not run.
         An empty list is ok with no results. not_on_message_thread as for execute(). */
     BatchResult executeBatch(std::string_view nameDe, const std::vector<BatchStep>& steps) const;

@@ -11,6 +11,10 @@ Editing, Mixing und Mastering. Claude ist integriert (Assistant-Panel, Tools aus
 Command-Registry) und Tracklab ist per lokalem MCP-Server von Claude Desktop/Claude Code steuerbar.
 Ohne Claude voll nutzbar.
 
+Vision (E53): eigenständige DAW mit dem Funktionsumfang der großen DAWs (schrittweise, nach 1.0 der restliche
+Feature-Katalog). Alleinstellung: Claude + MCP in jeder Aktion, Live-Mitschnitt-Automatik, Open Source unter Windows
+und Linux, eigene Plugins/DSP.
+
 ## Eckdaten
 | | |
 |---|---|
@@ -32,7 +36,7 @@ Ohne Claude voll nutzbar.
 ## Roadmap
 M0 Start/Spike · M1 Fundament · M2 Mitschnitt ohne Claude · M3 Claude-Integration + MCP ·
 M4 Spuren & Aufnahme · M5 Editing & Comping · M6 Mixer & Plugins · M7 Automation & MIDI ·
-M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2, M5, M8.
+M8 Mastering & Export · M9 = 1.0 Interop & Politur · ab M10 restlicher Feature-Katalog (E53). Optimierungsrunden nach M2, M5, M8.
 
 ## Status
 - 08.10.2026: M0 begonnen. Grundgerüst (CLAUDE.md, README, Gate, CI, Hook `guard-git.sh`),
@@ -71,12 +75,17 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
   Handtest V1 nach `docs/testing/manual/M1.md` (David). Folgekarte O-10.
 - 09.10.2026: O-11 (Windows-CI: lame/ffmpeg mit Retry + Cache) erledigt. O-09 Teil B: Befehlspakete werden vor dem ersten
   Schritt vollständig geprüft – ungültige Pakete ändern nichts, Undo-Historie bleibt. Teil C (JUCE-Patch) wartet auf F46.
+- 09.10.2026: O-09 komplett – JUCE-Undo-Patch (E49) wird beim Bauen automatisch angewendet; gescheiterte Befehle
+  verlieren keine Undo-Historie mehr (F44 erledigt). GUI-Leitbild E50: modern, aufgeräumt, dunkel. Eigene Plugins E48.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
 - Reaper-Preset (M0-08) nach F11; Risiko Mint 23 / libstdc++ 15 (O-03).
 
 ## Entscheidungen
+- E53 (09.10.2026): Vision bestätigt – Funktionsumfang der großen DAWs schrittweise, Nicht-Ziele bleiben;
+  Alleinstellung Claude + MCP, Live-Mitschnitt-Automatik, Open Source Win/Linux, eigene Plugins/DSP.
+- E52 (09.10.2026): Kein Reverse Engineering fremder DAWs; Vergleich nur über öffentlich Dokumentiertes.
 - E43 (08.10.2026): Bei C++ bleiben (kein Rust-Umstieg); Rust höchstens später für abgegrenzte Prozesse.
 - E40–E42 (08.10.2026): Projektdatei `.tracklab`, Autosave 2 min + 10 Backups, Namen Tracklab/tracklab-cli/tracklab-mcp.
 - E39 (08.10.2026): ADR-001 angenommen – JUCE 9.0.3, Tracktion Engine develop, AGPLv3, doctest.
