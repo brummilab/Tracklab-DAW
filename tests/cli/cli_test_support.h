@@ -28,6 +28,7 @@ namespace tracklab_test::cli
 {
 
 using tracklab::core::Json;
+using tracklab_test::ScopedTempDir;
 namespace fs = std::filesystem;
 
 inline constexpr double pi = 3.14159265358979323846;
@@ -44,8 +45,16 @@ struct CliRun
 
     bool ok() const { return json.is_object() && json.value("ok", false); }
     bool has(const std::string& key) const { return json.is_object() && json.contains(key); }
-    double number(const std::string& key) const { return json.at(key).get<double>(); }
-    std::int64_t integer(const std::string& key) const { return json.at(key).get<std::int64_t>(); }
+    /** NaN / -1 if the key is missing, so that a missing value is a plain failed CHECK, not an exception. */
+    double number(const std::string& key) const
+    {
+        return json.is_object() && json.contains(key) && json[key].is_number() ? json[key].get<double>() : std::nan("");
+    }
+    std::int64_t integer(const std::string& key) const
+    {
+        return json.is_object() && json.contains(key) && json[key].is_number_integer() ? json[key].get<std::int64_t>()
+                                                                                       : -1;
+    }
     std::string text(const std::string& key) const
     {
         return json.is_object() && json.contains(key) && json[key].is_string() ? json[key].get<std::string>() : "";
