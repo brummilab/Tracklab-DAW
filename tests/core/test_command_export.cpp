@@ -1,15 +1,12 @@
 // Registry export (M1-02): tools.json and docs/commands.md are deterministic, and the checked-in files are current.
-// The CLI (`tracklab-cli export-tools`) follows in M1-07; until then
+// `tracklab-cli export-tools` (M1-07) writes and checks the two files; the gate runs `export-tools --check`. As a shortcut
 //   TRACKLAB_UPDATE_EXPORTS=1 ./tracklab_tests --test-case="*checked-in*"
-// rewrites the two files in the source tree (never set by the gate).
+// rewrites them in the source tree (never set by the gate).
 #include "core/core_test_helpers.h"
 
-#include "core/app_commands.h"
+#include "cli/builtin_commands.h"
 #include "core/command_export.h"
-#include "core/edit_commands.h"
 #include "engine/engine_factory.h"
-#include "io/audio_devices.h"
-#include "project/project_commands.h"
 #include "project/project_session.h"
 
 #include "engine/engine_test_options.h"
@@ -331,18 +328,18 @@ TEST_SUITE("core")
     //==========================================================================
     TEST_CASE("the checked-in tools.json and docs/commands.md match the registry (all built-in commands)")
     {
-        // The registry as the app builds it: every registerXxxCommands(). Today: app.version and the edit.* commands
-        // (src/core, M1-03), the io.* commands (src/io, M1-06; they need an engine, a headless one without devices
-        // is enough) and the project.* commands (src/project, M1-04; they need a session, which stays without a
-        // project here). The version is not part of the exports, so any string does; the EditContext stays empty.
+        // The registry as the app builds it: registerBuiltInCommands (app.*, edit.*, io.*, project.*). The io commands
+        // need an engine (a headless one without devices is enough), the project commands a session, which stays
+        // without a project here. The version is not part of the exports, so any string does; the EditContext stays
+        // empty.
         auto engine = tracklab::engine::createEngine(tracklab_test::testOptions());
         CommandRegistry registry;
         EditContext editContext;
         tracklab::project::ProjectSession session(*engine, editContext);
-        REQUIRE(registerAppCommands(registry, "0.0.0").ok);
-        REQUIRE(registerEditCommands(registry, editContext).ok);
-        REQUIRE(tracklab::io::registerIoCommands(registry, *engine).ok);
-        REQUIRE(tracklab::project::registerProjectCommands(registry, session).ok);
+        // The same function as tracklab-cli export-tools uses (src/cli/builtin_commands.h): one list of commands.
+        const auto registered = tracklab::cli::registerBuiltInCommands(registry, *engine, editContext, session, "0.0.0");
+        INFO(registered.error.code << " " << registered.error.message);
+        REQUIRE(registered.ok);
 
         const fs::path root = TRACKLAB_SOURCE_DIR;
         const char* update = std::getenv("TRACKLAB_UPDATE_EXPORTS");
