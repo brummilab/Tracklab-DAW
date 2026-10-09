@@ -6,6 +6,7 @@
 
 #include "core/app_commands.h"
 #include "core/command_export.h"
+#include "core/edit_commands.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -324,10 +325,12 @@ TEST_SUITE("core")
     //==========================================================================
     TEST_CASE("the checked-in tools.json and docs/commands.md match the registry (all built-in commands)")
     {
-        // The registry as the app builds it: every registerXxxCommands() of src/core. Today: app.version.
-        // The version is not part of the exports, so any string does.
+        // The registry as the app builds it: every registerXxxCommands() of src/core. Today: app.version and the
+        // edit.* commands. The version is not part of the exports, so any string does; the EditContext stays empty.
         CommandRegistry registry;
+        EditContext editContext;
         REQUIRE(registerAppCommands(registry, "0.0.0").ok);
+        REQUIRE(registerEditCommands(registry, editContext).ok);
 
         const fs::path root = TRACKLAB_SOURCE_DIR;
         const char* update = std::getenv("TRACKLAB_UPDATE_EXPORTS");

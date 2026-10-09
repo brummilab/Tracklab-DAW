@@ -3,6 +3,7 @@
 #pragma once
 
 #include "core/command.h"
+#include "core/edit_context.h"
 
 #include <cstddef>
 #include <map>
@@ -55,17 +56,58 @@ public:
 
     /** Validates `params` against paramsSchema, runs the handler, validates its result against resultSchema.
         Must be called on the JUCE message thread, otherwise error not_on_message_thread (the handler is not run).
-        Order: thread -> unknown_command -> invalid_params (handler not run) -> handler -> invalid_result.
+        Order: thread -> unknown_command -> invalid_params (handler not run) -> no_edit (undoable only, handler not run) ->
+        handler -> invalid_result.
         The error of a validation is the FIRST problem the validator reports (pointer: the offending field; message:
         what was expected and what was received, see schema_validation.h).
-        A handler that throws a std::exception gives handler_failed (the registry stays usable). */
+        A handler that throws a std::exception gives handler_failed (the registry stays usable); one that throws a
+        CommandFailure gives exactly its code, message and pointer (expected failures such as no_edit). */
     CommandResult execute(std::string_view id, const Json& params) const;
+
+    //==========================================================================
+    // Undo (M1-03, DESIGN Rev 3 section 3 "Undo")
+
+    /** The project the commands work on; null = none (default). Not owned: it has to outlive the registry's use of it.
+        Commands reach the Edit through the same EditContext (registerEditCommands(registry, context) etc.). */
+    void setEditContext(EditContext* context) noexcept { editContextPtr = context; }
+    EditContext* editContext() const noexcept { return editContextPtr; }
+
+    /** execute() of an `undoable` command (flags.undoable) runs in exactly ONE undo transaction (core::Transaction)
+        named titleDe of the command:
+        - no entry for commands without the flag (readOnly, edit.undo, ...), and none if the command changed nothing;
+        - no Edit in the EditContext (none set, or edit() null) -> error no_edit, the handler is not run;
+        - a failed command (invalid_result, handler_failed, CommandFailure) leaves no trace: what the handler already
+          changed is rolled back (Transaction::rollback), no undo entry, and the redo stack is as before (exception:
+          see Transaction::rollback, a stale JUCE stash clears the whole history);
+        - execute() called from inside a handler (a macro command) joins the transaction of the outer command
+          instead of starting its own: one outer command = one undo step, named after the outer command. A nested
+          command that fails is NOT rolled back on its own (its writes belong to the outer transaction); the outer
+          handler decides: it lets the failure go (CommandFailure/exception) and the outer command is rolled back as a
+          whole, or it swallows it and keeps the nested command's earlier writes;
+        - edit.undo / edit.redo inside such a transaction (nested in a handler, or a step of a batch with an undoable
+          step) -> error undo_in_transaction: they would cut the open transaction in two. */
+
+    /** Runs the steps in order as ONE undo transaction named `nameDe` (a macro / a Claude turn). Every step is
+        validated and run like execute(), but without a transaction of its own, so the result is one undo step
+        whatever the steps' flags. If a step fails (any execute() error, incl. unknown_command and invalid_params), the
+        steps already run are rolled back (Transaction::rollback: state as before, no undo entry, redo stack as before)
+        and the result carries the error and the index of the failing step; later steps are not run.
+        An empty list is ok with no results. no_edit and not_on_message_thread as for execute()
+        (no_edit only if a step is undoable). */
+    BatchResult executeBatch(std::string_view nameDe, const std::vector<BatchStep>& steps) const;
 
 private:
     struct Entry;  // the command plus its compiled schemas; hides the validator from this header
 
+    /** Params check, handler, result check, without thread check and without a transaction: the common core of
+        execute() and executeBatch(). A CommandFailure of the handler becomes its error 1:1, other exceptions
+        handler_failed. */
+    CommandResult runUnchecked(const Entry& entry, const Json& params) const;
+    tracktion::Edit* currentEdit() const;  ///< the Edit of the EditContext, null if there is none
+
     std::map<std::string, std::unique_ptr<Entry>, std::less<>> commands;  // id -> entry (stable addresses)
     std::map<std::string, std::string, std::less<>> toolToId;             // tool name -> id
+    EditContext* editContextPtr = nullptr;                                // not owned
 };
 
 }  // namespace tracklab::core

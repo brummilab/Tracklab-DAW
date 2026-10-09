@@ -4,9 +4,13 @@
 
 #include <nlohmann/json.hpp>
 
+#include <cstddef>
 #include <functional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 namespace tracklab::core
 {
@@ -31,6 +35,9 @@ inline constexpr std::string_view invalidParams = "invalid_params";    ///< para
 inline constexpr std::string_view invalidResult = "invalid_result";    ///< handler result violates resultSchema
 inline constexpr std::string_view handlerFailed = "handler_failed";    ///< the handler threw a std::exception
 inline constexpr std::string_view notOnMessageThread = "not_on_message_thread";  ///< called from another thread
+inline constexpr std::string_view noEdit = "no_edit";  ///< an undoable command needs an open project (M1-03)
+inline constexpr std::string_view undoInTransaction =
+    "undo_in_transaction";  ///< edit.undo/edit.redo while an undo transaction is open (batch, macro; M1-03)
 }  // namespace error_code
 
 /** Structured error, serialised as {"code":..., "message":..., "pointer":...}. All three are strings.
@@ -47,6 +54,27 @@ struct CommandError
     Json toJson() const;
 };
 
+/** What a handler throws for an expected, domain-level failure (no project open, unknown track id, ...): the registry
+    reports it 1:1 as CommandError{code, message, pointer} instead of the generic handler_failed. `code` is a stable
+    machine-readable string (error_code::... or a command's own); `pointer` is an RFC 6901 JSON Pointer into the params
+    ("" = none in particular). It is a std::runtime_error (what() = message), so code that only knows
+    std::exception still sees a sensible text. Like any failure of an undoable command it rolls the command back. */
+class CommandFailure : public std::runtime_error
+{
+public:
+    CommandFailure(std::string_view code, const std::string& message, std::string pointer = {})
+        : std::runtime_error(message), failureCode(code), failurePointer(std::move(pointer))
+    {
+    }
+
+    const std::string& code() const noexcept { return failureCode; }
+    const std::string& pointer() const noexcept { return failurePointer; }
+
+private:
+    std::string failureCode;
+    std::string failurePointer;
+};
+
 /** Outcome of CommandRegistry::execute. */
 struct CommandResult
 {
@@ -56,6 +84,22 @@ struct CommandResult
 
     /** ok: {"ok":true,"result":<result>}; otherwise {"ok":false,"error":{"code","message","pointer"}}. */
     Json toJson() const;
+};
+
+/** One step of CommandRegistry::executeBatch. */
+struct BatchStep
+{
+    std::string id;
+    Json params = Json::object();
+};
+
+/** Outcome of CommandRegistry::executeBatch (M1-03). */
+struct BatchResult
+{
+    bool ok = false;
+    std::vector<Json> results;    ///< ok: one validated result per step, in order
+    CommandError error;           ///< !ok: the error of the failing step (same codes as execute)
+    std::size_t failedIndex = 0;  ///< !ok: index of the failing step in the list
 };
 
 /** Outcome of CommandRegistry::registerCommand. */
