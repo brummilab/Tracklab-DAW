@@ -188,11 +188,11 @@ TEST_SUITE("core")
               "unknown command in step 1")
     {
         int calls = 0;
-        auto counting = tracklab_test::core_helpers::makeUndoable("test.counting", "Z\xC3\xA4hlen");
+        auto counting = makeUndoable("test.counting", "Z\xC3\xA4hlen");
         counting.handler = [&calls](const Json&)
         {
             ++calls;
-            return tracklab_test::core_helpers::valueResult(1);
+            return valueResult(1);
         };
         CommandRegistry registry;  // no EditContext, so an undoable step has no Edit
         tracklab_test::core_helpers::registerOrFail(registry, counting);
