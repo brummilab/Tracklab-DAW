@@ -62,8 +62,10 @@ Meilenstein **M1 (Fundament)** läuft.
   und die Kommandozeile.
 - **Befehlsliste fertig:** Alle Aktionen sind registrierte Befehle mit Schema-Prüfung und verständlichen
   Fehlermeldungen. Die Liste ist in [`docs/commands.md`](docs/commands.md) dokumentiert.
+- **Undo/Redo fertig:** Jeder Befehl und jedes Befehlspaket ist genau ein Undo-Schritt; scheitert ein Befehl, wird
+  er vollständig zurückgenommen.
 - **In Arbeit:**
-  - Undo/Redo-Transaktionen und Audio-Geräteauswahl.
+  - Audio-Geräteauswahl (ALSA, JACK/PipeWire, WASAPI, ASIO).
   - Danach Projektformat, automatisches Speichern, Kommandozeile und das erste Programmfenster.
 
 Arbeitsstand im Detail: [`team/RESUME.md`](team/RESUME.md) · Plan: [`team/plan/PLAN.md`](team/plan/PLAN.md).

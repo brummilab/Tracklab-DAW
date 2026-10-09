@@ -63,6 +63,9 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
   README-Logo passt sich dem GitHub-Theme an.
 - 09.10.2026: Repo öffentlich (E45) – Actions-Minuten für Standard-Runner unbegrenzt.
 - 09.10.2026: O-08 – Windows-CI war seit M1-01 rot (Link-Fehler), behoben; CI auf `main` komplett grün.
+- 09.10.2026: **M1-03 Undo/Redo gemerged** – Transaktionen über die Registry (ein Befehl bzw. Batch = ein Undo-Schritt),
+  Rollback bei Fehlern, `edit.undo`/`edit.redo`/`edit.get_undo_state`, 200 Stufen, Vertragstest für alle undoable Commands.
+  Bekannte Einschränkung F44 (JUCE-Stash) → O-09.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
