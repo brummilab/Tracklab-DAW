@@ -15,7 +15,7 @@ Ohne Claude voll nutzbar.
 | | |
 |---|---|
 | Product Owner | David |
-| Repo | `brummilab/Tracklab-DAW` (wird öffentlich, E45), Branch `main` |
+| Repo | `brummilab/Tracklab-DAW` (öffentlich seit 09.10.2026, E45), Branch `main` |
 | Arbeitsweise | Agent-Team-Vorlage (Team Lead + Sub-Agents), Loop aus Auftrag §3.2 |
 | Vorlage | `agent-team-vorlage` (privat) **v1.0.0**, übernommen am 08.10.2026 (per ZIP vom PO) |
 | Stack (Vorschlag ADR-001) | C++20, CMake, JUCE 8, Tracktion Engine 3.x, VST3 (MVP), LV2/CLAP (v1) |
@@ -61,6 +61,7 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
   Bezug auf andere DAWs (PO-Wunsch).
 - 09.10.2026: Git-Historie umgeschrieben (E47) – private Pfade und Namen aus allen Commits entfernt, Force-Push.
   README-Logo passt sich dem GitHub-Theme an.
+- 09.10.2026: Repo öffentlich (E45) – Actions-Minuten für Standard-Runner unbegrenzt.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
