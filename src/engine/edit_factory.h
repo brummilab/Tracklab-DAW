@@ -1,6 +1,8 @@
 // Edit factory (M1-03): the place that decides how a project (te::Edit) is created, so far the undo depth.
 #pragma once
 
+#include "core/undo_levels.h"
+
 #include <tracktion_engine/tracktion_engine.h>
 
 #include <memory>
@@ -10,8 +12,9 @@ namespace tracklab::engine
 
 namespace te = tracktion;
 
-/** Undo depth of a project (DESIGN Rev 3: 200, adjustable). Tracktion's own default is 30. */
-inline constexpr int defaultUndoLevels = 200;
+/** Undo depth of a project (DESIGN Rev 3: 200, adjustable). Tracktion's own default is 30. The value lives in core
+    (core/undo_levels.h), where the project module reads it, too. */
+inline constexpr int defaultUndoLevels = core::defaultUndoLevels;
 
 struct EditOptions
 {

@@ -109,5 +109,105 @@
       "type": "object"
     },
     "name": "io_set_device"
+  },
+  {
+    "description": "Closes the open project. Fails with unsaved_changes if there are unsaved changes, unless discard is true, which throws them away. Does nothing if no project is open.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "discard": {
+          "description": "Throw away unsaved changes (default: false).",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "name": "project_close"
+  },
+  {
+    "description": "Returns path, name, format version and whether there are unsaved changes of the open project. Fails with no_edit if no project is open.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "name": "project_get_info"
+  },
+  {
+    "description": "Creates a new project <folder>/<name>/<name>.tracklab with the sub folders Audio, Renders, Backups and Peaks and opens it. Fails with unsaved_changes if the open project has unsaved changes.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "folder": {
+          "description": "Absolute path of the folder that holds the project folders (it must exist). The project lives in <folder>/<name>/<name>.tracklab.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Project name; a plain name without path separators.",
+          "type": "string"
+        },
+        "template": {
+          "description": "Project template (default: empty).",
+          "enum": [
+            "empty"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "folder",
+        "name"
+      ],
+      "type": "object"
+    },
+    "name": "project_new"
+  },
+  {
+    "description": "Opens a .tracklab project file. Fails with unsaved_changes if the open project has unsaved changes, with project_not_found, corrupt_project or project_too_new if the file cannot be opened.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "Absolute path of the .tracklab file.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "type": "object"
+    },
+    "name": "project_open"
+  },
+  {
+    "description": "Saves the open project to its file (atomically: the old file stays intact if saving fails). Fails with no_edit if no project is open.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "name": "project_save"
+  },
+  {
+    "description": "Saves the open project as a new project <folder>/<name>/<name>.tracklab and continues in it. Media files are not copied. Never overwrites an existing project.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "folder": {
+          "description": "Absolute path of the folder that holds the project folders (it must exist). The project lives in <folder>/<name>/<name>.tracklab.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Project name; a plain name without path separators.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "folder",
+        "name"
+      ],
+      "type": "object"
+    },
+    "name": "project_save_as"
   }
 ]

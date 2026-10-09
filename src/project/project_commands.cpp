@@ -1,0 +1,187 @@
+#include "project/project_commands.h"
+
+#include <string>
+#include <utility>
+
+namespace tracklab::project
+{
+
+namespace
+{
+
+using core::Command;
+using core::Json;
+
+const char* const noParamsSchema = R"({"type": "object", "properties": {}, "additionalProperties": false})";
+
+const char* const infoSchema = R"({
+    "type": "object",
+    "properties": {
+        "path": {"type": "string", "description": "Absolute path of the .tracklab project file."},
+        "name": {"type": "string", "description": "Project name (the file name without the extension)."},
+        "format_version": {"type": "integer", "description": "Version of the project file format."},
+        "modified": {"type": "boolean", "description": "True if there are unsaved changes."}
+    },
+    "required": ["path", "name", "format_version", "modified"],
+    "additionalProperties": false
+})";
+
+const char* const folderDescription =
+    "Absolute path of the folder that holds the project folders (it must exist). The project lives in "
+    "<folder>/<name>/<name>.tracklab.";
+
+Json toJson(const ProjectInfo& info)
+{
+    return Json{{"path", info.file.getFullPathName().toStdString()},
+                {"name", info.name},
+                {"format_version", info.formatVersion},
+                {"modified", info.modified}};
+}
+
+/** Paths come from outside (GUI dialog, Claude, MCP): only absolute ones, so that nothing depends on the working
+    directory of the process. The folder release for Claude comes with M3. */
+juce::File absoluteFile(const Json& params, const char* key)
+{
+    const auto text = juce::String::fromUTF8(params.at(key).get<std::string>().c_str());
+    if (!juce::File::isAbsolutePath(text))
+        throw core::CommandFailure(core::error_code::invalidParams,
+                                   std::string("\"") + key + "\" must be an absolute path", std::string("/") + key);
+    return juce::File(text);
+}
+
+juce::String projectName(const Json& params)
+{
+    return juce::String::fromUTF8(params.at("name").get<std::string>().c_str());
+}
+
+}  // namespace
+
+core::RegisterResult registerProjectCommands(core::CommandRegistry& registry, ProjectSession& session)
+{
+    // Not captured by value: the session outlives the registry's use of the commands (see the header).
+    Command create;
+    create.id = "project.new";
+    create.titleDe = "Neues Projekt";
+    create.descriptionEn =
+        "Creates a new project <folder>/<name>/<name>.tracklab with the sub folders Audio, Renders, Backups and Peaks "
+        "and opens it. Fails with unsaved_changes if the open project has unsaved changes.";
+    create.paramsSchema = Json::parse(std::string(R"({
+        "type": "object",
+        "properties": {
+            "folder": {"type": "string", "description": ")") +
+                                      folderDescription + R"("},
+            "name": {"type": "string", "description": "Project name; a plain name without path separators."},
+            "template": {"type": "string", "enum": ["empty"], "description": "Project template (default: empty)."}
+        },
+        "required": ["folder", "name"],
+        "additionalProperties": false
+    })");
+    create.resultSchema = Json::parse(infoSchema);
+    create.shortcut = "Ctrl+N";
+    create.menuPath = "Datei";
+    create.handler = [&session](const Json& params)
+    { return toJson(session.createProject(absoluteFile(params, "folder"), projectName(params))); };
+    if (auto outcome = registry.registerCommand(std::move(create)); !outcome.ok)
+        return outcome;
+
+    Command open;
+    open.id = "project.open";
+    open.titleDe = "Projekt \xC3\xB6"
+                   "ffnen";
+    open.descriptionEn =
+        "Opens a .tracklab project file. Fails with unsaved_changes if the open project has unsaved changes, with "
+        "project_not_found, corrupt_project or project_too_new if the file cannot be opened.";
+    open.paramsSchema = Json::parse(R"({
+        "type": "object",
+        "properties": {"path": {"type": "string", "description": "Absolute path of the .tracklab file."}},
+        "required": ["path"],
+        "additionalProperties": false
+    })");
+    open.resultSchema = Json::parse(infoSchema);
+    open.shortcut = "Ctrl+O";
+    open.menuPath = "Datei";
+    open.handler = [&session](const Json& params) { return toJson(session.openProject(absoluteFile(params, "path"))); };
+    if (auto outcome = registry.registerCommand(std::move(open)); !outcome.ok)
+        return outcome;
+
+    Command save;
+    save.id = "project.save";
+    save.titleDe = "Projekt speichern";
+    save.descriptionEn =
+        "Saves the open project to its file (atomically: the old file stays intact if saving fails). Fails with "
+        "no_edit if no project is open.";
+    save.paramsSchema = Json::parse(noParamsSchema);
+    save.resultSchema = Json::parse(infoSchema);
+    save.shortcut = "Ctrl+S";
+    save.menuPath = "Datei";
+    save.handler = [&session](const Json&) { return toJson(session.save()); };
+    if (auto outcome = registry.registerCommand(std::move(save)); !outcome.ok)
+        return outcome;
+
+    Command saveAs;
+    saveAs.id = "project.save_as";
+    saveAs.titleDe = "Projekt speichern unter";
+    saveAs.descriptionEn =
+        "Saves the open project as a new project <folder>/<name>/<name>.tracklab and continues in it. Media files "
+        "are not copied. Never overwrites an existing project.";
+    saveAs.paramsSchema = Json::parse(std::string(R"({
+        "type": "object",
+        "properties": {
+            "folder": {"type": "string", "description": ")") +
+                                      folderDescription + R"("},
+            "name": {"type": "string", "description": "Project name; a plain name without path separators."}
+        },
+        "required": ["folder", "name"],
+        "additionalProperties": false
+    })");
+    saveAs.resultSchema = Json::parse(infoSchema);
+    saveAs.shortcut = "Ctrl+Shift+S";
+    saveAs.menuPath = "Datei";
+    saveAs.handler = [&session](const Json& params)
+    { return toJson(session.saveAs(absoluteFile(params, "folder"), projectName(params))); };
+    if (auto outcome = registry.registerCommand(std::move(saveAs)); !outcome.ok)
+        return outcome;
+
+    Command close;
+    close.id = "project.close";
+    close.titleDe = "Projekt schlie\xC3\x9F"
+                    "en";
+    close.descriptionEn =
+        "Closes the open project. Fails with unsaved_changes if there are unsaved changes, unless discard is true, "
+        "which throws them away. Does nothing if no project is open.";
+    close.paramsSchema = Json::parse(R"({
+        "type": "object",
+        "properties": {"discard": {"type": "boolean", "description": "Throw away unsaved changes (default: false)."}},
+        "additionalProperties": false
+    })");
+    close.resultSchema = Json::parse(R"({
+        "type": "object",
+        "properties": {"closed": {"type": "boolean"}},
+        "required": ["closed"],
+        "additionalProperties": false
+    })");
+    close.flags.destructive = true;
+    close.shortcut = "Ctrl+W";
+    close.menuPath = "Datei";
+    close.handler = [&session](const Json& params)
+    {
+        session.closeProject(params.value("discard", false));
+        return Json{{"closed", true}};
+    };
+    if (auto outcome = registry.registerCommand(std::move(close)); !outcome.ok)
+        return outcome;
+
+    Command getInfo;
+    getInfo.id = "project.get_info";
+    getInfo.titleDe = "Projektinfo abfragen";
+    getInfo.descriptionEn =
+        "Returns path, name, format version and whether there are unsaved changes of the open project. Fails with "
+        "no_edit if no project is open.";
+    getInfo.paramsSchema = Json::parse(noParamsSchema);
+    getInfo.resultSchema = Json::parse(infoSchema);
+    getInfo.flags.readOnly = true;
+    getInfo.handler = [&session](const Json&) { return toJson(session.info()); };
+    return registry.registerCommand(std::move(getInfo));
+}
+
+}  // namespace tracklab::project
