@@ -155,7 +155,7 @@ inline std::vector<std::string> trackNamesOfFile(const juce::File& file)
     is zero based). Backups are named after it. */
 inline juce::Time clockTime(int seconds = 0)
 {
-    return juce::Time(2026, 9, 9, 12, 34, 56 + seconds, 0, true);
+    return juce::Time(2026, 9, 9, 12, 34, 56, 0, true) + juce::RelativeTime::seconds(seconds);
 }
 
 /** Backup file name of project `name` for the clock time `seconds` seconds after clockTime(). */
