@@ -135,7 +135,7 @@ public:
         `<name>.tracklab` right away (so the project is a valid file from the start; modified = false, empty undo
         history). The new project replaces the open one.
         - a project is open and modified -> unsaved_changes (nothing is created);
-        - `name` empty, ".", "..", containing one of `<>:"/\|?*` or a control character, with blanks at the ends or a
+        - `name` longer than 120 bytes (UTF-8), empty, ".", "..", containing one of `<>:"/\|?*` or a control character, with blanks at the ends or a
           dot at the end, or a reserved Windows device name (CON, PRN, AUX, NUL, COM1-9, LPT1-9, any case, also with
           an extension) -> invalid_project_name (nothing is created); `#@,;&` and umlauts are fine;
         - `parentFolder` is not an existing folder -> folder_not_found (it is never created);
@@ -161,7 +161,10 @@ public:
         - none open -> no_edit;
         - Edit::isSaveInhibited() -> save_inhibited, nothing is written;
         - writing, flushing or replacing fails, or the BeforeReplaceHook refuses -> save_failed, the project file is
-          byte-identical to before, no temporary file stays behind, modified is unchanged. */
+          byte-identical to before, no temporary file stays behind, modified is unchanged.
+        M1-05: right before the replace, the project file as it was is copied to
+        `Backups/<name>.<YYYYMMDD-HHMMSS>.tracklab` (a failed save leaves no backup) and the backups beyond maxBackups
+        are deleted afterwards; a successful save deletes the autosave file and ends an offered recovery. */
     ProjectInfo save();
 
     /** Writes the open project as a new project `<parentFolder>/<name>/<name>.tracklab` (same rules for the name and the
@@ -176,7 +179,8 @@ public:
 
     /** Closes the open project (the context's Edit becomes nullptr). With `discard` = false and unsaved changes:
         unsaved_changes (the project stays open). With `discard` = true the changes are dropped, nothing is written.
-        Closing when none is open is allowed and does nothing. */
+        Closing when none is open is allowed and does nothing. M1-05: a close that happens deletes the autosave file,
+        except while an offered recovery is undecided (it is offered again at the next open). */
     void closeProject(bool discard);
 
     /** Info of the open project; no_edit if none is open. */

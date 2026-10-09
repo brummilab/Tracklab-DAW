@@ -3,11 +3,18 @@
 #include "core/undo_levels.h"
 
 #include <algorithm>
+#include <climits>
 #include <exception>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+
+#if JUCE_LINUX || JUCE_MAC
+#include <fcntl.h>
+#include <unistd.h>
+#endif
 
 namespace tracklab::project
 {
@@ -18,6 +25,13 @@ namespace
 /** How long after a save / open the "modified" flag is looked at once more, see ProjectSession::Impl::SettleTimer.
     Tracktion's PluginChangeTimer marks the Edit changed 500 ms after the last plugin change; 650 leaves some slack. */
 constexpr int settleDelayMs = 650;
+
+/** Longest project name in UTF-8 bytes. The name is the base of derived file names: `<name>.<YYYYMMDD-HHMMSS>.tracklab`
+    (backup, +24), `<name>.tracklab.autosave` (+18) and `<name>.tracklab_temp<8 hex>.autosave` (+27); file systems allow
+    255 bytes per name, so 120 leaves a wide margin. */
+constexpr int maxProjectNameBytes = 120;
+
+constexpr const char* autosaveExtension = ".autosave";
 
 [[noreturn]] void fail(std::string_view code, const std::string& message)
 {
@@ -40,6 +54,8 @@ std::string nameProblem(const juce::String& name)
         return "it is empty";
     if (name == "." || name == "..")
         return "it is a folder reference, not a name";
+    if (name.getNumBytesAsUTF8() > static_cast<size_t>(maxProjectNameBytes))
+        return "it is longer than " + std::to_string(maxProjectNameBytes) + " bytes (UTF-8)";
     for (const auto character : name)
     {
         if (character < 32)
@@ -82,6 +98,151 @@ juce::File projectFileIn(const juce::File& projectFolder, const juce::String& na
     return projectFolder.getChildFile(name + fileExtension);
 }
 
+juce::File autosaveFileOf(const juce::File& projectFile)
+{
+    return projectFile.getSiblingFile(projectFile.getFileName() + autosaveExtension);
+}
+
+juce::File backupsFolderOf(const juce::File& projectFile)
+{
+    return projectFile.getParentDirectory().getChildFile("Backups");
+}
+
+/** `<name>.<YYYYMMDD-HHMMSS>.tracklab`, the stamp in local time of the session's clock. */
+juce::String backupFileName(const juce::String& projectName, const juce::Time& time)
+{
+    return projectName + "." + time.formatted("%Y%m%d-%H%M%S") + fileExtension;
+}
+
+/** The time in the name of a backup of project `projectName`; empty if `fileName` is not such a name (other projects'
+    backups and foreign files in Backups/ are none of our business: they are neither listed, counted nor deleted). */
+std::optional<juce::Time> backupTimeOf(const juce::String& projectName, const juce::String& fileName)
+{
+    const auto prefix = projectName + ".";
+    const juce::String suffix(fileExtension);
+    if (!fileName.startsWith(prefix) || !fileName.endsWith(suffix))
+        return std::nullopt;
+    const auto stamp = fileName.substring(prefix.length(), fileName.length() - suffix.length());
+    if (stamp.length() != 15 || stamp[8] != '-')
+        return std::nullopt;
+    for (int i = 0; i < 15; ++i)
+        if (i != 8 && !juce::CharacterFunctions::isDigit(stamp[i]))
+            return std::nullopt;
+    return juce::Time(stamp.substring(0, 4).getIntValue(), stamp.substring(4, 6).getIntValue() - 1,
+                      stamp.substring(6, 8).getIntValue(), stamp.substring(9, 11).getIntValue(),
+                      stamp.substring(11, 13).getIntValue(), stamp.substring(13, 15).getIntValue(), 0, true);
+}
+
+/** The backups of the project in `backupsFolder`, newest first (by the time in the name). */
+std::vector<BackupInfo> collectBackups(const juce::File& backupsFolder, const juce::String& projectName)
+{
+    std::vector<BackupInfo> backups;
+    for (const auto& file : backupsFolder.findChildFiles(juce::File::findFiles, false))
+        if (const auto time = backupTimeOf(projectName, file.getFileName()))
+            backups.push_back(BackupInfo{file.getFileName(), *time, file.getSize()});
+    std::sort(backups.begin(), backups.end(),
+              [](const BackupInfo& a, const BackupInfo& b)
+              {
+                  if (a.time != b.time)
+                      return a.time > b.time;
+                  return a.name > b.name;
+              });
+    return backups;
+}
+
+/** Deletes the oldest backups of the project beyond `keep`. A count <= 0 means "backups are off": nothing is deleted. */
+void rotateBackups(const juce::File& backupsFolder, const juce::String& projectName, int keep)
+{
+    if (keep <= 0)
+        return;
+    const auto backups = collectBackups(backupsFolder, projectName);
+    for (size_t i = static_cast<size_t>(keep); i < backups.size(); ++i)
+        backupsFolder.getChildFile(backups[i].name).deleteFile();
+}
+
+/** Makes a rename durable: the directory entry is flushed (POSIX; Windows' ReplaceFileW is durable by itself). */
+void syncFolder([[maybe_unused]] const juce::File& folder)
+{
+#if JUCE_LINUX || JUCE_MAC
+    // NOLINTNEXTLINE(hicpp-vararg,cppcoreguidelines-pro-type-vararg): POSIX open() has no other signature
+    const int descriptor = ::open(folder.getFullPathName().toRawUTF8(), O_RDONLY | O_DIRECTORY);
+    if (descriptor >= 0)
+    {
+        ::fsync(descriptor);
+        ::close(descriptor);
+    }
+#endif
+}
+
+/** `chars` are all hex digits and there is at least one. */
+bool isHex(const juce::String& chars)
+{
+    return chars.isNotEmpty() && chars.containsOnly("0123456789abcdefABCDEF");
+}
+
+/** Removes what an interrupted atomic write left in the project folder: juce::TemporaryFile names its files
+    `<stem>_temp<hex><extension>`, i.e. `<name>_temp<hex>.tracklab` for the project file and
+    `<name>.tracklab_temp<hex>.autosave` for the autosave. Only files with this project's names are touched. */
+void removeInterruptedWrites(const juce::File& projectFile)
+{
+    const auto isLeftover = [](const juce::String& fileName, const juce::String& stem, const juce::String& extension)
+    {
+        const auto prefix = stem + "_temp";
+        return fileName.startsWith(prefix) && fileName.endsWith(extension) &&
+               fileName.length() > prefix.length() + extension.length() &&
+               isHex(fileName.substring(prefix.length(), fileName.length() - extension.length()));
+    };
+    for (const auto& file : projectFile.getParentDirectory().findChildFiles(juce::File::findFiles, false))
+    {
+        const auto fileName = file.getFileName();
+        if (isLeftover(fileName, projectFile.getFileNameWithoutExtension(), fileExtension) ||
+            isLeftover(fileName, projectFile.getFileName(), autosaveExtension))
+            file.deleteFile();
+    }
+}
+
+/** What to add to the error of a project file that cannot be read: the newest of the backups and the autosave (E41), so
+    that the user knows where the work is. The autosave counts as newer than a backup when its modification time is
+    later than the backup's time in its name. */
+std::string recoveryHint(const juce::File& projectFile)
+{
+    const auto backups = collectBackups(backupsFolderOf(projectFile), projectFile.getFileNameWithoutExtension());
+    const auto autosave = autosaveFileOf(projectFile);
+    if (autosave.existsAsFile() && (backups.empty() || autosave.getLastModificationTime() > backups.front().time))
+        return "; the autosave " + quoted(autosave) + " may hold the latest work";
+    if (!backups.empty())
+        return "; the newest backup is " + quoted(backupsFolderOf(projectFile).getChildFile(backups.front().name));
+    return {};
+}
+
+/** The copy of the project file as it is before a save, made right before the save replaces it (so that a save that
+    fails leaves no backup: takeBack removes what was made). Best effort: a backup that cannot be made does not stop the
+    save. */
+struct BackupCopy
+{
+    juce::File source;  ///< the project file as it is now; a missing file (or none) means "no backup"
+    juce::File target;
+
+    void make()
+    {
+        if (!source.existsAsFile() || !target.getParentDirectory().createDirectory().wasOk())
+            return;
+        const bool existed = target.exists();  // two saves within a second share a name; the later one wins
+        juce::TemporaryFile temporary(target);
+        if (!source.copyFileTo(temporary.getFile()) || !temporary.overwriteTargetFileWithTemporary())
+            return;
+        made = !existed;
+    }
+
+    void takeBack() const
+    {
+        if (made)
+            target.deleteFile();
+    }
+
+    bool made = false;  ///< a new file was created by make()
+};
+
 /** Folder and the four sub folders of a project. Remembers whether the project folder is new, so that a failed
     creation can take it back (only what this call created is ever removed). */
 struct ProjectFolders
@@ -117,8 +278,10 @@ struct ProjectFolders
 /** Writes the state of `edit` to `target` so that `target` is either the old file or the complete new one, never
     something in between: a temporary file next to it is written and flushed (fsync), and only then replaces `target`
     (rename on Linux, ReplaceFileW on Windows). Everything that goes wrong is save_failed; the temporary file is
-    removed by juce::TemporaryFile's destructor in every case. */
-void writeProjectFile(te::Edit& edit, const juce::File& target, const ProjectSession::BeforeReplaceHook& hook)
+    removed by juce::TemporaryFile's destructor in every case. `backup`, if given, is made after the hook has agreed and
+    right before the replace. */
+void writeProjectFile(te::Edit& edit, const juce::File& target, const ProjectSession::BeforeReplaceHook& hook,
+                      BackupCopy* backup = nullptr)
 {
     // The plugin states go into the tree first, then the version: the file must say which format it is in.
     edit.flushState();
@@ -159,8 +322,43 @@ void writeProjectFile(te::Edit& edit, const juce::File& target, const ProjectSes
             fail(error_code::saveFailed, "The save was aborted before " + quoted(target) + " was replaced");
     }
 
+    if (backup != nullptr)
+        backup->make();
     if (!temporary.overwriteTargetFileWithTemporary())
+    {
+        if (backup != nullptr)
+            backup->takeBack();
         fail(error_code::saveFailed, "Cannot replace " + quoted(target) + " by the saved project");
+    }
+    syncFolder(target.getParentDirectory());
+}
+
+/** The project state of a file (project, autosave or backup) as a tree, migrated in memory to currentFormatVersion.
+    `what` names the kind of file in the messages, `hint` is appended to a corrupt_project message. Fails with
+    corrupt_project, project_too_new or migration_failed. Nothing is written. */
+juce::ValueTree readState(const juce::File& file, const std::string& what, const std::string& hint)
+{
+    const auto corrupt = [&](const std::string& reason)
+    {
+        fail(error_code::corruptProject, "The " + what + " " + quoted(file) +
+                                             " cannot be read as a Tracklab project (" + reason +
+                                             "); the file was not changed" + hint);
+    };
+
+    const auto xml = juce::XmlDocument::parse(file);
+    if (xml == nullptr)
+        corrupt("not valid XML or empty");
+    if (!xml->hasTagName("EDIT"))
+        corrupt("the root element is not EDIT");
+    auto state = juce::ValueTree::fromXml(*xml);
+    if (!state.isValid())
+        corrupt("no project state");
+
+    // In memory only: the file on disk is rewritten by the next save, never by reading it.
+    if (const auto outcome = migrateState(state, builtInMigrationSteps(), currentFormatVersion); !outcome.ok)
+        fail(outcome.code, "The " + what + " " + quoted(file) + ": " + outcome.message);
+    state.setProperty(te::IDs::alwaysUseRelativePaths, true, nullptr);
+    return state;
 }
 
 /** Do two states have the same content? Tracktion re-sorts the child nodes of the EDIT node (tracks by type) in an
@@ -267,6 +465,19 @@ struct ProjectSession::Impl
         Impl& impl;
     };
 
+    /** The autosave timer (M1-05): a message-thread timer, so that the autosave never runs in parallel with a command. */
+    struct AutosaveTimer : private juce::Timer
+    {
+        explicit AutosaveTimer(Impl& owner) : impl(owner) {}
+        using juce::Timer::startTimer;
+        using juce::Timer::stopTimer;
+
+    private:
+        void timerCallback() override { impl.autosave(); }
+
+        Impl& impl;
+    };
+
     void beginSettling()
     {
         edit->flushState();  // so that the snapshot has what a later flushState would write anyway
@@ -293,7 +504,11 @@ struct ProjectSession::Impl
         if (edit == nullptr || !settling)
             return;
         edit->getUndoManager().dispatchPendingMessages();
-        alignFlagWithContent();
+        if (forceModified)
+            edit->markAsChanged();
+        else
+            alignFlagWithContent();
+        forceModified = false;
         settling = false;
         snapshot = {};
     }
@@ -307,7 +522,9 @@ struct ProjectSession::Impl
         if (edit == nullptr)
             return false;
         edit->getUndoManager().dispatchPendingMessages();
-        return settling ? alignFlagWithContent() : edit->hasChangedSinceSaved();
+        if (settling)
+            return forceModified || alignFlagWithContent();
+        return edit->hasChangedSinceSaved();
     }
 
     void requireNoUnsavedChanges(const char* action)
@@ -376,14 +593,20 @@ struct ProjectSession::Impl
     void dropEdit()
     {
         settleTimer.stopTimer();
+        autosaveTimer.stopTimer();
         settling = false;
+        forceModified = false;
+        recovery.reset();
+        autosaved = {};
         context.setEdit(nullptr);
         edit.reset();  // before the engine goes away
         fileRef = std::make_shared<juce::File>();
     }
 
-    /** Makes `fresh` the open project. The previous Edit is destroyed after the context points to the new one. */
-    void install(std::unique_ptr<te::Edit> fresh, std::shared_ptr<juce::File> file)
+    /** Makes `fresh` the open project. The previous Edit is destroyed after the context points to the new one.
+        `markModified`: the state is not what the project file has (restored from an autosave or a backup), so it counts
+        as modified although Tracktion does not know of a change. */
+    void install(std::unique_ptr<te::Edit> fresh, std::shared_ptr<juce::File> file, bool markModified = false)
     {
         settleTimer.stopTimer();
         settling = false;
@@ -392,15 +615,75 @@ struct ProjectSession::Impl
         edit = std::move(fresh);
         fileRef = std::move(file);
         previous.reset();
+        autosaved = {};
         beginSettling();
+        forceModified = markModified;
+        restartAutosaveTimer();
     }
 
     ProjectInfo finishSave(te::Edit& e)
     {
         e.resetChangedStatus();
         beginSettling();
+        forceModified = false;
+        // The saved file has everything: the autosave is obsolete, and an offered recovery is decided by saving.
+        autosaveFileOf(*fileRef).deleteFile();
+        recovery.reset();
+        autosaved = {};
         return infoOf();
     }
+
+    //==========================================================================
+    void restartAutosaveTimer()
+    {
+        autosaveTimer.stopTimer();
+        if (edit != nullptr && autosaveInterval.count() > 0)
+            autosaveTimer.startTimer(
+                static_cast<int>(std::min<std::chrono::milliseconds::rep>(autosaveInterval.count(), INT_MAX)));
+    }
+
+    /** What the autosave timer does: writes `<project>.tracklab.autosave` if the project changed since the last save and
+        since the last autosave, through the same atomic write as a save. Never throws. */
+    AutosaveResult autosave()
+    {
+        if (edit == nullptr)
+            return AutosaveResult::noProject;
+        if (!isModified())
+            return AutosaveResult::notModified;
+        if (recovery.has_value())
+            return AutosaveResult::recoveryPending;  // the autosave of the crash is not decided yet: keep it
+        if (edit->isSaveInhibited())
+            return AutosaveResult::saveInhibited;
+
+        try
+        {
+            // Tracktion's flag stays set after an autosave (it is not a save), so what was written is compared.
+            edit->flushState();
+            if (autosaved.isValid() && sameContent(edit->state, autosaved))
+                return AutosaveResult::notModified;
+            writeProjectFile(*edit, autosaveFileOf(*fileRef), hook);
+            autosaved = edit->state.createCopy();
+            return AutosaveResult::written;
+        }
+        catch (...)
+        {
+            return AutosaveResult::failed;
+        }
+    }
+
+    juce::Time now() const { return clock ? clock() : juce::Time::getCurrentTime(); }
+
+    juce::String projectName() const { return fileRef->getFileNameWithoutExtension(); }
+
+    /** The backup of the project file as it is now, named after the clock. Empty source if backups are switched off. */
+    BackupCopy backupOfCurrentFile() const
+    {
+        if (maxBackups <= 0)
+            return {};
+        return BackupCopy{*fileRef, backupsFolderOf(*fileRef).getChildFile(backupFileName(projectName(), now()))};
+    }
+
+    void rotate() const { rotateBackups(backupsFolderOf(*fileRef), projectName(), maxBackups); }
 
     /** After a failed write the project is as modified as before (the write itself changes the state tree only without
         the undo manager, but a flag set on the way would be wrong). */
@@ -417,7 +700,14 @@ struct ProjectSession::Impl
     std::shared_ptr<juce::File> fileRef = std::make_shared<juce::File>();
     juce::ValueTree snapshot;  // the state that was written / read last, while `settling`
     bool settling = false;
+    bool forceModified = false;  // while `settling`: modified although the content equals the snapshot (see install)
     SettleTimer settleTimer{*this};
+    Clock clock;  // empty = juce::Time::getCurrentTime()
+    int maxBackups = defaultMaxBackups;
+    std::chrono::milliseconds autosaveInterval{defaultAutosaveIntervalMs};
+    juce::ValueTree autosaved;             // the state of the autosave file, invalid = none written since open / save
+    std::optional<RecoveryInfo> recovery;  // an offered, undecided recovery
+    AutosaveTimer autosaveTimer{*this};
     std::unique_ptr<te::Edit> edit;  // last: destroyed first
 };
 
@@ -473,6 +763,7 @@ ProjectInfo ProjectSession::createProject(const juce::File& parentFolder, const 
 
     Impl::startClean(*created);
     impl->install(std::move(created), std::move(fileRef));
+    impl->recovery.reset();
     return impl->infoOf();
 }
 
@@ -482,34 +773,29 @@ ProjectInfo ProjectSession::openProject(const juce::File& file)
     if (!file.existsAsFile())
         fail(error_code::projectNotFound, "The project file " + quoted(file) + " does not exist");
 
-    const auto corrupt = [&file](const std::string& reason)
-    {
-        fail(error_code::corruptProject, "The project file " + quoted(file) +
-                                             " cannot be read as a Tracklab project (" + reason +
-                                             "); the file was not changed");
-    };
-
-    const auto xml = juce::XmlDocument::parse(file);
-    if (xml == nullptr)
-        corrupt("not valid XML or empty");
-    if (!xml->hasTagName("EDIT"))
-        corrupt("the root element is not EDIT");
-    auto state = juce::ValueTree::fromXml(*xml);
-    if (!state.isValid())
-        corrupt("no project state");
-
-    // In memory only: the file on disk is rewritten by the next save, never by reading it.
-    if (const auto outcome = migrateState(state, builtInMigrationSteps(), currentFormatVersion); !outcome.ok)
-        fail(outcome.code, "The project file " + quoted(file) + ": " + outcome.message);
-    state.setProperty(te::IDs::alwaysUseRelativePaths, true, nullptr);
+    // An unreadable file names the newest backup / autosave: that is where the work is.
+    const auto state = readState(file, "project file", recoveryHint(file));
 
     auto fileRef = std::make_shared<juce::File>(file);
     auto opened = impl->makeEdit(state, fileRef);
     if (opened == nullptr)
-        corrupt("Tracktion could not load the project state");
+        fail(error_code::corruptProject, "The project file " + quoted(file) +
+                                             " cannot be read as a Tracklab project (Tracktion could not load the "
+                                             "project state); the file was not changed" +
+                                             recoveryHint(file));
+
+    // A write that was interrupted by a crash left a temporary file next to the project file.
+    removeInterruptedWrites(file);
+
+    // An autosave that is newer than the project file is a crash that lost work: offer it (never applied unasked).
+    std::optional<RecoveryInfo> recovery;
+    if (const auto autosave = autosaveFileOf(file);
+        autosave.existsAsFile() && autosave.getLastModificationTime() > file.getLastModificationTime())
+        recovery = RecoveryInfo{file.getLastModificationTime(), autosave.getLastModificationTime()};
 
     Impl::startClean(*opened);
     impl->install(std::move(opened), std::move(fileRef));
+    impl->recovery = recovery;
     return impl->infoOf();
 }
 
@@ -521,15 +807,17 @@ ProjectInfo ProjectSession::save()
              "The project cannot be saved right now: an operation that changes it temporarily is running");
 
     const bool wasModified = impl->isModified();
+    auto backup = impl->backupOfCurrentFile();  // the file as it is before this save replaces it
     try
     {
-        writeProjectFile(edit, *impl->fileRef, impl->hook);
+        writeProjectFile(edit, *impl->fileRef, impl->hook, &backup);
     }
     catch (...)
     {
         Impl::restoreModified(edit, wasModified);
         throw;
     }
+    impl->rotate();
     return impl->finishSave(edit);
 }
 
@@ -576,55 +864,130 @@ void ProjectSession::closeProject(bool discard)
         return;
     if (!discard)
         impl->requireNoUnsavedChanges("close it");
+
+    // A clean close and a confirmed discard both end the session on purpose: the autosave is of no use any more. Only an
+    // offered recovery that was never decided stays, so that it is offered again.
+    const auto autosave = autosaveFileOf(*impl->fileRef);
+    const bool recoveryUndecided = impl->recovery.has_value();
     impl->dropEdit();
+    if (!recoveryUndecided)
+        autosave.deleteFile();
 }
 
 //==============================================================================
-// M1-05: interfaces only, behaviour follows with the implementation.
-void ProjectSession::setClock(Clock) {}
+// M1-05: autosave, backups, recovery.
+void ProjectSession::setClock(Clock clock)
+{
+    impl->clock = std::move(clock);
+}
 
-void ProjectSession::setAutosaveInterval(std::chrono::milliseconds) {}
+void ProjectSession::setAutosaveInterval(std::chrono::milliseconds interval)
+{
+    impl->autosaveInterval = interval;
+    impl->restartAutosaveTimer();
+}
 
 std::chrono::milliseconds ProjectSession::autosaveInterval() const
 {
-    return std::chrono::milliseconds(0);
+    return impl->autosaveInterval;
 }
 
-void ProjectSession::setMaxBackups(int) {}
+void ProjectSession::setMaxBackups(int count)
+{
+    impl->maxBackups = count;
+}
 
 int ProjectSession::maxBackups() const
 {
-    return 0;
+    return impl->maxBackups;
 }
 
 AutosaveResult ProjectSession::autosaveNow()
 {
-    return AutosaveResult::failed;
+    return impl->autosave();
 }
 
 std::vector<BackupInfo> ProjectSession::listBackups() const
 {
-    return {};
+    if (impl->edit == nullptr)
+        return {};
+    return collectBackups(backupsFolderOf(*impl->fileRef), impl->projectName());
 }
 
 std::optional<RecoveryInfo> ProjectSession::pendingRecovery() const
 {
-    return std::nullopt;
+    return impl->recovery;
 }
 
 ProjectInfo ProjectSession::restoreAutosave()
 {
-    fail(error_code::noAutosave, "not implemented");
+    impl->requireEdit();
+    const auto autosave = autosaveFileOf(*impl->fileRef);
+    if (!autosave.existsAsFile())
+        fail(error_code::noAutosave, "There is no autosave file " + quoted(autosave) + " of the open project");
+
+    // Everything that can fail happens before the open project is touched.
+    const auto state = readState(autosave, "autosave file", {});
+    auto restored = impl->makeEdit(state, impl->fileRef);
+    if (restored == nullptr)
+        fail(error_code::corruptProject, "The autosave file " + quoted(autosave) +
+                                             " cannot be read as a Tracklab project (Tracktion could not load the "
+                                             "project state); the open project was not changed");
+
+    Impl::startClean(*restored);
+    impl->install(std::move(restored), impl->fileRef, true);
+    impl->recovery.reset();
+    impl->autosaved = impl->snapshot.createCopy();  // the autosave file has exactly this state
+    return impl->infoOf();
 }
 
 void ProjectSession::discardAutosave()
 {
-    fail(error_code::noAutosave, "not implemented");
+    impl->requireEdit();
+    const auto autosave = autosaveFileOf(*impl->fileRef);
+    if (!autosave.existsAsFile())
+        fail(error_code::noAutosave, "There is no autosave file " + quoted(autosave) + " of the open project");
+    if (!autosave.deleteFile())
+        fail(error_code::saveFailed, "Cannot delete the autosave file " + quoted(autosave));
+    impl->recovery.reset();
+    impl->autosaved = {};  // the next autosave writes again, whatever was written before
 }
 
-ProjectInfo ProjectSession::restoreBackup(const juce::String&)
+ProjectInfo ProjectSession::restoreBackup(const juce::String& name)
 {
-    fail(error_code::backupNotFound, "not implemented");
+    auto& edit = impl->requireEdit();
+
+    // The name comes from outside (GUI, Claude, MCP): a plain file name of this project's Backups folder, nothing else.
+    if (name.isEmpty() || name.containsAnyOf("/\\") || name.contains("..") || juce::File::isAbsolutePath(name))
+        throw core::CommandFailure(core::error_code::invalidParams,
+                                   "\"" + name.toStdString() + "\" is not a backup name; use a name from list_backups",
+                                   "/name");
+    const auto listed = collectBackups(backupsFolderOf(*impl->fileRef), impl->projectName());
+    if (std::none_of(listed.begin(), listed.end(), [&name](const BackupInfo& backup) { return backup.name == name; }))
+        fail(error_code::backupNotFound, "The project has no backup \"" + name.toStdString() + "\"");
+    const auto backupFile = backupsFolderOf(*impl->fileRef).getChildFile(name);
+
+    // Load first, change nothing yet: an unreadable backup must not cost the current state.
+    const auto state = readState(backupFile, "backup file", {});
+    auto restored = impl->makeEdit(state, impl->fileRef);
+    if (restored == nullptr)
+        fail(error_code::corruptProject, "The backup file " + quoted(backupFile) +
+                                             " cannot be read as a Tracklab project (Tracktion could not load the "
+                                             "project state); the open project was not changed");
+
+    // The current state, unsaved changes included, becomes a backup of its own, so that restoring loses nothing. Same
+    // atomic write as a save; without the test hook, which is about the project file and the autosave. If it shares its
+    // name with the chosen backup (same second) it replaces it: the chosen state is already loaded.
+    const auto safety = backupsFolderOf(*impl->fileRef).getChildFile(backupFileName(impl->projectName(), impl->now()));
+    if (const auto result = safety.getParentDirectory().createDirectory(); result.failed())
+        fail(error_code::saveFailed, "Cannot create the folder " + quoted(safety.getParentDirectory()) + ": " +
+                                         result.getErrorMessage().toStdString());
+    writeProjectFile(edit, safety, {});
+    impl->rotate();
+
+    Impl::startClean(*restored);
+    impl->install(std::move(restored), impl->fileRef, true);
+    return impl->infoOf();
 }
 
 ProjectInfo ProjectSession::info() const

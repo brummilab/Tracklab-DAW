@@ -30,6 +30,19 @@ namespace tracklab::project
                       Error unsaved_changes if there are unsaved changes and discard is not true.
     project.get_info  flags: readOnly     params {} -> Info. Error no_edit if no project is open.
 
+    M1-05 (E41):
+    project.open      additionally returns "recovery_available": {"project_time": ISO 8601, "autosave_time": ISO 8601}
+                      (only that key, only if the autosave file is newer than the project file; the project is opened as
+                      the file has it, nothing is applied).
+    project.list_backups     flags: readOnly   params {} -> {"backups": [{"name", "time" (ISO 8601), "size_bytes"}]},
+                      newest first. Error no_edit.
+    project.restore_backup   flags: destructive  params {"name": string} -> Info (modified true). Backs up the current
+                      state first. Errors: no_edit, invalid_params (not a plain file name), backup_not_found,
+                      corrupt_project (the backup is unreadable; nothing changed).
+    project.restore_autosave flags: destructive  params {} -> Info (modified true). Errors: no_edit, no_autosave,
+                      corrupt_project.
+    project.discard_autosave flags: destructive  params {} -> {"discarded": true}. Errors: no_edit, no_autosave.
+
     Parameters are checked by the registry (additionalProperties:false: an unknown key is invalid_params). `folder` and
     `path` have to be absolute: a relative one is invalid_params (pointer "/folder" / "/path"), so that nothing depends
     on the working directory. Which folders Claude may use is decided by the folder release of M3. */
