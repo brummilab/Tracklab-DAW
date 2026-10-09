@@ -9,7 +9,8 @@ Stand: 09.10.2026 · Lauf: `researcher` · Übernommen vom Lead.
   47462 nur per Suchzusammenfassung; GitHub-Issue-Suche gesperrt) `[VERIFIZIEREN]`.
 - **Tracktion:** produktiv nur `tracktion_CurveEditor.cpp:512` (Echtzeit-Drag) – betroffen, falls Tracklab diesen
   Editor nutzt `[VERIFIZIEREN]`. Tracklab: nur `src/core/transaction.cpp` (`rollback`).
-- **Minimaler Fix (2 Zeilen):** `stashedFutureTransactions.clear()` in `moveFutureTransactionsToStash()` außerhalb des
+- **Minimaler Fix – korrigiert in O-09 C:** Stash im `else`-Zweig von `perform()` (neuer ActionSet) und in
+  `clearUndoHistory()` leeren (5 Zeilen). Die ursprünglich notierte Variante unten wäre falsch (Review O-09 C): `stashedFutureTransactions.clear()` in `moveFutureTransactionsToStash()` außerhalb des
   `if`; zusätzlich in `clearUndoHistory()`.
 - **Ohne JUCE-Änderung:** kein sauberer Weg (Feld privat, keine virtuellen Methoden; Dummy-Action-Trick erzeugt
   sichtbaren Geister-Eintrag).
@@ -52,6 +53,9 @@ Minimal example
 Same with clearUndoHistory() followed by perform() and undoCurrentTransactionOnly().
 
 Suggested fix
-Call stashedFutureTransactions.clear() unconditionally in moveFutureTransactionsToStash() and in clearUndoHistory().
+Clear stashedFutureTransactions where perform() starts a new ActionSet (the else branch) and in clearUndoHistory().
+Not unconditionally in moveFutureTransactionsToStash(): that runs after every perform(), so the second write of a
+transaction that began with redo steps would drop the stash it just filled, and undoCurrentTransactionOnly() could
+no longer restore them.
 ```
 Minimalbeispiel vor dem Posten als Test reproduzieren (Teil C).
