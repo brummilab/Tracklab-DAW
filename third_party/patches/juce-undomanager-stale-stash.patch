@@ -1,0 +1,23 @@
+diff --git a/modules/juce_data_structures/undomanager/juce_UndoManager.cpp b/modules/juce_data_structures/undomanager/juce_UndoManager.cpp
+index 4a6db25..989277c 100644
+--- a/modules/juce_data_structures/undomanager/juce_UndoManager.cpp
++++ b/modules/juce_data_structures/undomanager/juce_UndoManager.cpp
+@@ -87,6 +87,7 @@ UndoManager::~UndoManager()
+ void UndoManager::clearUndoHistory()
+ {
+     transactions.clear();
++    stashedFutureTransactions.clear();
+     totalUnitsStored = 0;
+     nextIndex = 0;
+     sendChangeMessage();
+@@ -148,6 +149,10 @@ bool UndoManager::perform (UndoableAction* newAction)
+             }
+             else
+             {
++                // Tracklab patch: a new transaction starts with an empty stash. Without this, a stash from an
++                // earlier transaction survives when no redo steps exist now, and undoCurrentTransactionOnly()
++                // would bring it back as a redo that no longer fits the state.
++                stashedFutureTransactions.clear();
+                 actionSet = new ActionSet (newTransactionName);
+                 transactions.insert (nextIndex, actionSet);
+                 ++nextIndex;

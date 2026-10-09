@@ -12,13 +12,23 @@ mitgelieferten Komponenten: 08.10.2026 (Karte M1-06).
 
 | Bibliothek | Version / Stand | Lizenz | Verwendung | Quelle / Lizenztext |
 |---|---|---|---|---|
-| JUCE | 9.0.3 (`be29c81`) | AGPL-3.0 (JUCE-Lizenzoption) | GUI, Audio-Geräte, Plugin-Hosting, Dateiformate | `third_party/JUCE/LICENSE.md` |
+| JUCE **mit Tracklab-Patch** | 9.0.3 (`be29c81`) | AGPL-3.0 (JUCE-Lizenzoption) | GUI, Audio-Geräte, Plugin-Hosting, Dateiformate | `third_party/JUCE/LICENSE.md`, Patch siehe unten |
 | Tracktion Engine | `develop` @ `bb38617` (3.5.0) | GPL-3.0-or-later | Audio-Engine, Edit, Transport, Aufnahme | `third_party/tracktion_engine/LICENSE.md` |
 | VST 3 SDK (in JUCE enthalten) | 3.8 | MIT | VST3-Hosting | `third_party/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK/LICENSE.txt` |
 | ASIO SDK (in JUCE enthalten) | 2.3 (© 2025 Steinberg) | **GPL-3.0** (Option der Steinberg-Doppellizenz), siehe unten | ASIO-Treiber unter Windows (`JUCE_ASIO=1`) | `third_party/JUCE/modules/juce_audio_devices/native/asio/LICENSE.txt` |
 | nlohmann/json | v3.12.0 | MIT | JSON in Command-Registry, Schemas, Projektdateien | `third_party/nlohmann_json/LICENSE.MIT` |
 | pboettch/json-schema-validator | 2.4.0 | MIT | Validierung der Command-Parameter (JSON Schema draft 7) | `third_party/json-schema-validator/LICENSE` |
 | doctest | 2.4.11 (aus dem Tracktion-Pin) | MIT | nur Tests (`tests/`), nicht im ausgelieferten Programm | `third_party/tracktion_engine/modules/3rd_party/doctest/` |
+
+## Änderung an JUCE (Tracklab-Patch)
+
+Tracklab verändert den Quelltext von JUCE an einer Stelle: `third_party/patches/juce-undomanager-stale-stash.patch`
+ändert `modules/juce_data_structures/undomanager/juce_UndoManager.cpp` (wenige Zeilen). Der Patch leert den internen
+Zwischenspeicher („Stash“) früherer Redo-Schritte beim Beginn einer neuen Transaktion und in `clearUndoHistory()`.
+Grund: Ohne ihn kommt ein längst verworfener Redo-Schritt nach `undoCurrentTransactionOnly()` als „Geister-Redo“ zurück
+(Entscheidung E49, Recherche `team/research/juce-undo-stash/NOTIZEN.md`). `cmake/TracklabDeps.cmake` wendet ihn beim
+Konfigurieren an (idempotent); das Submodul-Pin bleibt unverändert. Die Änderung steht wie JUCE selbst unter der AGPL-3.0,
+der Quelltext des Patches liegt im Repository. Entfällt, sobald JUCE den Fehler upstream behebt.
 
 ## Audio-Schnittstellen des Betriebssystems
 

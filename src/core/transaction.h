@@ -14,7 +14,8 @@ namespace tracklab::core
     the object lives belongs to ONE undo step named `nameDe` (UTF-8). A transaction without any change leaves no entry.
     A Transaction created while another one on the same Edit is alive (on this thread) joins it: no new step, no
     name of its own, and its rollback() does nothing: only the outer Transaction can take the changes back.
-    Message thread only. The Edit has to outlive the Transaction. */
+    Message thread only. Contract: the Edit outlives the Transaction (the inhibitor reads it in its destructor, a
+    Transaction does not guard against a destroyed Edit). */
 class Transaction
 {
 public:
@@ -24,10 +25,11 @@ public:
     Transaction& operator=(const Transaction&) = delete;
 
     /** Takes back everything done since construction: the Edit state is as before and no undo entry remains. The redo
-        steps that existed when the Transaction began are back too (UndoManager::undoCurrentTransactionOnly), with one
-        exception forced by JUCE: its stash of former redo steps can be stale, and then the undo history is cleared
-        completely (see transaction.cpp) rather than let a redo come back that no longer fits the state. A redo that
-        existed at the beginning is never lost by a rollback, one that did not exist is never created.
+        steps that existed when the Transaction began are back too (UndoManager::undoCurrentTransactionOnly), and the
+        earlier undo history is untouched: no history is lost. A redo that existed at the beginning is never lost by a
+        rollback, one that did not exist is never created. This needs the Tracklab patch for JUCE (a stale stash of
+        former redo steps would come back as a ghost redo), applied by cmake/TracklabDeps.cmake
+        (third_party/patches/juce-undomanager-stale-stash.patch, tests/engine/test_juce_undo_patch.cpp).
         Does nothing if nothing was changed, and nothing for a Transaction that joined an outer one.
         It ends the transaction for the rollback, not for isOpen(): later changes before the destructor are not part of
         it and not rolled back, a second rollback() does nothing, and isOpen() stays true until the destructor (so
