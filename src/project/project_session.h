@@ -24,7 +24,8 @@ namespace tracklab::project
 
 namespace te = tracktion;
 
-/** What the commands report about the open project. */
+/** What the commands report about the open project. `modified` also covers the leftovers Tracktion's timers leave after a
+    save (ProjectSession::Impl::SettleTimer in project_session.cpp). */
 struct ProjectInfo
 {
     juce::File file;        ///< the project file `<folder>/<name>/<name>.tracklab`, absolute
@@ -58,12 +59,14 @@ public:
     //==========================================================================
     // Operations behind the project.* commands (see project_commands.h for the command side).
 
-    /** New empty project (template "empty": Edit::createEdit with an empty Edit, undo depth of the Tracklab edit factory
-        = 200) in `<parentFolder>/<name>/`: creates the folder, `Audio/`, `Renders/`, `Backups/`, `Peaks/`, and writes
+    /** New empty project (template "empty": Edit::createEdit with an empty state: no audio track, Tracktion's default
+        master level; undo depth of the Tracklab edit factory = 200) in `<parentFolder>/<name>/`: creates the folder, `Audio/`, `Renders/`, `Backups/`, `Peaks/`, and writes
         `<name>.tracklab` right away (so the project is a valid file from the start; modified = false, empty undo
         history). The new project replaces the open one.
         - a project is open and modified -> unsaved_changes (nothing is created);
-        - `name` empty, ".", "..", or containing '/' or '\\' -> invalid_project_name (nothing is created);
+        - `name` empty, ".", "..", with blanks at the ends, or containing '/', '\\' or any other character a file
+          name must not have -> invalid_project_name (nothing is created);
+        - `parentFolder` is not an existing folder -> folder_not_found (it is never created);
         - `<name>.tracklab` exists in the target folder -> project_exists (never overwritten). */
     ProjectInfo createProject(const juce::File& parentFolder, const juce::String& name);
 
@@ -91,7 +94,12 @@ public:
 
     /** Writes the open project as a new project `<parentFolder>/<name>/<name>.tracklab` (same rules for the name and the
         folders as createProject; atomically like save) and makes it the open project's file. The previous project file
-        is not touched. Errors: no_edit, invalid_project_name, project_exists, save_inhibited, save_failed. */
+        is not touched. Errors: no_edit, invalid_project_name, folder_not_found, project_exists, save_inhibited,
+        save_failed.
+
+        Media are not copied. Every stored media path (clip sources) is re-written relative to the new project file, so
+        that media outside the new project folder keep being found; nothing of this goes through the undo manager. A
+        failed save_as puts the paths and the file back. */
     ProjectInfo saveAs(const juce::File& parentFolder, const juce::String& name);
 
     /** Closes the open project (the context's Edit becomes nullptr). With `discard` = false and unsaved changes:

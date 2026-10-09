@@ -30,6 +30,7 @@ juce::ValueTree makeEditState(int version, bool withVersion = true)
 std::vector<MigrationStep> recordingSteps(std::vector<int>& ran)
 {
     std::vector<MigrationStep> steps;
+    steps.reserve(3);
     for (int from = 0; from < 3; ++from)
         steps.push_back(MigrationStep{from, [&ran, from](juce::ValueTree& edit)
                                       {
@@ -53,6 +54,7 @@ TEST_SUITE("project")
     TEST_CASE("the project folders are Audio, Renders, Backups and Peaks")
     {
         std::vector<std::string> names;
+        names.reserve(subFolderNames.size());
         for (const char* name : subFolderNames)
             names.emplace_back(name);
         CHECK(names == std::vector<std::string>{"Audio", "Renders", "Backups", "Peaks"});

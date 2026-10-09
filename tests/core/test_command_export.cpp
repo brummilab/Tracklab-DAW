@@ -9,6 +9,8 @@
 #include "core/edit_commands.h"
 #include "engine/engine_factory.h"
 #include "io/audio_devices.h"
+#include "project/project_commands.h"
+#include "project/project_session.h"
 
 #include "engine/engine_test_options.h"
 
@@ -330,14 +332,17 @@ TEST_SUITE("core")
     TEST_CASE("the checked-in tools.json and docs/commands.md match the registry (all built-in commands)")
     {
         // The registry as the app builds it: every registerXxxCommands(). Today: app.version and the edit.* commands
-        // (src/core, M1-03) and the io.* commands (src/io, M1-06; they need an engine, a headless one without devices
-        // is enough). The version is not part of the exports, so any string does; the EditContext stays empty.
+        // (src/core, M1-03), the io.* commands (src/io, M1-06; they need an engine, a headless one without devices
+        // is enough) and the project.* commands (src/project, M1-04; they need a session, which stays without a
+        // project here). The version is not part of the exports, so any string does; the EditContext stays empty.
         auto engine = tracklab::engine::createEngine(tracklab_test::testOptions());
         CommandRegistry registry;
         EditContext editContext;
+        tracklab::project::ProjectSession session(*engine, editContext);
         REQUIRE(registerAppCommands(registry, "0.0.0").ok);
         REQUIRE(registerEditCommands(registry, editContext).ok);
         REQUIRE(tracklab::io::registerIoCommands(registry, *engine).ok);
+        REQUIRE(tracklab::project::registerProjectCommands(registry, session).ok);
 
         const fs::path root = TRACKLAB_SOURCE_DIR;
         const char* update = std::getenv("TRACKLAB_UPDATE_EXPORTS");

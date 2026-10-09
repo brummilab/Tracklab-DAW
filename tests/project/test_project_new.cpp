@@ -129,8 +129,8 @@ TEST_SUITE("project")
         const auto evil = f.root().getSiblingFile(evilName);
         const auto cleanUp = [&evil] { evil.deleteRecursively(); };
 
-        for (const std::string bad : {std::string(), std::string("."), std::string(".."), std::string("a/b"),
-                                      std::string("a\\b"), std::string("../") + evilName.toStdString()})
+        for (const std::string& bad : {std::string(), std::string("."), std::string(".."), std::string("a/b"),
+                                       std::string("a\\b"), std::string("../") + evilName.toStdString()})
         {
             INFO("name: `" << bad << "`");
             const auto result = f.tryRun("project.new", Json{{"folder", utf8(f.root())}, {"name", bad}});

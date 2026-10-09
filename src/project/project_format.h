@@ -42,6 +42,8 @@ inline constexpr std::string_view projectTooNew =
 inline constexpr std::string_view projectNotFound = "project_not_found";  ///< the project file does not exist
 inline constexpr std::string_view projectExists = "project_exists";       ///< new/save_as would overwrite a project
 inline constexpr std::string_view invalidProjectName = "invalid_project_name";  ///< name is empty or not a plain name
+inline constexpr std::string_view folderNotFound =
+    "folder_not_found";  ///< new/save_as: the parent folder does not exist (it is never created)
 inline constexpr std::string_view saveFailed = "save_failed";  ///< writing the project file failed, old file intact
 inline constexpr std::string_view saveInhibited = "save_inhibited";  ///< Edit::isSaveInhibited(): nothing was written
 inline constexpr std::string_view migrationFailed = "migration_failed";  ///< a migration step failed
