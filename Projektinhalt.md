@@ -77,6 +77,8 @@ M8 Mastering & Export inkl. M/S · M9 = 1.0 Interop & Politur inkl. Handy-Fernbe
   Schritt vollständig geprüft – ungültige Pakete ändern nichts, Undo-Historie bleibt. Teil C (JUCE-Patch) wartet auf F46.
 - 09.10.2026: O-09 komplett – JUCE-Undo-Patch (E49) wird beim Bauen automatisch angewendet; gescheiterte Befehle
   verlieren keine Undo-Historie mehr (F44 erledigt). GUI-Leitbild E50: modern, aufgeräumt, dunkel. Eigene Plugins E48.
+- 09.10.2026: M1-04 Projektformat `.tracklab` gemerged (neu/öffnen/speichern atomar/speichern unter, Migration,
+  relative Pfade, keine Personendaten); O-09 JUCE-Undo-Patch erledigt. Roadmap-Übersicht `docs/ROADMAP.md`.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.

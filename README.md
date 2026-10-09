@@ -74,7 +74,10 @@ Meilenstein **M1 (Fundament)** läuft.
   er vollständig zurückgenommen, ohne die bisherige Undo-Historie zu verlieren.
 - **Audio-Geräte fertig:** Treiber und Gerät wählen (ALSA, JACK/PipeWire unter Linux; WASAPI, ASIO unter Windows),
   Samplerate, Puffer und Kanäle; die Wahl bleibt über Neustarts erhalten. Handtest an echter Hardware steht noch aus.
-- **Als Nächstes:** Projektformat, automatisches Speichern, Kommandozeile und das erste Programmfenster.
+- **Projektformat fertig:** Projekte anlegen, öffnen, speichern und „speichern unter“ (`.tracklab` plus Ordner
+  `Audio/`, `Renders/`, `Backups/`, `Peaks/`). Speichern ist atomar, alte Formatversionen werden beim Öffnen
+  übernommen, Pfade sind relativ – der Projektordner lässt sich verschieben.
+- **Als Nächstes:** automatisches Speichern und Backups, Kommandozeile und das erste Programmfenster.
 
 Arbeitsstand im Detail: [`team/RESUME.md`](team/RESUME.md) · Plan: [`team/plan/PLAN.md`](team/plan/PLAN.md).
 
