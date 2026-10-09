@@ -69,6 +69,8 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
 - 09.10.2026: **M1-06 Audio-Geräte gemerged** – `io.list_device_types`/`list_devices`/`get_device`/`set_device` für ALSA,
   JACK/PipeWire, WASAPI, ASIO; Persistenz; belegte Geräte → klarer Fehler statt stummem Ausgang. Windows-CI grün.
   Handtest V1 nach `docs/testing/manual/M1.md` (David). Folgekarte O-10.
+- 09.10.2026: O-11 (Windows-CI: lame/ffmpeg mit Retry + Cache) erledigt. O-09 Teil B: Befehlspakete werden vor dem ersten
+  Schritt vollständig geprüft – ungültige Pakete ändern nichts, Undo-Historie bleibt. Teil C (JUCE-Patch) wartet auf F46.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
