@@ -78,6 +78,24 @@ Meilenstein **M1 (Fundament)** läuft.
 
 Arbeitsstand im Detail: [`team/RESUME.md`](team/RESUME.md) · Plan: [`team/plan/PLAN.md`](team/plan/PLAN.md).
 
+## Roadmap
+
+| | Meilenstein | Kurz |
+|---|---|---|
+| ✅ | M0 Start & Spike | Team, Gate, Tech-Stack, Engine-Spike |
+| 🔄 | M1 Fundament | Engine, Befehle, Undo, Audio-Geräte, Projektformat, Autosave, Kommandozeile, erstes Fenster |
+| ⏳ | M2 Live-Mitschnitt | Konzert importieren, an Pausen/Setlist in Songs teilen, LUFS, Export für Resolve |
+| ⏳ | M3 Claude + MCP | Claude-Panel, Steuerung über Claude Code/Desktop |
+| ⏳ | M4 Spuren & Aufnahme | 12-Kanal-Aufnahme, Monitoring, Takes |
+| ⏳ | M5 Editing & Comping | Lanes, Comping, Razor, Crossfades |
+| ⏳ | M6 Mixer & Plugins | Mischpult, VST3, Cue-Mixe |
+| ⏳ | M7 Automation & MIDI | Automation, Piano-Roll |
+| ⏳ | M8 Mastering & Export | Mastering-Seite, Stems, Mid/Side |
+| ⏳ | M9 = 1.0 | Interop, Installer, Handy-Fernbedienung |
+| ⏳ | M10 ff. | Rest des Katalogs: Stem-Separation, ARA, Spektral-Editing … |
+
+Übersicht mit Diagramm und Abnahmekriterien: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
 ## Technik
 
 - C++20, CMake, Ninja.
