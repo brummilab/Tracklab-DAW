@@ -59,6 +59,8 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
   Markenprüfung „Tracklab“ vor dem ersten Release (O-07). Private Pfade und Namen anderer Projekte neutralisiert.
 - 08.10.2026: README neu auf das Produkt ausgerichtet (Funktionen, Claude-Integration, Stand, Selbst bauen), ohne
   Bezug auf andere DAWs (PO-Wunsch).
+- 09.10.2026: Git-Historie umgeschrieben (E47) – private Pfade und Namen aus allen Commits entfernt, Force-Push.
+  README-Logo passt sich dem GitHub-Theme an.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
