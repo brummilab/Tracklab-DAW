@@ -176,7 +176,7 @@ struct ProjectFixture
         asynchronously, and the "modified" flag is only meaningful afterwards. */
     void settleEdit() const
     {
-        pumpMessageLoop(50);
+        pumpMessageLoop(250);
         if (session->edit() != nullptr)
             settle(*session->edit());
     }
@@ -213,6 +213,15 @@ struct ProjectFixture
         REQUIRE(e.hasChangedSinceSaved());
     }
 
+    /** Tracktion marks an Edit "changed" up to 500 ms after the last plugin change (Edit::PluginChangeTimer), even if
+        it was saved in between. Tests that add tracks or clips therefore let those timers run out before they go on, so
+        that "modified" means what the test says (see the report of M1-04, open question on the modified flag). */
+    static void letPluginTimersRunOut(te::Edit& e)
+    {
+        pumpMessageLoop(700);
+        settle(e);
+    }
+
     /** Some project content: three tracks with names, a tempo. Everything goes through the undo manager. */
     void addSampleContent()
     {
@@ -225,6 +234,7 @@ struct ProjectFixture
             tracks[i]->setName(names[i]);
         e.tempoSequence.getTempo(0)->setBpm(97.0);
         settle(e);
+        letPluginTimersRunOut(e);
     }
 
     /** A wave clip of a generated sine file on the first audio track (the Tracktion API, as the import will do). */
@@ -240,6 +250,7 @@ struct ProjectFixture
                                        te::DeleteExistingClips::no);
         REQUIRE(clip != nullptr);
         settle(e);
+        letPluginTimersRunOut(e);
         return clip;
     }
 

@@ -4,6 +4,7 @@
 
 #include "test_support.h"
 
+#include <stdexcept>
 #include <string>
 #include <vector>
 

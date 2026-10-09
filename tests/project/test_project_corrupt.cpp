@@ -68,7 +68,11 @@ TEST_SUITE("project")
             folder.deleteRecursively();
             REQUIRE(folder.createDirectory().wasOk());
             const auto file = folder.getChildFile("Kaputt.tracklab");
-            REQUIRE(file.replaceWithData(variant.content.getData(), variant.content.getSize()));
+            // replaceWithData() with 0 bytes would delete the file: an empty file is created explicitly
+            if (variant.content.getSize() == 0)
+                REQUIRE(file.create().wasOk());
+            else
+                REQUIRE(file.replaceWithData(variant.content.getData(), variant.content.getSize()));
             const auto before = tracklab_test::snapshotOf(folder);
 
             const auto result = f.tryRun("project.open", Json{{"path", utf8(file)}});
