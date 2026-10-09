@@ -349,8 +349,7 @@ inline void addFakeTypes(juce::AudioDeviceManager& manager, const std::shared_pt
     if (hardware.separateType)
     {
         auto device = [](const char* name, juce::StringArray ins, juce::StringArray outs, juce::Array<double> rates,
-                         juce::Array<int> buffers, int defaultBuffer)
-        {
+                         juce::Array<int> buffers, int defaultBuffer) {
             return DeviceSpec{name,         std::move(ins), std::move(outs), std::move(rates), std::move(buffers),
                               defaultBuffer};
         };

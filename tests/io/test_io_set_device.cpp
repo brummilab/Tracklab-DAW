@@ -484,7 +484,7 @@ TEST_SUITE("io")
         const Session session(temp.dir());
         session.backend->exclusive = true;
         session.setDevice(micAndSpeakersParams());
-        session.backend->busy.push_back(fake::kLineInterface);
+        session.backend->busy.emplace_back(fake::kLineInterface);
 
         expectRefused(session, Json{{"input_device", fake::kLineInterface}}, "no channels");
         expectRefused(session, Json{{"input_device", fake::kLineInterface}}, fake::kLineInterface);
