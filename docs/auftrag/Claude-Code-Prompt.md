@@ -333,6 +333,9 @@ Claude „hört“ ausschließlich über Messwerte. Das Panel zeigt sie an, dami
 | „Quantisiere Snare und Kick phasenkohärent auf 1/16, nur Transienten über −20 dB.“ | `edit.detect_transients(group)` → `edit.audio_quantize` |
 | „Wo clippt der Mix? Senk die betroffenen Spuren so weit, dass 1 dB Headroom bleibt.“ | `analyze.clipping` → `mixer.set_volume` |
 | „Vergleiche meinen Master mit referenz.wav: Lautheit und Tiefen.“ | `analyze.compare_reference` |
+| „Teil den Mitschnitt an den Pausen in Songs und benenn sie nach setlist.txt.“ | `import.audio` → `edit.detect_silence` → `marker.from_setlist` → `assistant.propose_plan` |
+| „Fades 2 s rein, 4 s raus, jeden Song auf −14 LUFS / −1 dBTP.“ | `clip.set_fade` ×n → `export.set_normalize(per_region)` |
+| „Exportier jeden Song als WAV 48/24 für Resolve und als MP3 320, mit Zeitstempel.“ | `export.region_matrix.set` → `export.set_bwf_timestamp` → `export.add_job` ×2 → `export.render_queue.run` |
 
 ---
 
@@ -433,6 +436,8 @@ Prioritäten: **MVP** = Kernfunktionen für Workflow A und die Grundzüge von Wo
 |---|---|---|---|
 | Marker, Regionen, Region-Manager | Reaper | MVP | `marker.add`, `marker.add_region`, `marker.list` |
 | Regionen aus Setlist, Songgrenzen-Erkennung (Claude) | Tracklab-eigen | MVP | `analyze.find_song_boundaries`, `marker.regions_from_setlist` |
+| Stille-/Pausenerkennung (Schwelle, Mindestdauer, Applaus optional) → Regionen | Reaper Dynamic Split† | MVP | `edit.detect_silence`, `marker.regions_from_split` |
+| Setlist-Import (Text/CSV) → benannte Regionen, Zuordnung zu erkannten Songs | – | MVP | `marker.from_setlist`, `marker.rename_regions` |
 | Tempo-/Taktart-Spur (Rampen) | alle; Tracktion Engine Tempo-Kurven | MVP | `tempo.set`, `tempo.add_point`, `tempo.set_timesig` |
 | Arranger-Spur (Songteile verschieben/duplizieren) | Studio Pro, Cubase Arranger† | v1 | `arrange.move_section`, `arrange.duplicate_section` |
 | Clip-Launcher/Szenen | Ableton Live Session View, Bitwig, Tracktion Engine v3, Ardour 9 Cues | später | `launcher.trigger` |
@@ -452,7 +457,8 @@ Prioritäten: **MVP** = Kernfunktionen für Workflow A und die Grundzüge von Wo
 | Mixer-Strips zwischen Projekten im-/exportieren | Ardour 9 | v2 | `mixer.export_strip`, `mixer.import_strip` |
 | Modulatoren (LFO, Random, S&H …) auf Parameter | Cubase 14/15, Bitwig | v2 | `mod.add`, `mod.assign` |
 | A/B-Vergleich pro Plugin | Live 12.3 | v1 | `fx.ab_toggle` |
-| Control Room/Listen-Bus, Cue-Mixe für die Band | Cubase† | v2 | `monitor.create_cue_mix` |
+| Control Room/Listen-Bus, Cue-Mixe für die Band | Cubase† | v1 | `monitor.create_cue_mix`, `monitor.set_cue_level` |
+| Mid/Side-Bearbeitung (M/S-EQ, M/S-Matrix) für Master und Busse | Studio Pro Pro EQ†, gängige Mastering-Plugins | v1 | `fx.set_ms_mode` |
 | Phase/Mono pro Kanal | – | v1 | `mixer.set_phase`, `mixer.set_mono` |
 
 ### 9.8 Automation
@@ -512,6 +518,7 @@ Prioritäten: **MVP** = Kernfunktionen für Workflow A und die Grundzüge von Wo
 | Dateinamen-Wildcards (z. B. Tracknummer + Regionsname) | Reaper | MVP | `export.set_pattern` |
 | LUFS-Normalisierung beim Render + Plattform-Presets | Reaper† | MVP | `export.set_normalize` |
 | Metadaten (BWF, ID3, Vorbis Comments) | Reaper† | v1 | `export.set_metadata` |
+| BWF-Zeitstempel (Time Reference) beim Export, damit Resolve die Songs an Originalposition anlegt | Reaper†, Pro Tools† | MVP | `export.set_bwf_timestamp` |
 | DAWproject Import/Export | Bitwig, Studio Pro, Cubase | v1 | `import.dawproject`, `export.dawproject` |
 | MIDI (SMF) Import/Export | alle | v1 | `import.midi`, `export.midi` |
 | AAF-Import | Ardour 9 (verbessert), Pro Tools† | v2 | `import.aaf` |
@@ -546,13 +553,14 @@ Prioritäten: **MVP** = Kernfunktionen für Workflow A und die Grundzüge von Wo
 | MIDI-Learn für alle Parameter | alle | v1 | `control.midi_learn` |
 | Mackie Control (MCU) / HUI | Ardour 9 (Mackie-Control-Erweiterungen), Reaper† | v1 | `control.add_surface` |
 | OSC | Reaper†, Ardour† | v2 | – |
+| Fernbedienung per Handy/Tablet (Transport, Record-Arm, Marker, Cue-Mix-Pegel) über lokale Web-Oberfläche oder OSC, Token-geschützt, nur LAN | Reaper Web Remote†, Studio One Remote† | v1 | `remote.enable`, `remote.get_url` |
 
 ### 9.16 KI-Funktionen (Marktstand 2026, zur Einordnung)
 
 | Feature | Herkunft | Prio | Claude-Tools |
 |---|---|---|---|
 | Agentischer Assistent, der in der DAW handelt | FL Studio 2026 Gopher; Studio Pro 8.1 Studio Assistant; Waveform 14 AI Assistant | **MVP – Kern von Tracklab** | alle |
-| Stem-Separation | Cubase 15, Logic Stem Splitter, Live 12.3 (Suite), FL Studio „Remix a Song“, Studio Pro 8.1 (Moises) | später (Library/Lizenz klären) | `ai.separate_stems` |
+| Stem-Separation (wichtig für Live-Mitschnitte, die nur als Stereosumme vorliegen) | Cubase 15, Logic Stem Splitter, Live 12.3 (Suite), FL Studio, Studio Pro 8.1 (Moises) | v2 (Library und Lizenz in eigenem ADR klären) | `ai.separate_stems` |
 | Audio-to-MIDI / Drum-Extraktion | Studio Pro 8 / 8.1 | später | – |
 | Speech-to-Text | Pro Tools | später | – |
 | Session Players | Logic | Nicht-Ziel | – |
@@ -662,15 +670,15 @@ Eigener CI-Job (Linux, Clang): Engine-Tests und Fixture-Renders mit `-fsanitize=
 |---|---|---|
 | **M0** | Vorlage übernommen, Gate auf C++ umgebaut, Agents ergänzt, Recherche-Themen, ADR-001-Vorschlag, Engine-Spike | Repo und Vault-Sync stehen; Entscheidungsrunde 1 beantwortet; Spike baut in der CI für Windows + Linux |
 | **M1** | Fundament: CMake, JUCE + Tracktion, Audio-I/O (ASIO/WASAPI/ALSA/JACK), Projektformat, Autosave, Command-Registry v1, Undo, Headless-CLI (`render`, `analyze`), CI + Artefakte | Projekt anlegen/speichern/öffnen; Fixture-Render golden; Artefakte downloadbar |
-| **M2** | Mitschnitt-Workflow ohne Claude: Audio-Import (WAV/FLAC/MP3), Arrange-Grundgerüst (Timeline, Transport, Theme-Tokens, Screenshot-CLI), Marker/Regionen, Split/Trim/Fades, Dynamic Split, LUFS/True Peak (EBU-validiert), Normalisierung, Render pro Region | Workflow A (§4.3) von Hand durchgespielt; Export passt in die Video-Pipeline |
+| **M2** | Workflow A „Live-Mitschnitt“ (ohne Claude-Panel): Audio-Import (WAV/FLAC/MP3, Stereo und Mehrspur), Arrange-Grundgerüst (Timeline, Transport, Theme-Tokens, Screenshot-CLI), Marker/Regionen, Stille-Erkennung (Dynamic Split), Setlist-Import, Split/Trim/Fades, LUFS/True-Peak-Meter (EBU-validiert), Normalisierung pro Region mit True-Peak-Limiter, Region-Render WAV 48 kHz/24-bit + MP3, BWF-Zeitstempel; die Commands dafür über CLI testbar | Mojo-Club-Mitschnitt wird in einzelne Songs zerlegt und exportiert, Resolve übernimmt die Dateien ohne Nacharbeit |
 | **M3** | Claude-Integration MVP: Panel (Streaming, 3 Modi, Plan-Vorschau), Tool-Generierung, strict, Tool Search, Caching, Turn-Undo, Keychain, Kosten; `analyze.find_song_boundaries`; MCP-Server (localhost, Token, opt-in) + stdio-Shim | Workflow A per Claude-Befehl; dieselben Befehle über Claude Code via MCP |
 | **M4** | Spuren & Aufnahme: Track-Typen, Ordner, Busse, 12-Kanal-Aufnahme, Monitoring, Metronom, Punch, Loop-Takes, Latenzmessung | Ich nehme 12 Kanäle auf (Testprotokoll) |
 | **M5** | Editing & Comping: Lanes, Swipe-Comping, Razor, Fades/Crossfades, Clip-Gain, Ripple, Snap, Gruppen-Edit | Gesang aus 3 Takes gecomped; Drum-Edit phasenkohärent |
-| **M6** | Mixer & Plugins: Konsole, Inserts, Sends, Sidechain, PDC, VST3-Hosting + Scanner + Sandbox, Basis-FX, Meter | Drum-Bus + Parallelkompression per Claude-Befehl; Plugin-Crash ohne Projektverlust |
+| **M6** | Mixer & Plugins: Konsole, Inserts, Sends, Sidechain, PDC, VST3-Hosting + Scanner + Sandbox, Basis-FX, Meter, Cue-Mixe | Drum-Bus + Parallelkompression per Claude-Befehl; Plugin-Crash ohne Projektverlust; Cue-Mix pro Musiker |
 | **M7** | Automation & MIDI-Basis: Lanes, Modi, Kurven; Piano-Roll, Drum-Editor | Fader-Ride in Touch; MIDI-Spur bearbeitet |
-| **M8** | Mastering & Export komplett: Mastering-Seite, Referenz-A/B, Dither, Render-Queue, Region-Matrix, Stems, Presets, Metadaten | Workflow B Ende-zu-Ende exportiert, Messbericht korrekt |
-| **M9 = 1.0** | Interop & Politur: DAWproject, MIDI, LV2, CLAP, Reaper-Shortcut-Preset, Screensets, Light-Theme, Barrierefreiheit-Basis, Installer | kompletter Akzeptanztest A + B durch mich |
-| danach | AAF-/RPP-Import, ARA, Spektral-Editing, Modulatoren, Mastering-Assistent, Control Room, MCU/OSC, Stem-Separation | per Entscheidung |
+| **M8** | Mastering & Export komplett (ohne die in M2 vorgezogenen Teile): Mastering-Seite, Referenz-A/B, Dither, Render-Queue, Region-Matrix, Stems, Presets, Metadaten, M/S-Bearbeitung | Workflow B Ende-zu-Ende exportiert, Messbericht korrekt |
+| **M9 = 1.0** | Interop & Politur: DAWproject, MIDI, LV2, CLAP, Reaper-Shortcut-Preset, Screensets, Light-Theme, Barrierefreiheit-Basis, Installer, Fernbedienung (Handy/Tablet) | kompletter Akzeptanztest A + B durch mich |
+| danach | AAF-/RPP-Import, ARA, Spektral-Editing, Modulatoren, Mastering-Assistent, MCU, Stem-Separation (v2) | per Entscheidung |
 
 Optimierungsrunden nach M2, M5 und M8.
 

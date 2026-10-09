@@ -28,19 +28,22 @@ Open Source und läuft vollwertig unter Windows und Linux; eigene Effekte sind d
 **Schneiden und Editieren**
 - Bereichsauswahl über mehrere Spuren, Ripple-Editing, Fades und Crossfades, Clip-Gain.
 - Comping: aus mehreren Takes per Wischen die beste Version zusammenstellen.
-- Marker und Regionen, z. B. einen Konzertmitschnitt per Setlist in einzelne Songs teilen.
+- Marker und Regionen, z. B. einen Konzertmitschnitt an den Pausen erkennen und per Setlist in benannte Songs teilen.
 
 **Mischen und Mastern**
-- Freies Routing, Busse, Gruppen und VCAs, Automation.
+- Freies Routing, Busse, Gruppen und VCAs, Automation, eigene Kopfhörermixe (Cue-Mixe) für die Band.
+- Mid/Side-Bearbeitung für Master und Busse.
 - VST3-Plugins (CLAP und LV2 später), Plugins abgeschottet, damit ein Absturz nicht die DAW mitreißt.
 - Lautheitsmessung nach EBU R128 (LUFS, True Peak) und Normalisierung beim Export, z. B. auf −14 LUFS / −1 dBTP.
 
 **Exportieren**
-- WAV (z. B. 48 kHz / 24 Bit für Videoschnitt) und MP3, pro Song oder Region, mit Dateinamen-Platzhaltern.
+- WAV (z. B. 48 kHz / 24 Bit für Videoschnitt) und MP3, pro Song oder Region, mit Dateinamen-Platzhaltern und
+  BWF-Zeitstempel, damit DaVinci Resolve die Songs an der Originalposition anlegt.
 - Stems und Bounce-in-Place.
 
 **Bedienung**
 - Jede Aktion gleichwertig per Maus, Tastatur, MIDI-Controller, Claude-Panel, MCP und Kommandozeile.
+- Fernbedienung per Handy oder Tablet im lokalen Netz (Transport, Aufnahme, Marker, Cue-Mix).
 - Frei belegbare Tastenkürzel, dunkles und helles Theme, Hochkontrast-Theme.
 - Automatisches Speichern und Backups; ein Projekt ist eine Datei (`.tracklab`) plus Audioordner.
 

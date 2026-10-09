@@ -8,14 +8,14 @@ Details zu Zielen und Akzeptanz: Auftrag §12, `team/design/DESIGN.md` Abschnitt
 |---|---|---|---|
 | M0 | Vorlage übernommen, Gate auf C++ umgebaut, Agents ergänzt, Recherche, ADR-001, Engine-Spike | ✅ 08.10.2026 | Entscheidungen E0–E39 ✅; Recherche ✅; Spike in CI Windows + Linux ✅; ADR-001 angenommen ✅; Gate C++/CMake + RTSan ✅ (Rückblick `team/RUECKBLICK-M0.md`; Reaper-Preset M0-08 → M9) |
 | M1 | Fundament: CMake, JUCE + Tracktion, Audio-I/O, Projektformat, Autosave, Command-Registry v1, Undo, CLI (`render`, `analyze`), CI + Artefakte, „Über Tracklab“ mit Lizenz/Quelltext (E23) | 🔄 | Projekt anlegen/speichern/öffnen; Fixture-Render golden; Artefakte downloadbar |
-| M2 | Mitschnitt-Workflow ohne Claude | ⏳ | Workflow A von Hand durchgespielt; Export passt in die Video-Pipeline |
+| M2 | Workflow A „Live-Mitschnitt“ ohne Claude-Panel: Import Stereo/Mehrspur, Stille-Erkennung, Setlist-Import, Fades, LUFS/True Peak, Normalisierung pro Region mit True-Peak-Limiter, Region-Render WAV + MP3, BWF-Zeitstempel; Commands per CLI testbar (E54) | ⏳ | Mojo-Club-Mitschnitt in Songs zerlegt und exportiert; Resolve übernimmt die Dateien ohne Nacharbeit |
 | M3 | Claude-Integration MVP + MCP-Server | ⏳ | Workflow A per Claude-Befehl; dieselben Befehle über Claude Code via MCP |
 | M4 | Spuren & Aufnahme | ⏳ | David nimmt 12 Kanäle auf (Testprotokoll) |
 | M5 | Editing & Comping | ⏳ | Gesang aus 3 Takes gecomped; Drum-Edit phasenkohärent |
-| M6 | Mixer & Plugins (VST3, Scanner-Isolation, Absturzerkennung; Sandbox nach Latenz-Spike, E34) | ⏳ | Drum-Bus + Parallelkompression per Claude; Plugin-Crash ohne Projektverlust |
+| M6 | Mixer & Plugins (VST3, Scanner-Isolation, Absturzerkennung; Sandbox nach Latenz-Spike, E34), Cue-Mixe (E54) | ⏳ | Drum-Bus + Parallelkompression per Claude; Plugin-Crash ohne Projektverlust; Cue-Mix pro Musiker |
 | M7 | Automation & MIDI-Basis | ⏳ | Fader-Ride in Touch; MIDI-Spur bearbeitet |
-| M8 | Mastering & Export komplett | ⏳ | Workflow B Ende-zu-Ende exportiert, Messbericht korrekt |
-| M9 = 1.0 | Interop & Politur | ⏳ | Akzeptanztest A + B durch David |
+| M8 | Mastering & Export komplett (ohne in M2 Vorgezogenes), M/S-Bearbeitung (E54) | ⏳ | Workflow B Ende-zu-Ende exportiert, Messbericht korrekt |
+| M9 = 1.0 | Interop & Politur, Fernbedienung Handy/Tablet (E54) | ⏳ | Akzeptanztest A + B durch David |
 
 **Nach 1.0 (E53):** restlicher Feature-Katalog Auftrag §9 (v2, dann „später“) in eigenen Meilensteinen M10 ff.,
 Ziel: Funktionsumfang der großen DAWs. Alleinstellung: Claude + MCP, Live-Mitschnitt-Automatik, Open Source

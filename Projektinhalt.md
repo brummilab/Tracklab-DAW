@@ -34,9 +34,9 @@ und Linux, eigene Plugins/DSP.
   Mastering, Export WAV/FLAC/MP3/Stems.
 
 ## Roadmap
-M0 Start/Spike · M1 Fundament · M2 Mitschnitt ohne Claude · M3 Claude-Integration + MCP ·
-M4 Spuren & Aufnahme · M5 Editing & Comping · M6 Mixer & Plugins · M7 Automation & MIDI ·
-M8 Mastering & Export · M9 = 1.0 Interop & Politur · ab M10 restlicher Feature-Katalog (E53). Optimierungsrunden nach M2, M5, M8.
+M0 Start/Spike · M1 Fundament · M2 Workflow A Live-Mitschnitt (Stille-Erkennung, Setlist, LUFS, Region-Export mit BWF-Zeitstempel) · M3 Claude-Integration + MCP ·
+M4 Spuren & Aufnahme · M5 Editing & Comping · M6 Mixer & Plugins inkl. Cue-Mixe · M7 Automation & MIDI ·
+M8 Mastering & Export inkl. M/S · M9 = 1.0 Interop & Politur inkl. Handy-Fernbedienung · ab M10 restlicher Feature-Katalog (E53). Optimierungsrunden nach M2, M5, M8.
 
 ## Status
 - 08.10.2026: M0 begonnen. Grundgerüst (CLAUDE.md, README, Gate, CI, Hook `guard-git.sh`),
@@ -80,9 +80,12 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur · ab M10 restlicher Feature
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
+- [ ] Stem-Separation (v2): Library und Lizenz klären (eigenes ADR).
 - Reaper-Preset (M0-08) nach F11; Risiko Mint 23 / libstdc++ 15 (O-03).
 
 ## Entscheidungen
+- E54 (09.10.2026): Auftrag ergänzt (Stille-Erkennung, Setlist-Import, BWF-Zeitstempel, Cue-Mixe v1, M/S v1,
+  Handy-Fernbedienung v1, Stem-Separation v2); Workflow A als M2 mit Mojo-Club-Abnahme; Claude-Integration bleibt M3.
 - E53 (09.10.2026): Vision bestätigt – Funktionsumfang der großen DAWs schrittweise, Nicht-Ziele bleiben;
   Alleinstellung Claude + MCP, Live-Mitschnitt-Automatik, Open Source Win/Linux, eigene Plugins/DSP.
 - E52 (09.10.2026): Kein Reverse Engineering fremder DAWs; Vergleich nur über öffentlich Dokumentiertes.
