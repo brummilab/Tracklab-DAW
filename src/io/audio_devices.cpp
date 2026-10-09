@@ -110,7 +110,9 @@ struct Probe
     std::unique_ptr<juce::AudioIODevice> owned;
 };
 
-/** The open device if it is of `type` and exactly the requested one (names of both sides). */
+/** The open device if it is of `type` and the requested one. One device serves both directions here, so it is the same
+    device when the name that is not empty is the same, even if one side is empty on either end (output only, input
+    dropped): loading a second instance of a driver that is running (ASIO) must never be needed to look at it. */
 juce::AudioIODevice* openDeviceFor(juce::AudioDeviceManager& manager, const juce::AudioIODeviceType& type,
                                    const juce::String& output, const juce::String& input)
 {
@@ -118,7 +120,9 @@ juce::AudioIODevice* openDeviceFor(juce::AudioDeviceManager& manager, const juce
     if (current == nullptr || current->getTypeName() != type.getTypeName())
         return nullptr;
     const auto setup = manager.getAudioDeviceSetup();
-    return setup.outputDeviceName == output && setup.inputDeviceName == input ? current : nullptr;
+    const auto& requested = output.isNotEmpty() ? output : input;
+    const auto& open = setup.outputDeviceName.isNotEmpty() ? setup.outputDeviceName : setup.inputDeviceName;
+    return requested.isNotEmpty() && requested == open ? current : nullptr;
 }
 
 /** A type with one device for both directions (ASIO): the device is asked with the same name on both sides. */
@@ -391,7 +395,13 @@ Offer collectOffer(juce::AudioDeviceManager& manager, juce::AudioIODeviceType& t
         offer.inputChannels = probe.device->getInputChannelNames();
         offer.outputChannels = probe.device->getOutputChannelNames();
         intersect(offer, true, probe.device->getAvailableSampleRates(), probe.device->getAvailableBufferSizes());
-        if (offer.inputChannels.isEmpty() && offer.outputChannels.isEmpty())
+        // The chosen side has to have channels. If both sides are chosen, a device that has channels in one direction
+        // only (an output-only interface) is fine; none at all is the sign of a device that is in use.
+        const bool bothChosen = inputName.isNotEmpty() && outputName.isNotEmpty();
+        const bool noInput = offer.inputChannels.isEmpty();
+        const bool noOutput = offer.outputChannels.isEmpty();
+        if (bothChosen ? (noInput && noOutput)
+                       : ((inputName.isNotEmpty() && noInput) || (outputName.isNotEmpty() && noOutput)))
             failNoChannels(name, "audio");
         return offer;
     }

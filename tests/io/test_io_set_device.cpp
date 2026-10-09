@@ -489,4 +489,40 @@ TEST_SUITE("io")
         expectRefused(session, Json{{"input_device", fake::kLineInterface}}, "no channels");
         expectRefused(session, Json{{"input_device", fake::kLineInterface}}, fake::kLineInterface);
     }
+
+    TEST_CASE("io.set_device on a duplex type asks the open device when only one side of it stays (exclusive hardware)")
+    {
+        // One driver for both directions (ASIO): dropping the input must not load a second instance of the driver
+        // that is running. The output keeps its channels, taken from the open device.
+        const ScopedTempDir temp;
+        const Session session(temp.dir());
+        session.backend->exclusive = true;
+        session.setDevice(Json{{"type", fake::kDuplexType},
+                               {"input_device", fake::kDuplexInterface},
+                               {"output_device", fake::kDuplexInterface},
+                               {"sample_rate", 48000},
+                               {"buffer_size", 128}});
+        const auto createdBefore = session.backend->devicesCreated;
+
+        const auto result = session.setDevice(Json{{"input_device", ""}});
+        CHECK(result.at("input_device") == "");
+        CHECK(result.at("output_device") == fake::kDuplexInterface);
+        CHECK(result.at("active_input_channels") == Json::array());
+        CHECK(result.at("active_output_channels") == Json::array({0, 1, 2, 3, 4, 5, 6, 7}));
+        CHECK(result.at("sample_rate") == 48000);
+        CHECK(result.at("buffer_size") == 128);
+        CHECK(session.backend->devicesCreated - createdBefore <= 1);  // the new open device only, no probe
+    }
+
+    TEST_CASE("io.set_device refuses a duplex device that reports no channels on the chosen side")
+    {
+        const ScopedTempDir temp;
+        const Session session(temp.dir());
+        session.backend->exclusive = true;
+        session.backend->busy.emplace_back(fake::kSecondBox);  // another program holds it
+
+        expectRefused(session,
+                      Json{{"type", fake::kDuplexType}, {"output_device", fake::kSecondBox}, {"input_device", ""}},
+                      "no channels");
+    }
 }

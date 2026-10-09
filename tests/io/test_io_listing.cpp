@@ -294,4 +294,30 @@ TEST_SUITE("io")
         CHECK_FALSE(speakers->at("sample_rates").empty());
         CHECK_FALSE(speakers->at("buffer_sizes").empty());
     }
+
+    TEST_CASE("io.list_devices shows a duplex device that is open with one side only by its own data")
+    {
+        const ScopedTempDir temp;
+        const Session session(temp.dir());
+        session.backend->exclusive = true;
+        session.setDevice(Json{{"type", fake::kDuplexType},
+                               {"output_device", fake::kDuplexInterface},
+                               {"input_device", ""},
+                               {"sample_rate", 48000},
+                               {"buffer_size", 128}});
+        const auto createdBefore = session.backend->devicesCreated;
+
+        const auto result = session.ok("io.list_devices", Json{{"type", fake::kDuplexType}});
+        const auto& type = result.at("types").at(0);
+        const auto* asInput = findByName(type.at("inputs"), fake::kDuplexInterface);
+        const auto* asOutput = findByName(type.at("outputs"), fake::kDuplexInterface);
+        REQUIRE(asInput != nullptr);
+        REQUIRE(asOutput != nullptr);
+        CHECK(asInput->at("channel_names").size() == 8);
+        CHECK(asOutput->at("channel_names").size() == 8);
+        CHECK(asOutput->at("sample_rates") == Json::array({44100, 48000}));
+        CHECK(asOutput->at("buffer_sizes") == Json::array({32, 64, 128, 256}));
+        CHECK(session.backend->devicesCreated ==
+              createdBefore + 2);  // only the closed "Fake Second Box", once per side
+    }
 }
