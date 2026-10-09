@@ -244,30 +244,46 @@ BatchResult CommandRegistry::executeBatch(std::string_view nameDe, const std::ve
                                      {}},
                         0);
 
-    // The Edit is needed as soon as one step can change it. Check up front: no handler of the batch runs without one.
-    std::optional<std::size_t> firstUndoable;
-    for (std::size_t i = 0; i < steps.size() && !firstUndoable; ++i)
-        if (const Command* command = find(steps[i].id); command != nullptr && command->flags.undoable)
-            firstUndoable = i;
-
-    std::optional<Transaction> transaction;
-    if (firstUndoable)
-    {
-        tracktion::Edit* edit = currentEdit();
-        if (edit == nullptr)
-            return failWith(CommandError{std::string(error_code::noEdit),
-                                         "command '" + steps[*firstUndoable].id + "' needs an open project",
-                                         {}},
-                            *firstUndoable);
-        transaction.emplace(*edit, std::string(nameDe));
-    }
-
+    // Up-front check of EVERY step before any handler runs or a transaction opens: whatever can be known without
+    // running (unknown id, params schema, no Edit for an undoable step) refuses the whole batch with no write at all.
+    // Why: a rollback after a write can cost the whole undo history when JUCE's redo stash is stale (see
+    // Transaction::rollback), so a batch that is bound to fail must never write. The step with the smallest index is
+    // reported (within a step in the order of execute(): unknown_command, invalid_params, no_edit), so the answer
+    // does not depend on which problem happens to be found first.
+    tracktion::Edit* edit = currentEdit();
+    bool anyUndoable = false;
     for (std::size_t i = 0; i < steps.size(); ++i)
     {
         const auto it = commands.find(steps[i].id);
-        auto step = it == commands.end()
-                        ? fail(error_code::unknownCommand, "no command '" + steps[i].id + "' is registered")
-                        : runUnchecked(*it->second, steps[i].params);
+        if (it == commands.end())
+            return failWith(CommandError{std::string(error_code::unknownCommand),
+                                         "no command '" + steps[i].id + "' is registered",
+                                         {}},
+                            i);
+        const Entry& entry = *it->second;
+        if (const auto problem = entry.params.validate(steps[i].params))
+            return failWith(CommandError{std::string(error_code::invalidParams), problem->message, problem->pointer},
+                            i);
+        if (entry.command.flags.undoable)
+        {
+            if (edit == nullptr)
+                return failWith(CommandError{std::string(error_code::noEdit),
+                                             "command '" + steps[i].id + "' needs an open project",
+                                             {}},
+                                i);
+            anyUndoable = true;
+        }
+    }
+
+    // Only a batch with an undoable step needs a transaction (and so can leave an undo entry).
+    std::optional<Transaction> transaction;
+    if (anyUndoable)
+        transaction.emplace(*edit, std::string(nameDe));
+
+    for (std::size_t i = 0; i < steps.size(); ++i)
+    {
+        // Found and params-checked above: what can still fail here is a run-time error, and that is rolled back.
+        auto step = runUnchecked(*commands.find(steps[i].id)->second, steps[i].params);
         if (!step.ok)
         {
             // All or nothing: the steps before and the failing step's own writes are taken back.

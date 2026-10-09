@@ -44,12 +44,25 @@ struct Transaction::Impl
     {
         if (!inhibitor)
             return;
+        assertRedoStackUntouched();
         auto& open = openEdits();
         open.erase(std::remove(open.begin(), open.end(), &edit), open.end());
     }
 
     Impl(const Impl&) = delete;
     Impl& operator=(const Impl&) = delete;
+
+    /** The rollback logic relies on the redo stack being changed only by the first write of this Transaction: JUCE
+        then moves the redo steps that existed at the beginning into its stash, so the stack is either still what it
+        was (nothing written yet) or empty (stashed). Anything else means an undo()/redo() or a second manager user
+        cut into the open transaction (edit.undo/edit.redo refuse that via isOpen), and rollback() could no longer
+        tell a stale stash from a right one. Debug-only on purpose: a release build keeps the safe fallback. */
+    void assertRedoStackUntouched() const
+    {
+        const auto now = edit.getUndoManager().getRedoDescriptions();
+        jassert(now.isEmpty() || now == redoAtBegin);
+        juce::ignoreUnused(now);
+    }
 
     tracktion::Edit& edit;
     std::optional<tracktion::Edit::UndoTransactionInhibitor> inhibitor;  // empty = joined an outer Transaction
@@ -73,6 +86,7 @@ void Transaction::rollback()
     // A joined Transaction cannot roll back on its own: its changes belong to the outer one.
     if (!impl->inhibitor)
         return;
+    impl->assertRedoStackUntouched();
     auto& manager = impl->edit.getUndoManager();
     // Only the current transaction: earlier steps stay as they were. False = nothing was changed, nothing to do.
     if (!manager.undoCurrentTransactionOnly())

@@ -88,12 +88,18 @@ public:
           step) -> error undo_in_transaction: they would cut the open transaction in two. */
 
     /** Runs the steps in order as ONE undo transaction named `nameDe` (a macro / a Claude turn). Every step is
-        validated and run like execute(), but without a transaction of its own, so the result is one undo step
-        whatever the steps' flags. If a step fails (any execute() error, incl. unknown_command and invalid_params), the
-        steps already run are rolled back (Transaction::rollback: state as before, no undo entry, redo stack as before)
-        and the result carries the error and the index of the failing step; later steps are not run.
-        An empty list is ok with no results. no_edit and not_on_message_thread as for execute()
-        (no_edit only if a step is undoable). */
+        run like execute(), but without a transaction of its own, so the result is one undo step whatever the
+        steps' flags.
+        Up-front check: BEFORE any handler runs and before the transaction opens, every step is checked for what
+        can be known without running it: unknown_command, invalid_params (schema), and no_edit (undoable step but no
+        Edit). The step with the smallest index is reported (within a step in that order). A refused batch has
+        written nothing: state, undo history and redo stack are untouched, and no transaction was ever open. The
+        error carries `failedIndex` and the params-relative pointer of that step (not "/steps/<i>/...").
+        Run-time errors (handler_failed, CommandFailure, invalid_result) can only be found by running: the steps
+        already run are rolled back (Transaction::rollback: state as before, no undo entry, redo stack as before;
+        see there for the stale-stash exception) and the result carries the error and the index of the failing
+        step; later steps are not run.
+        An empty list is ok with no results. not_on_message_thread as for execute(). */
     BatchResult executeBatch(std::string_view nameDe, const std::vector<BatchStep>& steps) const;
 
 private:

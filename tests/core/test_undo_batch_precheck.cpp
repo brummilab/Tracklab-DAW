@@ -184,6 +184,39 @@ TEST_SUITE("core")
         CHECK(f.propertyValue("a") == -1);
     }
 
+    TEST_CASE("the up-front check reports the smallest step index across problem kinds: no_edit in step 0 beats an "
+              "unknown command in step 1")
+    {
+        int calls = 0;
+        auto counting = tracklab_test::core_helpers::makeUndoable("test.counting", "Z\xC3\xA4hlen");
+        counting.handler = [&calls](const Json&)
+        {
+            ++calls;
+            return tracklab_test::core_helpers::valueResult(1);
+        };
+        CommandRegistry registry;  // no EditContext, so an undoable step has no Edit
+        tracklab_test::core_helpers::registerOrFail(registry, counting);
+
+        SUBCASE("undoable step 0 without an Edit, unknown step 1")
+        {
+            const auto result =
+                registry.executeBatch(turnName, {BatchStep{"test.counting", Json::object()}, unknownStep()});
+            CHECK_FALSE(result.ok);
+            CHECK(result.failedIndex == 0);
+            CHECK(result.error.code == error_code::noEdit);
+        }
+
+        SUBCASE("unknown step 0 beats an undoable step 1 without an Edit")
+        {
+            const auto result =
+                registry.executeBatch(turnName, {unknownStep(), BatchStep{"test.counting", Json::object()}});
+            CHECK_FALSE(result.ok);
+            CHECK(result.failedIndex == 0);
+            CHECK(result.error.code == error_code::unknownCommand);
+        }
+        CHECK(calls == 0);
+    }
+
     //==========================================================================
     // History
     TEST_CASE("after 'A, undo, B' a batch refused up front loses no undo history and brings no stale redo back")

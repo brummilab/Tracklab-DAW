@@ -29,11 +29,15 @@ public:
         completely (see transaction.cpp) rather than let a redo come back that no longer fits the state. A redo that
         existed at the beginning is never lost by a rollback, one that did not exist is never created.
         Does nothing if nothing was changed, and nothing for a Transaction that joined an outer one.
-        It ends the transaction: later changes before the destructor are not part of it and not rolled back, and a
-        second rollback() does nothing. */
+        It ends the transaction for the rollback, not for isOpen(): later changes before the destructor are not part of
+        it and not rolled back, a second rollback() does nothing, and isOpen() stays true until the destructor (so
+        edit.undo/edit.redo are still refused and Transactions created meanwhile still join this one's bookkeeping).
+        Debug builds assert that the redo stack was not touched by anything but this Transaction's own writes (it is
+        what it was at the beginning, or empty because the first write moved it to JUCE's stash). */
     void rollback();
 
-    /** True while a Transaction (not a joined one) is alive on `edit` on this thread. edit.undo/edit.redo check this:
+    /** True while a Transaction (not a joined one) is alive on `edit` on this thread, from construction to
+        destruction, also after rollback() (rollback does not close it).  edit.undo/edit.redo check this:
         UndoManager::undo() starts a new transaction and would cut the open one in two. */
     static bool isOpen(const tracktion::Edit& edit);
 
