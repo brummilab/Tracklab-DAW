@@ -8,9 +8,17 @@ name: gate
 #   build-test-windows CMake Debug + Release with MSVC, ctest
 #   mp3-compare        MP3 decoding compared across platforms (engine spike M0-06)
 # Packaging and release get their own workflows in later cards.
+#
+# Saving Actions minutes (E44, E46): the local gate (scripts/gate.sh all) is mandatory before every merge, CI only
+# re-checks. A push runs CI only on main and only when something besides team records and documentation changed.
 
 on:
   push:
+    branches: [main]
+    paths-ignore:
+      - "team/**"
+      - "docs/**"
+      - "**/*.md"
   workflow_dispatch:
     inputs:
       xvfb:
@@ -23,7 +31,7 @@ permissions:
 
 concurrency:
   group: gate-${{ github.ref }}
-  # A newer push to a branch replaces the running gate; on main every commit keeps its own run and artefacts.
+  # A newer manual run on another branch replaces the running gate; on main every commit keeps its own run and artefacts.
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
@@ -103,7 +111,7 @@ jobs:
         run: git submodule update --init --depth 1 -- $TRACKLAB_SUBMODULES
 
       - name: Install build dependencies (apt)
-        timeout-minutes: 10
+        timeout-minutes: 20
         run: |
           $APT_GET update
           $APT_GET install -y $LINUX_PACKAGES clang-18 clang-tidy-18 clang-format-18
@@ -198,7 +206,7 @@ jobs:
       - name: Submodules (JUCE 9.0.3, Tracktion develop; not recursive)
         run: git submodule update --init --depth 1 -- $TRACKLAB_SUBMODULES
       - name: Install build dependencies (apt)
-        timeout-minutes: 10
+        timeout-minutes: 20
         run: |
           $APT_GET update
           # clang-20 is the noble-updates package (Clang 20.1.2); runtime and symbolizer in the same version.
@@ -329,11 +337,7 @@ jobs:
         run: |
           {
             echo "### MP3 decoding: platform comparison"
-            python3 spike/engine/tests/mp3_platform_compare.py \
-              pcm/pcm-linux-gcc-release/decoded.f32 \
-              pcm/pcm-linux-gcc-debug/decoded.f32 \
-              pcm/pcm-linux-clang-release/decoded.f32 \
-              pcm/pcm-linux-clang-debug/decoded.f32 \
-              pcm/pcm-windows-msvc-release/decoded.f32 \
-              pcm/pcm-windows-msvc-debug/decoded.f32
+            reference=pcm/pcm-linux-gcc-debug/decoded.f32
+            mapfile -t others < <(ls pcm/*/decoded.f32 | grep -v '/pcm-linux-gcc-debug/')
+            python3 spike/engine/tests/mp3_platform_compare.py "$reference" "${others[@]}"
           } | tee -a "$GITHUB_STEP_SUMMARY"

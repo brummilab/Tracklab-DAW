@@ -118,7 +118,9 @@ Bei Prozessfragen gilt die Vorlage, bei Produkt- und Technikfragen der Auftrag
   `implementer-rt` statt `implementer`.
 - **Sprache:** Doku, Briefs, Reviews Deutsch; Code, Bezeichner und Code-Kommentare **Englisch** (Auftrag R8,
   weicht vom Vorlagen-Implementer ab). Test-Namen ebenfalls Englisch.
-- **Gate:** `scripts/gate.sh` (Linux) bzw. `scripts/gate.ps1` (Windows); CI-Matrix Windows + Linux bei jedem Push.
+- **Gate:** `scripts/gate.sh` (Linux) bzw. `scripts/gate.ps1` (Windows); CI nur bei Push auf `main` mit Code-Änderung, volle Matrix + RTSan (E44, E46).
+  Weil reine `team/`-/`docs/`-/`*.md`-Pushes keine CI mehr bekommen, lässt der Lead vor **jedem** Push
+  `scripts/gate.sh static` laufen (Secret- und Audio-Scan, R13).
   DoD je Karte: `team/design/DESIGN.md` → „Gate“.
 - **Push:** Kein PR-Workflow; nur der Lead merged nach grünem Gate lokal in `main` und pusht direkt (Auftrag R3/R4).
   Bei jedem Merge: README, `Projektinhalt.md`, Vault-Abschnitte *Status*/*Offene Punkte*/*Entscheidungen*,
