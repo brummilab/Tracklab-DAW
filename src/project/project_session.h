@@ -16,6 +16,7 @@
 #include <tracktion_engine/tracktion_engine.h>
 
 #include <chrono>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -39,7 +40,7 @@ struct ProjectInfo
 };
 
 /** What one autosave attempt did (M1-05). */
-enum class AutosaveResult
+enum class AutosaveResult : std::uint8_t
 {
     written,          ///< `<project>.tracklab.autosave` was (re)written
     notModified,      ///< nothing changed since the last save / autosave: nothing was written
