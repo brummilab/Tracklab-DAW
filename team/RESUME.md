@@ -2,7 +2,21 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 08.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01, M1-02, O-04 erledigt – M1-03 + M1-06 in Arbeit
+**Stand:** 08.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01, M1-02, O-04 erledigt – M1-03 + M1-06 **angehalten (PO: „alle stoppen“)**
+
+> **Angehalten 08.10.2026:** Beide Implementer auf Wunsch des PO gestoppt, ungeprüft, nichts gemerged.
+> Stand: `m1-03-impl` @ `99c56ca` (Umsetzung committet, Build/Format-Lauf unterbrochen),
+> `m1-06-impl` @ `9aafc75` (Umsetzung + Lizenzprüfung committet, RTSan grün, tidy-Befunde offen).
+> **CI (E44):** Actions-Minuten des Kontos aufgebraucht; `gate.yml` läuft nur noch bei Push auf `main` mit Code-Änderung
+> (Debug + RTSan), volle Matrix manuell. Bis neue Minuten da sind, zählt nur das lokale Gate.
+> **Öffentlich (E45):** Repo ist seit 09.10.2026 öffentlich (David); F43 entschieden (E46). CI-Minuten wieder verfügbar.
+> **Historie umgeschrieben (E47, 09.10.2026):** alle Commit-IDs neu. Die alten Worktrees sind entfernt; `m1-03-impl`
+> (`2d83353`), `m1-03-tests`, `m1-06-impl` (`4172af2`), `m1-06-tests` sind seit 09.10.2026 auf GitHub gesichert
+> (PO: „ja sichern“). Sie tragen noch die alte `gate.yml` (CI bei jedem Push) – ausgelöste Läufe wurden abgebrochen;
+> beim Fortsetzen zuerst `main` hineinmergen.
+> **O-08 erledigt (09.10.2026):** Windows-CI war seit M1-01 rot (Link-Fehler WindowsMediaAudioFormat); Fix gemerged,
+> CI auf `main` komplett grün (Run 37906889207).
+> Neue Worktrees auf diese Branches anlegen. Fortsetzen nur auf Anweisung des PO: Implementer zu Ende führen → Review → Merge.
 
 ## Zuletzt erledigt
 
