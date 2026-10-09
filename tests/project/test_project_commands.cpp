@@ -69,15 +69,18 @@ TEST_SUITE("project")
     {
         ProjectFixture f;
 
+        int seen = 0;
         for (const auto* command : f.registry.list())
         {
             if (command->id.rfind("project.", 0) != 0)
                 continue;
+            ++seen;
             INFO("command " << command->id);
             CHECK_FALSE(command->flags.undoable);
             CHECK(command->flags.destructive == (command->id == "project.close"));
             CHECK(command->flags.readOnly == (command->id == "project.get_info"));
         }
+        CHECK(seen == 6);  // the loop is not vacuous
     }
 
     TEST_CASE(
