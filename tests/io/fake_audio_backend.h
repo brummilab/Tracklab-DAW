@@ -23,6 +23,7 @@
 
 #include <juce_audio_devices/juce_audio_devices.h>
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -70,6 +71,17 @@ struct Backend
     int devicesCreated = 0;
     int devicesStarted = 0;
     juce::AudioIODeviceCallback* callback = nullptr;  ///< the callback of the running device (nullptr = stopped)
+
+    /** Exclusive hardware (like ALSA `hw:` or WASAPI exclusive mode): a device that is created while the hardware it
+        names is in use reports no channels, no rates and no buffer sizes. `busy` holds the names in use: the open
+        devices add theirs (only if `exclusive`), a test adds a name to simulate another program. */
+    bool exclusive = false;
+    std::vector<juce::String> busy;
+
+    bool isBusy(const juce::String& name) const
+    {
+        return exclusive && name.isNotEmpty() && std::find(busy.begin(), busy.end(), name) != busy.end();
+    }
 };
 
 class FakeDevice final : public juce::AudioIODevice
@@ -85,6 +97,13 @@ public:
         if (outputSpec != nullptr)
             outputNames = outputSpec->outputChannelNames;
 
+        const bool inputBusy = backend->isBusy(inputName);
+        const bool outputBusy = backend->isBusy(outputName);
+        if (inputBusy)
+            inputNames.clear();
+        if (outputBusy)
+            outputNames.clear();
+
         const DeviceSpec* first = outputSpec != nullptr ? outputSpec : inputSpec;
         rates = first->sampleRates;
         buffers = first->bufferSizes;
@@ -96,9 +115,15 @@ public:
             if (!buffers.contains(defaultBuffer) && !buffers.isEmpty())
                 defaultBuffer = buffers.getFirst();
         }
+        if (inputBusy || outputBusy)  // the driver cannot ask a device that is in use
+        {
+            rates.clear();
+            buffers.clear();
+            defaultBuffer = 0;
+        }
     }
 
-    ~FakeDevice() override { stop(); }
+    ~FakeDevice() override { close(); }
 
     juce::StringArray getOutputChannelNames() override { return outputNames; }
     juce::StringArray getInputChannelNames() override { return inputNames; }
@@ -126,12 +151,21 @@ public:
         currentRate = sampleRate;
         currentBuffer = bufferSize;
         opened = true;
+        if (backend->exclusive)
+            for (const auto& name : {inputDeviceName, outputDeviceName})
+                if (name.isNotEmpty())
+                    backend->busy.push_back(name);
         return {};
     }
 
     void close() override
     {
         stop();
+        if (opened && backend->exclusive)
+            for (const auto& name : {inputDeviceName, outputDeviceName})
+                if (const auto it = std::find(backend->busy.begin(), backend->busy.end(), name);
+                    it != backend->busy.end())
+                    backend->busy.erase(it);
         opened = false;
     }
 
@@ -315,7 +349,8 @@ inline void addFakeTypes(juce::AudioDeviceManager& manager, const std::shared_pt
     if (hardware.separateType)
     {
         auto device = [](const char* name, juce::StringArray ins, juce::StringArray outs, juce::Array<double> rates,
-                         juce::Array<int> buffers, int defaultBuffer) {
+                         juce::Array<int> buffers, int defaultBuffer)
+        {
             return DeviceSpec{name,         std::move(ins), std::move(outs), std::move(rates), std::move(buffers),
                               defaultBuffer};
         };

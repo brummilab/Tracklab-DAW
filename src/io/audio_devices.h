@@ -56,6 +56,9 @@ juce::String restoreAudioDeviceSetup(te::Engine& engine);
                   "default_buffer_size": integer}
         "type" absent: all types; unknown type: handler_failed. For types without separate inputs and outputs the same
         device appears in "inputs" (with its input channel names) and in "outputs" (with its output channel names).
+        The device that is open is described by the open device itself (a second device object for hardware that is in
+        use cannot be asked); other devices are asked briefly. A device used exclusively by another program is listed
+        with empty lists.
 
     io.get_device         readOnly, params {}
         result Setup = {"open": boolean, "type": string, "input_device": string, "output_device": string,
@@ -68,7 +71,9 @@ juce::String restoreAudioDeviceSetup(te::Engine& engine);
         params {"type"?: string, "input_device"?: string, "output_device"?: string, "sample_rate"?: number,
                 "buffer_size"?: integer, "active_input_channels"?: [integer], "active_output_channels"?: [integer]}
         Absent = keep the current value; "" for a device = none. A new "type" without devices selects that type's
-        default devices. The result is the Setup after the change (same shape as io.get_device). The device is
+        default devices. The side that stays (same device name) takes its channels, rates and buffer sizes from the open
+        device. A chosen device that reports no channels is an error ("reports no channels ..."), never ok. The
+        result is the Setup after the change (same shape as io.get_device). The device is
         opened, and the setup is stored in the settings of the engine before the command returns (no message loop is
         needed in between). */
 [[nodiscard]] core::RegisterResult registerIoCommands(core::CommandRegistry& registry, te::Engine& engine);

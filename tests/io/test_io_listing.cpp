@@ -274,4 +274,24 @@ TEST_SUITE("io")
         CHECK(setup.at("active_input_channels").empty());
         CHECK(setup.at("active_output_channels").empty());
     }
+
+    TEST_CASE("io.list_devices shows the open device with its own data on exclusive hardware")
+    {
+        // A probe of hardware that is open reports nothing there; the listing uses the open device for its sides.
+        const ScopedTempDir temp;
+        const Session session(temp.dir());
+        session.backend->exclusive = true;
+        session.setDevice(micAndSpeakersParams());
+
+        const auto result = session.ok("io.list_devices", Json{{"type", fake::kSeparateType}});
+        const auto& type = result.at("types").at(0);
+        const auto* mic = findByName(type.at("inputs"), fake::kMicInterface);
+        const auto* speakers = findByName(type.at("outputs"), fake::kSpeakers);
+        REQUIRE(mic != nullptr);
+        REQUIRE(speakers != nullptr);
+        CHECK(mic->at("channel_names") == strings({"Mic 1", "Mic 2", "Mic 3", "Mic 4"}));
+        CHECK(speakers->at("channel_names") == strings({"Left", "Right"}));
+        CHECK_FALSE(speakers->at("sample_rates").empty());
+        CHECK_FALSE(speakers->at("buffer_sizes").empty());
+    }
 }

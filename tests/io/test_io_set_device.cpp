@@ -387,7 +387,7 @@ TEST_SUITE("io")
 
     TEST_CASE("io.set_device refuses a buffer size the device does not offer")
     {
-        // Lead decision pending (see report): treated like the sample rate, JUCE would round.
+        // Lead decision 2 (M1-06): an error like the sample rate, no silent rounding (JUCE would round).
         const ScopedTempDir temp;
         const Session session(temp.dir());
         session.setDevice(micAndSpeakersParams());
@@ -437,5 +437,56 @@ TEST_SUITE("io")
                            {"active_input_channels", Json::array({3})},
                            {"output_device", "Muster Lautsprecher"}},
                       "Muster Lautsprecher");
+    }
+
+    TEST_CASE("io.set_device takes channels and rates of the unchanged side from the open device (exclusive hardware)")
+    {
+        // A device that is created while its hardware is open reports nothing (like ALSA hw: or WASAPI exclusive).
+        // The input stays the mic interface: its channels must come from the open device, not from such a probe.
+        const ScopedTempDir temp;
+        const Session session(temp.dir());
+        session.backend->exclusive = true;
+        session.setDevice(micAndSpeakersParams());
+
+        const auto result =
+            session.setDevice(Json{{"output_device", fake::kHeadphones}, {"sample_rate", 48000}, {"buffer_size", 256}});
+        CHECK(result.at("output_device") == fake::kHeadphones);
+        CHECK(result.at("input_device") == fake::kMicInterface);
+        CHECK(result.at("active_input_channels") == Json::array({0, 2}));
+        CHECK(result.at("active_output_channels") == Json::array({0, 1}));
+
+        REQUIRE_FALSE(session.backend->opens.empty());
+        CHECK(maskIs(session.backend->opens.back().inputChannels, {0, 2}));
+        CHECK(session.getDevice() == result);
+    }
+
+    TEST_CASE("io.set_device keeps the unchanged side when only the input changes (exclusive hardware)")
+    {
+        const ScopedTempDir temp;
+        const Session session(temp.dir());
+        session.backend->exclusive = true;
+        session.setDevice(micAndSpeakersParams());
+
+        const auto result = session.setDevice(Json{{"input_device", fake::kLineInterface}});
+        CHECK(result.at("input_device") == fake::kLineInterface);
+        CHECK(result.at("active_input_channels") == Json::array({0, 1}));  // new device: all its channels
+        CHECK(result.at("output_device") == fake::kSpeakers);
+        CHECK(result.at("active_output_channels") == Json::array({0, 1}));
+        CHECK(result.at("sample_rate") == 48000);
+        CHECK(result.at("buffer_size") == 128);
+    }
+
+    TEST_CASE("io.set_device refuses a device that reports no channels, never answers ok")
+    {
+        // Another program holds the line interface: the probe sees no channels. The output would be silent or the
+        // input dead, so this is an error with a text that names the device and the likely cause.
+        const ScopedTempDir temp;
+        const Session session(temp.dir());
+        session.backend->exclusive = true;
+        session.setDevice(micAndSpeakersParams());
+        session.backend->busy.push_back(fake::kLineInterface);
+
+        expectRefused(session, Json{{"input_device", fake::kLineInterface}}, "no channels");
+        expectRefused(session, Json{{"input_device", fake::kLineInterface}}, fake::kLineInterface);
     }
 }

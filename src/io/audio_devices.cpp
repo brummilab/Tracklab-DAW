@@ -100,30 +100,58 @@ juce::AudioIODeviceType* findType(juce::AudioDeviceManager& manager, const juce:
     return nullptr;
 }
 
-/** A device to ask for channel names, rates and buffer sizes. The open device itself if it is exactly the requested
-    one (hardware that is open must not be opened a second time just to look at it), a short-lived new one otherwise;
-    the same way juce::AudioDeviceSelectorComponent finds out what a device offers. Opens nothing. */
+/** A device to ask for channel names, rates and buffer sizes. Opens nothing.
+    The open device itself if the question is about hardware it is using, a short-lived new one otherwise.
+    That matters on exclusive hardware (ALSA `hw:`, WASAPI exclusive): a second device object for hardware that is
+    already open cannot be asked and reports no channels and no rates. */
 struct Probe
 {
     juce::AudioIODevice* device = nullptr;  ///< null if the type cannot create it
     std::unique_ptr<juce::AudioIODevice> owned;
 };
 
+/** The open device if it is of `type` and exactly the requested one (names of both sides). */
+juce::AudioIODevice* openDeviceFor(juce::AudioDeviceManager& manager, const juce::AudioIODeviceType& type,
+                                   const juce::String& output, const juce::String& input)
+{
+    auto* current = manager.getCurrentAudioDevice();
+    if (current == nullptr || current->getTypeName() != type.getTypeName())
+        return nullptr;
+    const auto setup = manager.getAudioDeviceSetup();
+    return setup.outputDeviceName == output && setup.inputDeviceName == input ? current : nullptr;
+}
+
+/** A type with one device for both directions (ASIO): the device is asked with the same name on both sides. */
 Probe probeDevice(juce::AudioDeviceManager& manager, juce::AudioIODeviceType& type, const juce::String& output,
                   const juce::String& input)
 {
     Probe probe;
-    if (auto* current = manager.getCurrentAudioDevice();
-        current != nullptr && current->getTypeName() == type.getTypeName())
+    probe.device = openDeviceFor(manager, type, output, input);
+    if (probe.device == nullptr)
+    {
+        probe.owned.reset(type.createDevice(output, input));
+        probe.device = probe.owned.get();
+    }
+    return probe;
+}
+
+/** A type with separate inputs and outputs: one side, `name` on the input or the output side. The open device answers
+    for its own side even if its other side differs (its rates and buffer sizes are then those of both sides together,
+    which is what the user can use anyway). Never opens a second device for hardware that is in use. */
+Probe probeSide(juce::AudioDeviceManager& manager, juce::AudioIODeviceType& type, const juce::String& name, bool input)
+{
+    Probe probe;
+    auto* current = manager.getCurrentAudioDevice();
+    if (current != nullptr && current->getTypeName() == type.getTypeName())
     {
         const auto setup = manager.getAudioDeviceSetup();
-        if (setup.outputDeviceName == output && setup.inputDeviceName == input)
+        if ((input ? setup.inputDeviceName : setup.outputDeviceName) == name)
         {
             probe.device = current;
             return probe;
         }
     }
-    probe.owned.reset(type.createDevice(output, input));
+    probe.owned.reset(input ? type.createDevice({}, name) : type.createDevice(name, {}));
     probe.device = probe.owned.get();
     return probe;
 }
@@ -196,9 +224,9 @@ Json typeDevicesJson(juce::AudioDeviceManager& manager, juce::AudioIODeviceType&
         for (const auto& name : type.getDeviceNames(input))
         {
             // A type without separate lists has one device for both directions: ask for it with both names.
+            // The device that is open answers for itself (exclusive hardware cannot be asked a second time).
             const auto probe =
-                separate ? probeDevice(manager, type, input ? juce::String() : name, input ? name : juce::String())
-                         : probeDevice(manager, type, name, name);
+                separate ? probeSide(manager, type, name, input) : probeDevice(manager, type, name, name);
             devices.push_back(deviceJson(name, probe.device, input));
         }
         lists[input ? "inputs" : "outputs"] = std::move(devices);
@@ -314,6 +342,79 @@ juce::BigInteger resolveChannels(const Json& params, const char* key, bool input
     return mask;
 }
 
+/** What the devices of a new setup offer together: the channels per side, the rates and buffer sizes both sides can run
+    at. Copies, no device is kept (the probes are gone before the real device opens: exclusive hardware). */
+struct Offer
+{
+    juce::StringArray inputChannels;
+    juce::StringArray outputChannels;
+    juce::Array<double> rates;
+    juce::Array<int> sizes;
+};
+
+void intersect(Offer& offer, bool first, const juce::Array<double>& rates, const juce::Array<int>& sizes)
+{
+    if (first)
+    {
+        offer.rates = rates;
+        offer.sizes = sizes;
+        return;
+    }
+    offer.rates.removeIf([&](double r) { return !offersRate(rates, r); });
+    offer.sizes.removeIf([&](int s) { return !sizes.contains(s); });
+}
+
+/** A device that reports no channels cannot be used: on exclusive hardware this is the sign of a device that is in
+    use by another program. Never answer ok for it, the output would be silent. */
+[[noreturn]] void failNoChannels(const juce::String& name, const char* side)
+{
+    fail(juce::String(side) + " device " + quoted(name) +
+         " reports no channels - is it in use by another program (or is the driver blocked)?");
+}
+
+[[noreturn]] void failCannotCreate(const juce::String& name)
+{
+    fail("cannot create the audio device " + quoted(name));
+}
+
+Offer collectOffer(juce::AudioDeviceManager& manager, juce::AudioIODeviceType& type, const juce::String& inputName,
+                   const juce::String& outputName)
+{
+    Offer offer;
+
+    if (!type.hasSeparateInputsAndOutputs())
+    {
+        const auto name = outputName.isNotEmpty() ? outputName : inputName;
+        const auto probe = probeDevice(manager, type, outputName, inputName);
+        if (probe.device == nullptr)
+            failCannotCreate(name);
+        offer.inputChannels = probe.device->getInputChannelNames();
+        offer.outputChannels = probe.device->getOutputChannelNames();
+        intersect(offer, true, probe.device->getAvailableSampleRates(), probe.device->getAvailableBufferSizes());
+        if (offer.inputChannels.isEmpty() && offer.outputChannels.isEmpty())
+            failNoChannels(name, "audio");
+        return offer;
+    }
+
+    bool first = true;
+    for (const bool input : {true, false})
+    {
+        const auto& name = input ? inputName : outputName;
+        if (name.isEmpty())
+            continue;
+        const auto probe = probeSide(manager, type, name, input);
+        if (probe.device == nullptr)
+            failCannotCreate(name);
+        auto& channels = input ? offer.inputChannels : offer.outputChannels;
+        channels = input ? probe.device->getInputChannelNames() : probe.device->getOutputChannelNames();
+        if (channels.isEmpty())
+            failNoChannels(name, input ? "input" : "output");
+        intersect(offer, first, probe.device->getAvailableSampleRates(), probe.device->getAvailableBufferSizes());
+        first = false;
+    }
+    return offer;
+}
+
 Json setDeviceHandler(te::Engine& engine, const Json& params)
 {
     auto& manager = audioDeviceManager(engine);
@@ -382,16 +483,15 @@ Json setDeviceHandler(te::Engine& engine, const Json& params)
     if (inputName.isEmpty() && outputName.isEmpty())
         fail("no audio device chosen: audio driver type " + quoted(typeName) + " has no device to select");
 
-    auto probe = probeDevice(manager, *type, outputName, inputName);
-    if (probe.device == nullptr)
-        fail("cannot create the audio device " + quoted(outputName.isNotEmpty() ? outputName : inputName));
-    auto& device = *probe.device;
+    // What the new setup can use. The side that stays is asked of the open device (a second device object for hardware
+    // that is in use reports nothing); a side that changes is asked of a short-lived new device.
+    const auto offer = collectOffer(manager, *type, inputName, outputName);
     const auto deviceText = quoted(outputName.isNotEmpty() ? outputName : inputName);
+    const auto& rates = offer.rates;
+    const auto& sizes = offer.sizes;
 
     // Rate and size: what is asked for has to be offered exactly (JUCE would round to the nearest). What is not asked
     // for stays, as long as the new device offers it; if it does not, 0 lets the device manager choose its default.
-    const auto rates = device.getAvailableSampleRates();
-    const auto sizes = device.getAvailableBufferSizes();
     double sampleRate = 0.0;
     if (params.contains("sample_rate"))
     {
@@ -427,17 +527,14 @@ Json setDeviceHandler(te::Engine& engine, const Json& params)
     setup.bufferSize = bufferSize;
     setup.useDefaultInputChannels = false;
     setup.useDefaultOutputChannels = false;
-    setup.inputChannels = resolveChannels(params, "active_input_channels", true, inputName,
-                                          device.getInputChannelNames(), keepInput ? &before.inputChannels : nullptr);
-    setup.outputChannels =
-        resolveChannels(params, "active_output_channels", false, outputName, device.getOutputChannelNames(),
-                        keepOutput ? &before.outputChannels : nullptr);
+    setup.inputChannels = resolveChannels(params, "active_input_channels", true, inputName, offer.inputChannels,
+                                          keepInput ? &before.inputChannels : nullptr);
+    setup.outputChannels = resolveChannels(params, "active_output_channels", false, outputName, offer.outputChannels,
+                                           keepOutput ? &before.outputChannels : nullptr);
     if (setup.inputChannels.isZero() && setup.outputChannels.isZero())
         fail("no active channel chosen for " + deviceText);
 
     // ---- 2. Apply.
-    // A probe device that is not the open one has to be gone before the real device opens (exclusive hardware).
-    probe.owned.reset();
     const auto managerType = manager.getCurrentAudioDeviceType();
     const bool managerUsesFirstType = managerType.isEmpty() || findType(manager, managerType) == nullptr;
     if (typeName != managerType && !(managerUsesFirstType && type == types.getFirst()))

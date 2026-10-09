@@ -6,6 +6,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
+#include <utility>
 #include <vector>
 
 namespace
@@ -36,13 +38,15 @@ struct HostedDeviceScope
 bool writeTone(const juce::File& file, double seconds)
 {
     juce::WavAudioFormat wav;
-    auto stream = std::make_unique<juce::FileOutputStream>(file);
-    if (stream->failedToOpen())
+    auto fileStream = std::make_unique<juce::FileOutputStream>(file);
+    if (fileStream->failedToOpen())
         return false;
-    std::unique_ptr<juce::AudioFormatWriter> writer(wav.createWriterFor(stream.get(), kRate, 1, 16, {}, 0));
+    std::unique_ptr<juce::OutputStream> stream = std::move(fileStream);
+    // The overload with AudioFormatWriterOptions: the writer takes the stream on success and leaves it with us if not.
+    auto writer = wav.createWriterFor(
+        stream, juce::AudioFormatWriterOptions().withSampleRate(kRate).withNumChannels(1).withBitsPerSample(16));
     if (writer == nullptr)
         return false;
-    [[maybe_unused]] auto* const released = stream.release();  // the writer owns the stream now
 
     const auto frames = static_cast<int>(seconds * kRate);
     juce::AudioBuffer<float> buffer(1, frames);
