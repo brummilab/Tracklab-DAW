@@ -1,0 +1,86 @@
+// Project format of Tracklab (M1-04, DESIGN Rev 3 section 3 "Projektformat", E40/E41): file layout, format version,
+// error codes and the migration framework. No engine, no file access: this header is about the data only.
+//
+// A project is a folder `<folder>/<name>/` with the project file `<name>.tracklab` and the sub folders
+// `Audio/`, `Renders/`, `Backups/`, `Peaks/`. The project file is the XML form of the state tree of a Tracktion Edit
+// (root element EDIT), written by ProjectSession (project_session.h). The root element carries the attribute
+// `tracklabFormatVersion`. Paths of media files are stored relative to the project file.
+#pragma once
+
+#include <juce_data_structures/juce_data_structures.h>
+
+#include <array>
+#include <functional>
+#include <string>
+#include <string_view>
+#include <vector>
+
+namespace tracklab::project
+{
+
+/** Format version this build writes and reads without migration. v0 = a file without the attribute. */
+inline constexpr int currentFormatVersion = 1;
+
+/** Attribute (ValueTree property) of the EDIT node that holds the format version (an integer). */
+inline constexpr const char* formatVersionProperty = "tracklabFormatVersion";
+
+/** Extension of the project file, with the dot. */
+inline constexpr const char* fileExtension = ".tracklab";
+
+/** Sub folders of a project folder, created by project.new / project.save_as. */
+inline constexpr std::array<const char*, 4> subFolderNames = {"Audio", "Renders", "Backups", "Peaks"};
+
+/** Stable machine-readable codes of CommandFailure / CommandError that the project commands report (besides the
+    generic ones of core::error_code, e.g. no_edit, invalid_params). */
+namespace error_code
+{
+inline constexpr std::string_view unsavedChanges = "unsaved_changes";  ///< open/new/close would drop unsaved changes
+inline constexpr std::string_view corruptProject =
+    "corrupt_project";  ///< the file exists but cannot be read as a project
+inline constexpr std::string_view projectTooNew =
+    "project_too_new";  ///< format version newer than currentFormatVersion
+inline constexpr std::string_view projectNotFound = "project_not_found";  ///< the project file does not exist
+inline constexpr std::string_view projectExists = "project_exists";       ///< new/save_as would overwrite a project
+inline constexpr std::string_view invalidProjectName = "invalid_project_name";  ///< name is empty or not a plain name
+inline constexpr std::string_view saveFailed = "save_failed";  ///< writing the project file failed, old file intact
+inline constexpr std::string_view saveInhibited = "save_inhibited";  ///< Edit::isSaveInhibited(): nothing was written
+inline constexpr std::string_view migrationFailed = "migration_failed";  ///< a migration step failed
+}  // namespace error_code
+
+//==============================================================================
+// Migration: a list of steps vN -> vN+1 on the state tree, run before the Edit is created.
+
+/** One step: turns a state of version `fromVersion` into one of version `fromVersion + 1`. The framework sets the
+    version attribute after the step, the step itself does not have to. */
+struct MigrationStep
+{
+    int fromVersion = 0;
+    std::function<void(juce::ValueTree& edit)> apply;  ///< `edit` is the EDIT node; may throw (migration_failed)
+};
+
+struct MigrationOutcome
+{
+    bool ok = false;
+    std::string code;     ///< !ok: error_code::projectTooNew, error_code::migrationFailed or error_code::corruptProject
+    std::string message;  ///< !ok: for people; names the versions involved
+    int fromVersion = 0;  ///< version found in the state
+    int toVersion = 0;    ///< version of the state afterwards (= fromVersion if nothing was done or !ok)
+};
+
+/** Version of an EDIT node: the integer attribute `tracklabFormatVersion`, 0 if it is missing. */
+int formatVersionOf(const juce::ValueTree& edit);
+
+/** The migration steps of the format, oldest first. Today: v0 -> v1 (a file without the attribute gets version 1; its
+    content is kept as it is). */
+const std::vector<MigrationStep>& builtInMigrationSteps();
+
+/** Brings `edit` to `targetVersion`: runs, in order, the step of every version from formatVersionOf(edit) up to
+    targetVersion - 1 (each exactly once; none if the state is already at targetVersion) and sets the version attribute
+    to targetVersion.
+    - state newer than targetVersion -> !ok, code project_too_new, message contains the found version number;
+    - a missing step for a version in between -> !ok, code migration_failed;
+    - a step that throws -> !ok, code migration_failed.
+    All or nothing: when !ok, `edit` is exactly as before (no step is visible). */
+MigrationOutcome migrateState(juce::ValueTree& edit, const std::vector<MigrationStep>& steps, int targetVersion);
+
+}  // namespace tracklab::project
