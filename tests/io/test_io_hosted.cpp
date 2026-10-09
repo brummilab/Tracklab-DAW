@@ -42,7 +42,7 @@ bool writeTone(const juce::File& file, double seconds)
     std::unique_ptr<juce::AudioFormatWriter> writer(wav.createWriterFor(stream.get(), kRate, 1, 16, {}, 0));
     if (writer == nullptr)
         return false;
-    static_cast<void>(stream.release());  // the writer owns the stream now
+    [[maybe_unused]] auto* const released = stream.release();  // the writer owns the stream now
 
     const auto frames = static_cast<int>(seconds * kRate);
     juce::AudioBuffer<float> buffer(1, frames);
