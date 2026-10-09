@@ -16,3 +16,12 @@
 | `edit.get_undo_state` | `edit_get_undo_state` | Undo-Status abfragen | Returns whether undo and redo are possible and the names of the next undo and redo step. | readOnly | - | - |
 | `edit.redo` | `edit_redo` | Wiederholen | Redoes the last undone step of the project. Does nothing (done=false) if there is none. | - | Ctrl+Shift+Z | Bearbeiten |
 | `edit.undo` | `edit_undo` | Rückgängig | Undoes the last undo step of the project. Does nothing (done=false) if there is none. | - | Ctrl+Z | Bearbeiten |
+
+## io
+
+| ID | Tool-Name | Titel | Beschreibung | Flags | Shortcut | Menüpfad |
+|---|---|---|---|---|---|---|
+| `io.get_device` | `io_get_device` | Aktuelles Audiogerät anzeigen | Returns the open audio device: driver type, input and output device, sample rate, buffer size and active channels. 'open' is false when no device is open. | readOnly | - | - |
+| `io.list_device_types` | `io_list_device_types` | Audio-Treibertypen auflisten | Lists the audio driver types (e.g. ALSA, JACK, WASAPI, ASIO) with the number of devices and the type of the open device. 'hints' tells the user how to make an empty type work. | readOnly | - | - |
+| `io.list_devices` | `io_list_devices` | Audiogeräte auflisten | Lists the audio devices per driver type: input and output devices with channel names, sample rates and buffer sizes. Optional 'type' limits the list to one driver type. | readOnly | - | - |
+| `io.set_device` | `io_set_device` | Audiogerät einstellen | Selects and opens the audio device: driver type, input and output device, sample rate, buffer size and active channels (0-based indices). Omitted values stay as they are; an empty device name means none. Fails without changing anything if a device, rate, size or channel is not available. Returns the new setup. The setting is stored. | - | - | - |
