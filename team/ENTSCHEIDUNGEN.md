@@ -6,6 +6,7 @@ durch den PO), `V` Verifikation/Prüfaufgabe durch den PO, `R` Release/Abnahme. 
 
 | Nr | Datum | Frage | Antwort | Folge |
 |---|---|---|---|---|
+| E51 | 09.10.2026 | F44 – Undo-Historienverlust hinnehmen? | Erledigt durch E49/O-09: JUCE-Patch + Vorabprüfung von Befehlspaketen; Rollback verliert keine Historie mehr | O-09 erledigt |
 | E50 | 09.10.2026 | GUI-Leitbild | „Modern und aufgeräumt“, Apple-inspiriert (PO): viel Weißraum, wenige Farben (Bernstein als einziger Akzent), klare Typografie, feine Linien, dezente Schatten, keine überladenen Leisten. Standard-Theme dunkel (PO: „dunkel“), hell umschaltbar | DESIGN §5; Mockups: Artifact 8K6W6W2KNm4kxGyfjznbD8, Canva DAHXhw2g9-8 |
 | E49 | 09.10.2026 | F46 – JUCE-Undo-Stash dauerhaft beheben | Default (a) (PO: „defaults ok“): kleiner Patch an JUCE (umgesetzt: Stash im neuen ActionSet von `perform()` und in `clearUndoHistory()` leeren, siehe Review O-09 C) als Patch-Datei, beim CMake-Konfigurieren idempotent angewendet; Test erkennt fehlenden Patch; Rollback danach ohne Historienverlust (F44 erledigt). Upstream-Meldung postet David (Text in `team/research/juce-undo-stash/NOTIZEN.md`) | O-09 Teil C |
 | E48 | 09.10.2026 | F45 – Eigene Plugins | Default (PO: „defaults ok“): A) eigenes Plugin-Repo (JUCE, VST3+CLAP, Linux+Windows) nach M1, erstes Plugin „Lo-Fi-Kompressor“ (klanglich inspiriert von Vulf Comp, keine Namen/Logos/Oberfläche kopiert); B) eingebaute Effekte wie geplant in M6; C) DSP-Skripte erst Recherche R-01, Entscheidung vor v2 | PLAN (nach M1), R-01 |

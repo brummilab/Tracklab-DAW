@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 09.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01, M1-02, M1-03, M1-06, O-04, O-08 erledigt – O-11 erledigt, O-09 Teil B gemergt; offen F45/F46 (PO); danach O-09 C, dann M1-04
+**Stand:** 09.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01/02/03/06, O-04/08/09/11 erledigt – **nächster Schritt: M1-04 Projektformat** (Basis `origin/main`), dann M1-05, M1-07
 
 > **Angehalten 08.10.2026:** Beide Implementer auf Wunsch des PO gestoppt, ungeprüft, nichts gemerged.
 > Stand: `m1-03-impl` @ `99c56ca` (Umsetzung committet, Build/Format-Lauf unterbrochen),
@@ -17,6 +17,12 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 > **O-08 erledigt (09.10.2026):** Windows-CI war seit M1-01 rot (Link-Fehler WindowsMediaAudioFormat); Fix gemerged,
 > CI auf `main` komplett grün (Run 37906889207).
 > Neue Worktrees auf diese Branches anlegen. Fortsetzen nur auf Anweisung des PO: Implementer zu Ende führen → Review → Merge.
+
+## Hinweise für neue Sessions (09.10.2026)
+- Sub-Agents immer von `origin/main` abzweigen (`git branch -f main origin/main` vor jedem Auftrag).
+- REA (Reverse-Engineering-MCP) installiert David optional per Setup-Script der Umgebung:
+  `npx -y rea-agents@6.1.0 setup --yes --client claude_code`. Nicht für Tracklab-Code ohne Auftrag (Lizenzrisiko).
+- Mockups: Artifact 8K6W6W2KNm4kxGyfjznbD8, Canva DAHXhw2g9-8; Leitbild E50 (modern, aufgeräumt, dunkel).
 
 ## PO-Wunsch: Bescheid geben, sobald testbar (09.10.2026)
 David will informiert werden, sobald er selbst testen kann – im Chat **und** per Push-Benachrichtigung, mit
@@ -71,10 +77,10 @@ kopierbaren Schritten und Download-Link. Stufen:
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | O-09 (Teil A+B erledigt, Teil C wartet auf F46) |
+| in Arbeit | – |
 | Review | – |
-| Backlog | O-09 (direkt nach M1, F44) · O-10 · M1-04 · M1-05 · M1-07 · M1-08 · M1-09 · O-05 · O-06 · O-07 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
-| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 · M1-02 · M1-03 · M1-06 · O-04 · O-08 |
+| Backlog | O-12 (CI-Flakes) · O-10 · M1-04 · M1-05 · M1-07 · M1-08 · M1-09 · O-05 · O-06 · O-07 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
+| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 · M1-02 · M1-03 · M1-06 · O-04 · O-08 · O-09 · O-11 |
 
 ## Builds
 
