@@ -111,7 +111,7 @@ jobs:
         run: git submodule update --init --depth 1 -- $TRACKLAB_SUBMODULES
 
       - name: Install build dependencies (apt)
-        timeout-minutes: 10
+        timeout-minutes: 20
         run: |
           $APT_GET update
           $APT_GET install -y $LINUX_PACKAGES clang-18 clang-tidy-18 clang-format-18
@@ -206,7 +206,7 @@ jobs:
       - name: Submodules (JUCE 9.0.3, Tracktion develop; not recursive)
         run: git submodule update --init --depth 1 -- $TRACKLAB_SUBMODULES
       - name: Install build dependencies (apt)
-        timeout-minutes: 10
+        timeout-minutes: 20
         run: |
           $APT_GET update
           # clang-20 is the noble-updates package (Clang 20.1.2); runtime and symbolizer in the same version.

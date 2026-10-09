@@ -57,7 +57,9 @@ endif()
 # Linking them into tracklab_engine, spike_core and the test executables would compile Tracktion three times.
 # Therefore: tracklab_juce_tracktion (static) links the modules PRIVATE and holds the only copy of the module
 # code; tracklab_juce_tracktion_api re-exports include directories and compile definitions (without sources).
-add_library(tracklab_juce_tracktion STATIC "${CMAKE_CURRENT_LIST_DIR}/tracklab_modules_anchor.cpp")
+add_library(tracklab_juce_tracktion STATIC
+  "${CMAKE_CURRENT_LIST_DIR}/tracklab_modules_anchor.cpp"
+  "${CMAKE_CURRENT_LIST_DIR}/windows_media_disabled.cpp")
 target_link_libraries(tracklab_juce_tracktion PRIVATE
   tracklab_defs
   tracktion::tracktion_engine
