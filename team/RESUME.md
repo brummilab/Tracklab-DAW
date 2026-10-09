@@ -18,6 +18,13 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 > CI auf `main` komplett grün (Run 37906889207).
 > Neue Worktrees auf diese Branches anlegen. Fortsetzen nur auf Anweisung des PO: Implementer zu Ende führen → Review → Merge.
 
+## PO-Wunsch: Bescheid geben, sobald testbar (09.10.2026)
+David will informiert werden, sobald er selbst testen kann – im Chat **und** per Push-Benachrichtigung, mit
+kopierbaren Schritten und Download-Link. Stufen:
+1. **Nach M1-07 (CLI):** Handtest V1 Audio-Geräte nach `docs/testing/manual/M1.md` (Windows + Linux).
+2. **Nach M1-08/M1-09:** erstes Programmfenster + Test-Builds als Download (Actions-Artefakt, Link in RESUME).
+3. **Ende M2:** erster echter Arbeitsablauf A (Mitschnitt importieren, schneiden, normalisieren, exportieren).
+
 ## Zuletzt erledigt
 
 - M0-01 Grundgerüst, Branding, Gate (Doku/Secrets), CI, Git-Hook (Commit `192753d`).
