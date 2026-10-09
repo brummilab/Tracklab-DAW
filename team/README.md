@@ -121,6 +121,9 @@ Bei Prozessfragen gilt die Vorlage, bei Produkt- und Technikfragen der Auftrag
 - **Gate:** `scripts/gate.sh` (Linux) bzw. `scripts/gate.ps1` (Windows); CI nur bei Push auf `main` mit Code-Änderung, volle Matrix + RTSan (E44, E46).
   Weil reine `team/`-/`docs/`-/`*.md`-Pushes keine CI mehr bekommen, lässt der Lead vor **jedem** Push
   `scripts/gate.sh static` laufen (Secret- und Audio-Scan, R13).
+- **Branch-Basis:** Der Lead pusht mit `HEAD:main`; der lokale `main` veraltet dabei. Vor jedem Auftrag an Sub-Agents
+  `git branch -f main origin/main` – und Briefe nennen ausdrücklich `origin/main` als Basis (O-11: Branch vom alten
+  `main` brachte den O-08-Linkerfehler zurück).
   DoD je Karte: `team/design/DESIGN.md` → „Gate“.
 - **Push:** Kein PR-Workflow; nur der Lead merged nach grünem Gate lokal in `main` und pusht direkt (Auftrag R3/R4).
   Bei jedem Merge: README, `Projektinhalt.md`, Vault-Abschnitte *Status*/*Offene Punkte*/*Entscheidungen*,
