@@ -579,6 +579,54 @@ void ProjectSession::closeProject(bool discard)
     impl->dropEdit();
 }
 
+//==============================================================================
+// M1-05: interfaces only, behaviour follows with the implementation.
+void ProjectSession::setClock(Clock) {}
+
+void ProjectSession::setAutosaveInterval(std::chrono::milliseconds) {}
+
+std::chrono::milliseconds ProjectSession::autosaveInterval() const
+{
+    return std::chrono::milliseconds(0);
+}
+
+void ProjectSession::setMaxBackups(int) {}
+
+int ProjectSession::maxBackups() const
+{
+    return 0;
+}
+
+AutosaveResult ProjectSession::autosaveNow()
+{
+    return AutosaveResult::failed;
+}
+
+std::vector<BackupInfo> ProjectSession::listBackups() const
+{
+    return {};
+}
+
+std::optional<RecoveryInfo> ProjectSession::pendingRecovery() const
+{
+    return std::nullopt;
+}
+
+ProjectInfo ProjectSession::restoreAutosave()
+{
+    fail(error_code::noAutosave, "not implemented");
+}
+
+void ProjectSession::discardAutosave()
+{
+    fail(error_code::noAutosave, "not implemented");
+}
+
+ProjectInfo ProjectSession::restoreBackup(const juce::String&)
+{
+    fail(error_code::backupNotFound, "not implemented");
+}
+
 ProjectInfo ProjectSession::info() const
 {
     return impl->infoOf();

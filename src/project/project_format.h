@@ -27,6 +27,10 @@ inline constexpr const char* formatVersionProperty = "tracklabFormatVersion";
 /** Extension of the project file, with the dot. */
 inline constexpr const char* fileExtension = ".tracklab";
 
+/** M1-05 defaults (E41): autosave every 2 minutes, 10 rotating backups. */
+inline constexpr int defaultAutosaveIntervalMs = 120000;
+inline constexpr int defaultMaxBackups = 10;
+
 /** Sub folders of a project folder, created by project.new / project.save_as. */
 inline constexpr std::array<const char*, 4> subFolderNames = {"Audio", "Renders", "Backups", "Peaks"};
 
@@ -47,6 +51,10 @@ inline constexpr std::string_view folderNotFound =
 inline constexpr std::string_view saveFailed = "save_failed";  ///< writing the project file failed, old file intact
 inline constexpr std::string_view saveInhibited = "save_inhibited";  ///< Edit::isSaveInhibited(): nothing was written
 inline constexpr std::string_view migrationFailed = "migration_failed";  ///< a migration step failed
+inline constexpr std::string_view backupNotFound =
+    "backup_not_found";  ///< project.restore_backup: no backup of that name in Backups/
+inline constexpr std::string_view noAutosave =
+    "no_autosave";  ///< project.restore_autosave: there is no autosave file of the open project
 }  // namespace error_code
 
 //==============================================================================

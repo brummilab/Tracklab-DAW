@@ -15,9 +15,12 @@
 #include <juce_core/juce_core.h>
 #include <tracktion_engine/tracktion_engine.h>
 
+#include <chrono>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace tracklab::project
 {
@@ -33,6 +36,33 @@ struct ProjectInfo
     std::string name;       ///< `<name>`: the project file's name without the extension
     int formatVersion = 0;  ///< format version of the state in memory (always currentFormatVersion once opened)
     bool modified = false;  ///< Edit::hasChangedSinceSaved(): changes since the last save / since opening
+};
+
+/** What one autosave attempt did (M1-05). */
+enum class AutosaveResult
+{
+    written,          ///< `<project>.tracklab.autosave` was (re)written
+    notModified,      ///< nothing changed since the last save / autosave: nothing was written
+    noProject,        ///< no project is open
+    saveInhibited,    ///< Edit::isSaveInhibited(): nothing was written, the next attempt tries again
+    recoveryPending,  ///< the project was opened with an offered recovery that is not decided yet: the old autosave file
+                      ///< is not overwritten
+    failed            ///< writing failed (the previous autosave file is intact); never throws
+};
+
+/** One file of `<project folder>/Backups/` that belongs to the open project: `<name>.<YYYYMMDD-HHMMSS>.tracklab`. */
+struct BackupInfo
+{
+    juce::String name;  ///< the file name, e.g. "Muster.20261009-123456.tracklab"
+    juce::Time time;    ///< the time in the name (local time of the clock the backup was made with)
+    juce::int64 sizeBytes = 0;
+};
+
+/** The autosave file is newer than the project file of the project that was just opened. */
+struct RecoveryInfo
+{
+    juce::Time projectTime;   ///< modification time of the project file
+    juce::Time autosaveTime;  ///< modification time of the autosave file
 };
 
 class ProjectSession
@@ -56,6 +86,45 @@ public:
         the project stays `modified`. An empty function = no hook. */
     using BeforeReplaceHook = std::function<bool(const juce::File& temporary, const juce::File& target)>;
     void setBeforeReplaceHook(BeforeReplaceHook hook);
+
+    //==========================================================================
+    // M1-05: autosave, rotating backups, recovery (members, see below the operations).
+
+    /** Where "now" comes from for the names of the backups (default: juce::Time::getCurrentTime()). Tests inject it. */
+    using Clock = std::function<juce::Time()>;
+    void setClock(Clock clock);
+
+    /** Autosave interval (default defaultAutosaveIntervalMs); a message-thread timer calls autosaveNow() that often
+        while a project is open. <= 0 switches the timer off. Changing it restarts the timer. */
+    void setAutosaveInterval(std::chrono::milliseconds interval);
+    std::chrono::milliseconds autosaveInterval() const;
+
+    /** How many backups of the open project are kept (default defaultMaxBackups); older ones are deleted by the next
+        save. */
+    void setMaxBackups(int count);
+    int maxBackups() const;
+
+    /** What the autosave timer does every interval; public so that tests do not have to wait. Never throws. */
+    AutosaveResult autosaveNow();
+
+    /** The backups of the open project, newest first (empty if none is open). */
+    std::vector<BackupInfo> listBackups() const;
+
+    /** Set by openProject when the autosave was newer than the project file; cleared by restoreAutosave,
+        discardAutosave and closing / opening another project. */
+    std::optional<RecoveryInfo> pendingRecovery() const;
+
+    /** Loads the autosave file as the state of the open project (the project file on disk is not touched, the autosave
+        file stays until the next save; modified = true; undo history empty). no_autosave if there is none. */
+    ProjectInfo restoreAutosave();
+
+    /** Deletes the autosave file of the open project; the project in memory is not changed. */
+    void discardAutosave();
+
+    /** Makes a backup of the current state first, then loads backup `name` (a file name from listBackups) as the state
+        of the open project (project file on disk not touched, modified = true, undo history empty). Errors: no_edit,
+        backup_not_found (also for a name that is not a plain file name of the Backups folder). */
+    ProjectInfo restoreBackup(const juce::String& name);
 
     //==========================================================================
     // Operations behind the project.* commands (see project_commands.h for the command side).
