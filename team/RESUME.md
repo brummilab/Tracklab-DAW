@@ -13,7 +13,10 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 > **Historie umgeschrieben (E47, 09.10.2026):** alle Commit-IDs neu. Die alten Worktrees sind entfernt; `m1-03-impl`
 > (`2d83353`), `m1-03-tests`, `m1-06-impl` (`4172af2`), `m1-06-tests` sind seit 09.10.2026 auf GitHub gesichert
 > (PO: „ja sichern“). Sie tragen noch die alte `gate.yml` (CI bei jedem Push) – ausgelöste Läufe wurden abgebrochen;
-> beim Fortsetzen zuerst `main` hineinmergen. Neue Worktrees auf diese Branches anlegen. Fortsetzen nur auf Anweisung des PO: Implementer zu Ende führen → Review → Merge.
+> beim Fortsetzen zuerst `main` hineinmergen.
+> **O-08 erledigt (09.10.2026):** Windows-CI war seit M1-01 rot (Link-Fehler WindowsMediaAudioFormat); Fix gemerged,
+> CI auf `main` komplett grün (Run 37906889207).
+> Neue Worktrees auf diese Branches anlegen. Fortsetzen nur auf Anweisung des PO: Implementer zu Ende führen → Review → Merge.
 
 ## Zuletzt erledigt
 

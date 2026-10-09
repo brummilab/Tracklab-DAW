@@ -62,6 +62,7 @@ M8 Mastering & Export · M9 = 1.0 Interop & Politur. Optimierungsrunden nach M2,
 - 09.10.2026: Git-Historie umgeschrieben (E47) – private Pfade und Namen aus allen Commits entfernt, Force-Push.
   README-Logo passt sich dem GitHub-Theme an.
 - 09.10.2026: Repo öffentlich (E45) – Actions-Minuten für Standard-Runner unbegrenzt.
+- 09.10.2026: O-08 – Windows-CI war seit M1-01 rot (Link-Fehler), behoben; CI auf `main` komplett grün.
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
