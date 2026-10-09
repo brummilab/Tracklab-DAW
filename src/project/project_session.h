@@ -24,8 +24,9 @@ namespace tracklab::project
 
 namespace te = tracktion;
 
-/** What the commands report about the open project. `modified` also covers the leftovers Tracktion's timers leave after a
-    save (ProjectSession::Impl::SettleTimer in project_session.cpp). */
+/** What the commands report about the open project. For a short time after create / open / save, `modified` is decided
+    by comparing the content with what was written or read, because Tracktion's own flag is unreliable then (see
+    ProjectSession::Impl::SettleTimer in project_session.cpp). */
 struct ProjectInfo
 {
     juce::File file;        ///< the project file `<folder>/<name>/<name>.tracklab`, absolute
@@ -59,13 +60,15 @@ public:
     //==========================================================================
     // Operations behind the project.* commands (see project_commands.h for the command side).
 
-    /** New empty project (template "empty": Edit::createEdit with an empty state: no audio track, Tracktion's default
-        master level; undo depth of the Tracklab edit factory = 200) in `<parentFolder>/<name>/`: creates the folder, `Audio/`, `Renders/`, `Backups/`, `Peaks/`, and writes
+    /** New empty project (template "empty": Edit::createEdit with an empty state: no audio track, master at 0 dB;
+        undo depth core::defaultUndoLevels = 200) in `<parentFolder>/<name>/`: creates the folder, `Audio/`, `Renders/`,
+        `Backups/`, `Peaks/`, and writes
         `<name>.tracklab` right away (so the project is a valid file from the start; modified = false, empty undo
         history). The new project replaces the open one.
         - a project is open and modified -> unsaved_changes (nothing is created);
-        - `name` empty, ".", "..", with blanks at the ends, or containing '/', '\\' or any other character a file
-          name must not have -> invalid_project_name (nothing is created);
+        - `name` empty, ".", "..", containing one of `<>:"/\|?*` or a control character, with blanks at the ends or a
+          dot at the end, or a reserved Windows device name (CON, PRN, AUX, NUL, COM1-9, LPT1-9, any case, also with
+          an extension) -> invalid_project_name (nothing is created); `#@,;&` and umlauts are fine;
         - `parentFolder` is not an existing folder -> folder_not_found (it is never created);
         - `<name>.tracklab` exists in the target folder -> project_exists (never overwritten). */
     ProjectInfo createProject(const juce::File& parentFolder, const juce::String& name);
@@ -73,7 +76,7 @@ public:
     /** Opens the project file. Reading never writes anything to disk (also not for a migrated old file: that is only
         written by the next save). The state is migrated in memory to currentFormatVersion (migrateState with
         builtInMigrationSteps) before the Edit is created; the Edit gets editFileRetriever (so that relative media paths
-        resolve against the project file), alwaysUseRelativePaths and the undo depth of the Tracklab edit factory; its
+        resolve against the project file), alwaysUseRelativePaths and the undo depth core::defaultUndoLevels; its
         undo history is empty, modified = false. Replaces the open project.
         - a project is open and modified -> unsaved_changes;
         - file missing -> project_not_found;

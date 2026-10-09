@@ -1,6 +1,6 @@
 #include "project/project_session.h"
 
-#include "engine/edit_factory.h"  // engine::defaultUndoLevels (a constant: nothing of the engine module is linked)
+#include "core/undo_levels.h"
 
 #include <algorithm>
 #include <exception>
@@ -29,26 +29,45 @@ std::string quoted(const juce::File& file)
     return "\"" + file.getFullPathName().toStdString() + "\"";
 }
 
-/** A name is a plain folder / file name: not empty, not "." or "..", no separators, nothing the platforms forbid in a
-    file name (juce::File::createLegalFileName replaces those), no leading or trailing blanks, no trailing dot
-    (Windows). */
-bool isPlainName(const juce::String& name)
+/** Why `name` cannot be a project name, empty if it can. The project name is used as folder name and as file name, and
+    the same project has to open on Windows and Linux, so the rules are those of Windows (the stricter ones): none of
+    `<>:"/\|?*`, no control characters (0-31), no blanks at the ends, no dot at the end, none of the reserved device
+    names (CON, PRN, AUX, NUL, COM1-9, LPT1-9, in any case, also with an extension such as "nul.txt"). Everything
+    else is allowed: umlauts, spaces inside, and `#@,;&`. */
+std::string nameProblem(const juce::String& name)
 {
-    if (name.isEmpty() || name == "." || name == "..")
-        return false;
-    if (name.containsAnyOf("/\\"))
-        return false;
-    if (name != name.trim() || name.endsWithChar('.'))
-        return false;
-    return juce::File::createLegalFileName(name) == name;
+    if (name.isEmpty())
+        return "it is empty";
+    if (name == "." || name == "..")
+        return "it is a folder reference, not a name";
+    for (const auto character : name)
+    {
+        if (character < 32)
+            return "it contains a control character";
+        if (juce::String("<>:\"/\\|?*").containsChar(character))
+            return "it contains the character '" + juce::String::charToString(character).toStdString() +
+                   "', which is not allowed in file names";
+    }
+    if (name != name.trim())
+        return "it starts or ends with a blank";
+    if (name.endsWithChar('.'))
+        return "it ends with a dot";
+
+    // Windows reserves the device names also with an extension: "NUL.txt" is the device, too.
+    const auto stem = name.upToFirstOccurrenceOf(".", false, false).toUpperCase();
+    for (const char* reserved : {"CON", "PRN", "AUX", "NUL"})
+        if (stem == reserved)
+            return "\"" + stem.toStdString() + "\" is a reserved name on Windows";
+    for (const char* device : {"COM", "LPT"})
+        if (stem.length() == 4 && stem.startsWith(device) && stem[3] >= '1' && stem[3] <= '9')
+            return "\"" + stem.toStdString() + "\" is a reserved name on Windows";
+    return {};
 }
 
 void requirePlainName(const juce::String& name)
 {
-    if (!isPlainName(name))
-        fail(error_code::invalidProjectName, "\"" + name.toStdString() +
-                                                 "\" is not a valid project name: it must be a plain name without "
-                                                 "path separators or characters that file systems forbid");
+    if (const auto problem = nameProblem(name); !problem.empty())
+        fail(error_code::invalidProjectName, "\"" + name.toStdString() + "\" is not a valid project name: " + problem);
 }
 
 void requireParentFolder(const juce::File& folder)
@@ -144,49 +163,22 @@ void writeProjectFile(te::Edit& edit, const juce::File& target, const ProjectSes
         fail(error_code::saveFailed, "Cannot replace " + quoted(target) + " by the saved project");
 }
 
-/** Tracktion re-sorts the child nodes of the EDIT node (tracks by type) in an asynchronous step after structural
-    changes, through the undo manager, and stamps `lastSignificantChange` whenever it marks the Edit changed. Neither is
-    a change of the content, which is what ProjectSession::Impl::SettleTimer wants to tell apart. So: the root's
-    `lastSignificantChange` is ignored, and children of different node types may stand in any order. The order among
-    children of one type counts (tracks, plugins of a chain, clips). */
-bool sameContent(const juce::ValueTree& a, const juce::ValueTree& b, bool isRoot = true)
+/** Do two states have the same content? Tracktion re-sorts the child nodes of the EDIT node (tracks by type) in an
+    asynchronous step after structural changes, through the undo manager, and stamps `lastSignificantChange` whenever it
+    marks the Edit changed. Neither is a change of the content, so both copies get the same normal form: no
+    `lastSignificantChange`, the root's children in the order of TrackList::sortTracksByType. From there on the
+    comparison is exact, the order of children counts everywhere (tracks, also an audio against a folder track, the
+    plugins of a chain, clips). */
+bool sameContent(const juce::ValueTree& a, const juce::ValueTree& b)
 {
-    if (!a.hasType(b.getType()))
-        return false;
-
-    const auto isIgnored = [isRoot](const juce::Identifier& name)
-    { return isRoot && name == te::IDs::lastSignificantChange; };
-    int numA = 0;
-    for (int i = 0; i < a.getNumProperties(); ++i)
+    auto left = a.createCopy();
+    auto right = b.createCopy();
+    for (auto* tree : {&left, &right})
     {
-        const auto name = a.getPropertyName(i);
-        if (isIgnored(name))
-            continue;
-        ++numA;
-        if (!b.hasProperty(name) || a.getProperty(name) != b.getProperty(name))
-            return false;
+        tree->removeProperty(te::IDs::lastSignificantChange, nullptr);
+        te::TrackList::sortTracksByType(*tree, nullptr);
     }
-    int numB = 0;
-    for (int i = 0; i < b.getNumProperties(); ++i)
-        numB += isIgnored(b.getPropertyName(i)) ? 0 : 1;
-    if (numA != numB || a.getNumChildren() != b.getNumChildren())
-        return false;
-
-    const auto byType = [](const juce::ValueTree& tree)
-    {
-        std::vector<juce::ValueTree> children;
-        for (const auto& child : tree)
-            children.push_back(child);
-        std::stable_sort(children.begin(), children.end(),
-                         [](const auto& x, const auto& y) { return x.getType().toString() < y.getType().toString(); });
-        return children;
-    };
-    const auto childrenA = byType(a);
-    const auto childrenB = byType(b);
-    for (size_t i = 0; i < childrenA.size(); ++i)
-        if (!sameContent(childrenA[i], childrenB[i], false))
-            return false;
-    return true;
+    return left.isEquivalentTo(right);
 }
 
 /** A clip source (or take source) property that holds a file path. */
@@ -251,11 +243,14 @@ struct ProjectSession::Impl
     ~Impl() { dropEdit(); }
 
     //==========================================================================
-    /** Tracktion marks the Edit changed up to 500 ms after the last plugin change (Edit::PluginChangeTimer, private,
-        not cancellable), also after a save. A project that was saved right after a plugin change would turn
-        "modified" by itself. After every save / open this timer looks once more: if the state (after flushing the plugin
-        states into it) has the same content as what was written or read (sameContent), the flag is a leftover of that
-        timer and is cleared. Any real change makes the content differ and keeps it. */
+    /** Tracktion's own bookkeeping of "changed" is unreliable right after a project was created, opened or saved, in
+        both directions: its EditChangeResetterTimer resets the flag unconditionally 200 ms after creation (a real
+        change in that time is forgotten), and the PluginChangeTimer (500 ms after the last plugin change, private, not
+        cancellable) and an asynchronous re-sort of the tracks set it again after a save (a project that was just saved
+        turns "modified" by itself). So from creation / open / save for `settleDelayMs`, "modified" is decided by
+        comparing the content with a snapshot of what was written or read (sameContent, after flushing the plugin
+        states into the state). When the time is over, SettleTimer makes Tracktion's flag agree with the comparison once
+        more (markAsChanged / resetChangedStatus) and Tracktion's flag is the truth again. */
     struct SettleTimer : private juce::Timer
     {
         explicit SettleTimer(Impl& owner) : impl(owner) {}
@@ -266,42 +261,56 @@ struct ProjectSession::Impl
         void timerCallback() override
         {
             stopTimer();
-            impl.settleModifiedFlag();
+            impl.endSettling();
         }
 
         Impl& impl;
     };
 
-    void armSettleTimer()
+    void beginSettling()
     {
+        edit->flushState();  // so that the snapshot has what a later flushState would write anyway
         snapshot = edit->state.createCopy();
+        settling = true;
         settleTimer.startTimer(settleDelayMs);
     }
 
-    void settleModifiedFlag()
+    /** Makes Tracktion's flag say what the comparison says. Returns the comparison. */
+    bool alignFlagWithContent()
     {
-        if (edit == nullptr)
+        edit->flushState();  // a real change of a plugin shows in the state only after this
+        const bool differs = !sameContent(edit->state, snapshot);
+        const bool flagged = edit->hasChangedSinceSaved();
+        if (differs && !flagged)
+            edit->markAsChanged();
+        else if (!differs && flagged)
+            edit->resetChangedStatus();
+        return differs;
+    }
+
+    void endSettling()
+    {
+        if (edit == nullptr || !settling)
             return;
         edit->getUndoManager().dispatchPendingMessages();
-        if (!edit->hasChangedSinceSaved())
-            return;
-        edit->flushState();  // a real change of a plugin shows in the state only after this
-        if (sameContent(edit->state, snapshot))
-            edit->resetChangedStatus();
+        alignFlagWithContent();
+        settling = false;
+        snapshot = {};
     }
 
     //==========================================================================
     /** The change messages of the UndoManager that set the flag are asynchronous: deliver them first, so that a change
-        made a moment ago (in the same batch) is not overlooked and a project.close cannot drop it silently. */
-    bool isModified() const
+        made a moment ago (in the same batch) is not overlooked and a project.close cannot drop it silently. While the
+        project is settling the content decides, see above. */
+    bool isModified()
     {
         if (edit == nullptr)
             return false;
         edit->getUndoManager().dispatchPendingMessages();
-        return edit->hasChangedSinceSaved();
+        return settling ? alignFlagWithContent() : edit->hasChangedSinceSaved();
     }
 
-    void requireNoUnsavedChanges(const char* action) const
+    void requireNoUnsavedChanges(const char* action)
     {
         if (isModified())
             fail(error_code::unsavedChanges, "The open project " + quoted(*fileRef) +
@@ -316,7 +325,7 @@ struct ProjectSession::Impl
         return *edit;
     }
 
-    ProjectInfo infoOf() const
+    ProjectInfo infoOf()
     {
         auto& e = requireEdit();
         return ProjectInfo{.file = *fileRef,
@@ -340,11 +349,13 @@ struct ProjectSession::Impl
                 te::Edit::Options{.engine = engine,
                                   .editState = state,
                                   .editProjectItemID = id,
-                                  .numUndoLevelsToStore = engine::defaultUndoLevels,
+                                  .numUndoLevelsToStore = core::defaultUndoLevels,
                                   // The Edit finds its media next to the project file; no Project/ProjectManager.
                                   .editFileRetriever = [file] { return *file; },
                                   // An empty project has no tracks; a file that has a tempo track gets none added.
-                                  .numAudioTracks = 0});
+                                  .numAudioTracks = 0,
+                                  // Unity gain: a new project does not start with Tracktion's -3 dB of headroom.
+                                  .defaultMasterVolumedB = 0.0f});
         }
         catch (...)
         {
@@ -365,6 +376,7 @@ struct ProjectSession::Impl
     void dropEdit()
     {
         settleTimer.stopTimer();
+        settling = false;
         context.setEdit(nullptr);
         edit.reset();  // before the engine goes away
         fileRef = std::make_shared<juce::File>();
@@ -374,18 +386,19 @@ struct ProjectSession::Impl
     void install(std::unique_ptr<te::Edit> fresh, std::shared_ptr<juce::File> file)
     {
         settleTimer.stopTimer();
+        settling = false;
         context.setEdit(fresh.get());
         auto previous = std::move(edit);
         edit = std::move(fresh);
         fileRef = std::move(file);
         previous.reset();
-        armSettleTimer();
+        beginSettling();
     }
 
     ProjectInfo finishSave(te::Edit& e)
     {
         e.resetChangedStatus();
-        armSettleTimer();
+        beginSettling();
         return infoOf();
     }
 
@@ -402,7 +415,8 @@ struct ProjectSession::Impl
     core::EditContext& context;
     BeforeReplaceHook hook;
     std::shared_ptr<juce::File> fileRef = std::make_shared<juce::File>();
-    juce::ValueTree snapshot;  // the state that was written / read last, for the settle timer
+    juce::ValueTree snapshot;  // the state that was written / read last, while `settling`
+    bool settling = false;
     SettleTimer settleTimer{*this};
     std::unique_ptr<te::Edit> edit;  // last: destroyed first
 };
@@ -539,15 +553,15 @@ ProjectInfo ProjectSession::saveAs(const juce::File& parentFolder, const juce::S
     // together if the write fails.
     const auto pathChanges = sourcePathChangesForMove(edit, file);
     const auto oldFile = *impl->fileRef;
+    *impl->fileRef = file;  // first: writing a path makes the clip resolve it against the Edit's file at once
     applySourcePaths(pathChanges, true);
-    *impl->fileRef = file;
     try
     {
         writeProjectFile(edit, file, impl->hook);
     }
     catch (...)
     {
-        *impl->fileRef = oldFile;
+        *impl->fileRef = oldFile;  // first again: a path is written while the file it is relative to is current
         applySourcePaths(pathChanges, false);
         Impl::restoreModified(edit, wasModified);
         folders.takeBack();
