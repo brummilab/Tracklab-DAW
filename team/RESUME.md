@@ -82,8 +82,8 @@ kopierbaren Schritten und Download-Link. Stufen:
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | M1-05 (implementer) · M1-07 (implementer) |
-| Review | – |
+| in Arbeit | M1-05 (implementer) |
+| Review | M1-07 (Reviewer + CI) |
 | Backlog | O-13 · O-12 (CI-Flakes) · O-10 · M1-08 · M1-09 · O-05 · O-06 · O-07 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
 | Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 · M1-02 · M1-03 · M1-04 · M1-06 · O-04 · O-08 · O-09 · O-11 |
 
