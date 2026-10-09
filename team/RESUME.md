@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 09.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01/02/03/06, O-04/08/09/11 erledigt – **M1-04 Projektformat in Arbeit** (implementer, Tests `m1-04-tests` @ `3d5b562`), dann M1-05, M1-07
+**Stand:** 09.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01/02/03/06, O-04/08/09/11 erledigt – **M1-04 Projektformat im Review** (`m1-04-impl` @ `32b392b`, Gate all lokal grün), dann M1-05, M1-07
 
 > **Angehalten 08.10.2026:** Beide Implementer auf Wunsch des PO gestoppt, ungeprüft, nichts gemerged.
 > Stand: `m1-03-impl` @ `99c56ca` (Umsetzung committet, Build/Format-Lauf unterbrochen),
@@ -77,8 +77,8 @@ kopierbaren Schritten und Download-Link. Stufen:
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | M1-04 (implementer) |
-| Review | – |
+| in Arbeit | – |
+| Review | M1-04 (Reviewer + CI auf `m1-04-impl`) |
 | Backlog | O-12 (CI-Flakes) · O-10 · M1-05 · M1-07 · M1-08 · M1-09 · O-05 · O-06 · O-07 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
 | Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 · M1-02 · M1-03 · M1-06 · O-04 · O-08 · O-09 · O-11 |
 
