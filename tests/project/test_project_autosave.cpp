@@ -17,7 +17,7 @@ using tracklab::project::AutosaveResult;
 juce::File savedProject(ProjectFixture& f, const std::string& name = "Muster")
 {
     const auto file = f.newProject(name);
-    f.addSampleContent();
+    f.addSampleTracks();
     f.run("project.save");
     f.settleEdit();
     REQUIRE_FALSE(f.modified());
@@ -175,6 +175,10 @@ TEST_SUITE("project")
         CHECK(f.session->autosaveNow() == AutosaveResult::failed);
 
         CHECK(fileNamesIn(f.projectFolder("Muster")) == std::vector<std::string>{"Muster.tracklab"});
+        CHECK(writes.autosaveWrites == 1);  // it did try, through the atomic write
+
+        writes.refuseAutosave = false;
+        CHECK(f.session->autosaveNow() == AutosaveResult::written);
     }
 
     TEST_CASE("no autosave while the Edit is save-inhibited; the next attempt after it writes")

@@ -259,7 +259,7 @@ TEST_SUITE("project")
         ProjectFixture f;
         const auto file = f.newProject("Muster");
         f.useInjectedClock();
-        f.addSampleContent();
+        f.addSampleTracks();
         for (int i = 0; i < 3; ++i)
         {
             f.renameFirstTrack("Version " + juce::String(i));
@@ -283,7 +283,7 @@ TEST_SUITE("project")
     {
         ProjectFixture f;
         const auto file = f.newProject("Muster");
-        f.addSampleContent();
+        f.addSampleTracks();
         leaveAutosaveBehind(f, file);
         REQUIRE(backupNamesOf(file).empty());
         writeText(file, "kein Projekt");
@@ -298,7 +298,7 @@ TEST_SUITE("project")
     {
         ProjectFixture f;
         const auto file = f.newProject("Muster");
-        f.addSampleContent();
+        f.addSampleTracks();
         leaveAutosaveBehind(f, file);  // modification time: now
         const auto backups = backupsFolderOf(file);
         REQUIRE(backups.getChildFile("Muster.20200101-000000.tracklab").replaceWithText("<EDIT/>"));

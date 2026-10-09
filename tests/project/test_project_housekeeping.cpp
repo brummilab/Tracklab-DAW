@@ -83,7 +83,7 @@ TEST_SUITE("project")
         f.useInjectedClock();  // two saves within a second would share one backup name
         const std::string name(100, 'n');
         const auto file = f.newProject(name);
-        f.addSampleContent();
+        f.addSampleTracks();
         f.saveAt(0);
         f.renameFirstTrack("Neu");
 
@@ -101,7 +101,7 @@ TEST_SUITE("project")
         for (int i = 0; i < 50; ++i)
             umlauts += "\xC3\xA4";
         const auto second = f.newProject(umlauts);
-        f.addSampleContent();
+        f.addSampleTracks();
         f.saveAt(120);
         f.renameFirstTrack("Neu");
         CHECK(f.session->autosaveNow() == AutosaveResult::written);

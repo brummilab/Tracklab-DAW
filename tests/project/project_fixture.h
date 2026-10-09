@@ -296,6 +296,21 @@ struct ProjectFixture
         letPluginTimersRunOut(e);
     }
 
+    /** Like addSampleContent() (the same three named tracks), but without waiting for Tracktion's plugin timers: the
+        autosave / backup tests save right after it, and a save decides "modified" by the content for the 650 ms after
+        it (ProjectSession), so the late timers cannot make the project look changed. Saves a second per test. */
+    void addSampleTracks()
+    {
+        auto& e = edit();
+        e.ensureNumberOfAudioTracks(3);
+        const char* names[] = {"Gitarre", "Bass", "Gesang"};
+        auto tracks = te::getAudioTracks(e);
+        REQUIRE(tracks.size() >= 3);
+        for (int i = 0; i < 3; ++i)
+            tracks[i]->setName(names[i]);
+        settle(e);
+    }
+
     /** A wave clip of a generated sine file on the first audio track (the Tracktion API, as the import will do). */
     te::WaveAudioClip::Ptr addClip(const juce::File& audioFile, const juce::String& name = "Take 1")
     {
@@ -383,7 +398,7 @@ inline CrashedProject crashedProject(ProjectFixture& f, const std::string& name 
                                      const juce::Time& autosaveTime = juce::Time(2026, 9, 9, 10, 5, 0, 0, true))
 {
     const auto original = f.newProject(name);
-    f.addSampleContent();
+    f.addSampleTracks();
     f.run("project.save");
     f.settleEdit();
     f.renameFirstTrack("Neu");

@@ -19,7 +19,7 @@ juce::File projectWithClock(ProjectFixture& f, const std::string& name = "Muster
 {
     const auto file = f.newProject(name);
     f.useInjectedClock();
-    f.addSampleContent();
+    f.addSampleTracks();
     return file;
 }
 
@@ -179,7 +179,7 @@ TEST_SUITE("project")
     {
         ProjectFixture f;
         const auto file = f.newProject("Muster");
-        f.addSampleContent();
+        f.addSampleTracks();
         const auto before = juce::Time::getCurrentTime();
 
         f.run("project.save");
@@ -259,9 +259,10 @@ TEST_SUITE("project")
         f.saveAt(0);
         f.renameFirstTrack("Zwei");
         f.saveAt(60);
-        const auto backupName = listedNames(f.run("project.list_backups")).back();  // the oldest
+        const auto backupName = listedNames(f.run("project.list_backups")).front();  // the newest
         const auto backupFile = backupsFolderOf(file).getChildFile(juce::String(backupName));
         const auto wanted = trackNamesOfFile(backupFile);
+        REQUIRE_FALSE(wanted.empty());
         f.renameFirstTrack("Ungespeichert");
         f.clockNow = clockTime(120);
         const auto projectBytes = bytesOf(file);
@@ -311,15 +312,36 @@ TEST_SUITE("project")
         f.saveAt(0);
         f.renameFirstTrack("Zwei");
         f.saveAt(60);
-        const auto oldest = listedNames(f.run("project.list_backups")).back();
-        const auto wanted = trackNamesOfFile(backupsFolderOf(file).getChildFile(juce::String(oldest)));
-        f.run("project.restore_backup", Json{{"name", oldest}});
+        const auto chosen = listedNames(f.run("project.list_backups")).front();
+        const auto wanted = trackNamesOfFile(backupsFolderOf(file).getChildFile(juce::String(chosen)));
         f.clockNow = clockTime(120);
+        f.run("project.restore_backup", Json{{"name", chosen}});
 
         f.run("project.save");
 
         CHECK(trackNamesOfFile(file) == wanted);
         CHECK_FALSE(f.modified());
+    }
+
+    TEST_CASE("restoring in the same second as the backup was made restores that backup, not the safety backup")
+    {
+        ProjectFixture f;
+        const auto file = projectWithClock(f);
+        f.renameFirstTrack("Eins");
+        f.saveAt(0);
+        f.renameFirstTrack("Zwei");
+        f.saveAt(60);
+        const auto chosen = listedNames(f.run("project.list_backups")).front();  // named after second 60
+        const auto wanted = trackNamesOfFile(backupsFolderOf(file).getChildFile(juce::String(chosen)));
+        REQUIRE_FALSE(wanted.empty());
+        f.renameFirstTrack("Ungespeichert");  // the clock still says second 60: both backups get the same name
+
+        f.run("project.restore_backup", Json{{"name", chosen}});
+
+        const auto tracks = te::getAudioTracks(f.edit());
+        REQUIRE_FALSE(tracks.isEmpty());
+        CHECK(tracks[0]->getName().toStdString() == wanted[0]);
+        CHECK(f.modified());
     }
 
     TEST_CASE("project.restore_backup works while the project has unsaved changes (it is destructive, not guarded)")
