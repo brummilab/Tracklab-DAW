@@ -245,6 +245,7 @@ jobs:
     env:
       GATE_CONFIGS: ${{ matrix.config }}
       SCCACHE_GHA_ENABLED: "true"
+      LAME_CACHE_REV: "1"
     steps:
       - uses: actions/checkout@v4
       - name: Build directory (outside the checkout)
@@ -255,9 +256,72 @@ jobs:
         shell: bash
         run: git submodule update --init --depth 1 -- $TRACKLAB_SUBMODULES
 
+      # O-11: runs 37922244183 and 37925702615 failed here, before any build started. The choco package
+      # "lame" downloads its ZIP over plain http from www.rarewares.org (LAME is LGPL; the package has
+      # no mirror, "Unable to connect"), and the choco community feed answered 504 once for ffmpeg. The
+      # tests need both tools (SPIKE_REQUIRE_TOOLS=1), so skipping is no option. Hence: (1) up to 3
+      # attempts per package with 20 s / 40 s waits, a hard error after the last one; (2) the lame
+      # binaries are cached so most runs never contact rarewares.org at all. ffmpeg is large and comes
+      # from the choco feed, so it is only retried, not cached.
+      # The cache key carries a manual revision: choco gives no version before installing, so bump
+      # LAME_CACHE_REV when the lame package should be re-fetched. A cached copy that does not run
+      # (--version fails) is ignored and lame is installed through choco again.
+      - name: Restore lame cache
+        id: lame-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}\lame-cache
+          key: lame-choco-${{ runner.os }}-${{ env.LAME_CACHE_REV }}
       - name: Install lame and ffmpeg (choco)
         shell: pwsh
-        run: choco install lame ffmpeg -y --no-progress
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $waits = @(20, 40)
+
+          function Install-ChocoPackage([string] $Package) {
+            for ($attempt = 1; $attempt -le 3; $attempt++) {
+              # --execution-timeout keeps one hanging download from eating the whole step budget
+              choco install $Package -y --no-progress --execution-timeout=240
+              if ($LASTEXITCODE -eq 0) { return }
+              if ($attempt -eq 3) { throw "choco install $Package failed after $attempt attempts (exit code $LASTEXITCODE)" }
+              Write-Warning "choco install $Package failed (attempt $attempt, exit code $LASTEXITCODE); retrying in $($waits[$attempt - 1]) s"
+              Start-Sleep -Seconds $waits[$attempt - 1]
+            }
+          }
+
+          $cacheDir = Join-Path $env:RUNNER_TEMP 'lame-cache'
+          $lameFromCache = $false
+          $cached = if (Test-Path $cacheDir) { Get-ChildItem $cacheDir -Recurse -Filter lame.exe | Select-Object -First 1 }
+          if ($cached) {
+            $env:PATH = "$($cached.DirectoryName);$env:PATH"
+            & $cached.FullName --version *> $null
+            if ($LASTEXITCODE -eq 0) {
+              $lameFromCache = $true
+              $cached.DirectoryName | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+              Write-Host "lame taken from cache: $($cached.FullName)"
+            } else {
+              Write-Warning 'cached lame does not run; installing it through choco'
+            }
+          }
+
+          if (-not $lameFromCache) {
+            Install-ChocoPackage 'lame'
+            # Keep the unpacked package contents (lame.exe and companions) for the cache; the shim in
+            # C:\ProgramData\chocolatey\bin is not enough on its own.
+            $tools = Join-Path $env:ChocolateyInstall 'lib\lame\tools'
+            if (-not (Test-Path $tools)) { throw "lame tools directory not found: $tools" }
+            Remove-Item $cacheDir -Recurse -Force -ErrorAction SilentlyContinue
+            Copy-Item $tools $cacheDir -Recurse
+          }
+          Install-ChocoPackage 'ffmpeg'
+      - name: Save lame cache
+        # Only after a fresh choco install (no exact cache hit); a failed job never stores a cache.
+        if: steps.lame-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}\lame-cache
+          key: lame-choco-${{ runner.os }}-${{ env.LAME_CACHE_REV }}
       - name: sccache
         # v0.0.11: node24 (v0.0.9 ran on node20)
         uses: Mozilla-Actions/sccache-action@v0.0.11
