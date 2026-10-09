@@ -110,4 +110,29 @@ TEST_SUITE("engine")
         CHECK(manager.redo());
         CHECK(log == "AB");
     }
+
+    TEST_CASE("a redo stack that exists when a transaction begins survives several performs in that transaction")
+    {
+        // Guards the placement of the patch: JUCE calls moveFutureTransactionsToStash() after EVERY perform(), so a
+        // clear() there would drop the stash again at the second perform() of the same transaction.
+        std::string log;
+        juce::UndoManager manager;
+
+        step(manager, log, 'A');
+        step(manager, log, 'B');
+        REQUIRE(manager.undo());  // redo stack: [B]
+        manager.beginNewTransaction();
+        REQUIRE(manager.perform(new LetterAction(log, 'C')));  // B moves to the stash
+        REQUIRE(manager.perform(new LetterAction(log, 'D')));  // same transaction, redo stack empty, stash must stay
+        REQUIRE(log == "ACD");
+
+        REQUIRE(manager.undoCurrentTransactionOnly());
+
+        CHECK(log == "A");
+        CHECK(manager.canRedo());
+        CHECK(manager.getRedoDescriptions().size() == 1);
+        CHECK(manager.redo());
+        CHECK(log == "AB");
+        CHECK_FALSE(manager.canRedo());
+    }
 }

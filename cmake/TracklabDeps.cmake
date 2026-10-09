@@ -39,13 +39,18 @@ if(NOT TRACKLAB_GIT_EXECUTABLE)
     "git not found: it is needed to apply third_party/patches/juce-undomanager-stale-stash.patch to JUCE.\n"
     "Install git and configure again.")
 endif()
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${TRACKLAB_JUCE_PATCH}")
+# Configure again when the patch or the patched JUCE file changes (a reset submodule must get the patch back).
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+  "${TRACKLAB_JUCE_PATCH}"
+  "${TRACKLAB_JUCE_DIR}/modules/juce_data_structures/undomanager/juce_UndoManager.cpp")
 
 function(_tracklab_git_apply out_ok)
-  # Runs `git apply <args>` inside the JUCE submodule; out_ok is TRUE if git exits with 0.
+  # Runs `git apply <args>` inside the JUCE submodule; out_ok is TRUE if git exits with 0. The stderr of the last call
+  # stays in _tracklab_git_apply_error for the error message.
   execute_process(
     COMMAND "${TRACKLAB_GIT_EXECUTABLE}" -C "${TRACKLAB_JUCE_DIR}" apply ${ARGN} "${TRACKLAB_JUCE_PATCH}"
-    RESULT_VARIABLE _rc OUTPUT_QUIET ERROR_QUIET)
+    RESULT_VARIABLE _rc OUTPUT_QUIET ERROR_VARIABLE _err)
+  set(_tracklab_git_apply_error "${_err}" PARENT_SCOPE)
   if(_rc EQUAL 0)
     set(${out_ok} TRUE PARENT_SCOPE)
   else()
@@ -74,6 +79,7 @@ if(NOT _tracklab_patch_done)
   message(FATAL_ERROR
     "The Tracklab patch for JUCE does not apply: ${TRACKLAB_JUCE_PATCH}\n"
     "JUCE in ${TRACKLAB_JUCE_DIR} is neither the pinned version (9.0.3, be29c81) nor already patched.\n"
+    "Last message of git apply:\n${_tracklab_git_apply_error}\n"
     "Reset the submodule and configure again:\n"
     "  git -C third_party/JUCE checkout -- .\n"
     "  (or: git submodule update --init --force third_party/JUCE)\n"
