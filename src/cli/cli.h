@@ -20,7 +20,8 @@
 //     Measures with Tracktion's LoudnessMeter (as the engine spike did). A `.tracklab` argument is a project: it is
 //     rendered to a temporary file first (as `render`), anything else is read as an audio file. Only the requested
 //     measurements are in the result: {"ok":true,"source":"<arg>","integrated_lufs":x,"true_peak_dbtp":x,"lra":x}.
-//     The output is always JSON; --json is accepted.
+//     The output is always JSON; --json is accepted. Without any of the three flags everything is measured. A
+//     measurement the meter reports as its silence floor (-100, digital silence) is null: "no measurement".
 //
 //   run-commands <project> <commands.json> [--save-as <out>]
 //     Opens the project, runs the steps of commands.json as ONE undo transaction (CommandRegistry::executeBatch), then
@@ -28,6 +29,8 @@
 //     <out>` is the path of the NEW project folder: the project is written as `<out>/<basename of out>.tracklab`
 //     (project.save_as with folder = parent of out, name = basename of out); the opened project file is not touched.
 //     Success: {"ok":true,"commands":N,"results":[<result of every step>],"saved":"<new .tracklab path>"}.
+//     Only commands that are undoable or readOnly are allowed (others, e.g. project.open/save/close, cannot be rolled
+//     back): any other step is refused before the first step runs, exit 1, code "command_not_allowed", failed_index.
 //     A failing step rolls the whole batch back (nothing is saved, no output is created): exit 1 and
 //     {"ok":false,"error":{"code","message","pointer"},"failed_index":i}.
 //

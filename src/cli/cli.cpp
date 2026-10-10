@@ -251,6 +251,28 @@ std::vector<core::BatchStep> loadCommands(const juce::File& file)
     return steps;
 }
 
+/** Only commands that are undoable (rolled back with the batch) or readOnly (nothing to roll back) may run in a batch.
+    Everything else (project.open/new/save/save_as/close, ...) has effects outside the Edit's undo history that a
+    failed batch could not take back, and project.* would also fight with the CLI's own open and save. The rule is
+    about the flags, not about names, so commands added later are covered. Checked before anything runs; ids the
+    registry does not know are left to executeBatch (unknown_command). */
+void requireBatchCommands(const core::CommandRegistry& registry, const std::vector<core::BatchStep>& steps)
+{
+    for (std::size_t i = 0; i < steps.size(); ++i)
+    {
+        const auto* command = registry.find(steps[i].id);
+        if (command == nullptr || command->flags.readOnly || command->flags.undoable)
+            continue;
+        CliFailure failure(exitFailed, "command_not_allowed",
+                           "\"" + steps[i].id +
+                               "\" is neither undoable nor readOnly: run-commands cannot roll it back, "
+                               "so it is not allowed in a commands file",
+                           "/id");
+        failure.failedIndex = i;
+        throw failure;
+    }
+}
+
 Json commandRunCommands(Workspace& workspace, const ParsedArgs& args, const CliHooks& hooks)
 {
     const auto commandsFile = fileFromArg(args.positionals[1]);
@@ -258,6 +280,7 @@ Json commandRunCommands(Workspace& workspace, const ParsedArgs& args, const CliH
 
     if (hooks.registerExtraCommands)
         hooks.registerExtraCommands(workspace.registry, workspace.context);
+    requireBatchCommands(workspace.registry, steps);
 
     workspace.openProject(fileFromArg(args.positionals[0]));
 

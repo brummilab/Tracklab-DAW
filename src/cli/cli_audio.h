@@ -18,7 +18,8 @@ struct Measurements
     bool lra = false;
 };
 
-/** Renders the whole project (from 0 to the end of its last clip, no tail, no dither) to `destination` as a 48 kHz /
+/** Renders the whole project (all audio tracks at any depth and the submix folders; from 0 to the end of its last clip,
+    no tail, no dither) to `destination` as a 48 kHz /
     24 bit stereo WAV. The file appears only if the render succeeded: it is rendered next to the destination under a
     temporary name and then moved. A project without any clip: failure "empty_project", nothing is written.
     Result: {"out","format","sample_rate","channels","bits_per_sample","length_samples"} of the file as written. */
@@ -26,7 +27,8 @@ core::Json renderProject(tracktion::Engine& engine, tracktion::Edit& edit, const
 
 /** Measures `file` with Tracktion's LoudnessMeter (BS.1770-4 K-weighting and gating, EBU Tech 3342 LRA, 4x oversampled
     true peak), as the engine spike does. Result: only the requested keys of {"integrated_lufs","true_peak_dbtp","lra"}.
-    A value the meter cannot give (e.g. the loudness of silence is -infinity) becomes JSON null. */
+    A value at or below the meter's silence floor (te::LoudnessMeter::silenceFloorDb, -100: what it reports for digital
+    silence) or NaN is "no measurement" and becomes JSON null. */
 core::Json measureLoudness(tracktion::Engine& engine, const juce::File& file, const Measurements& wanted);
 
 }  // namespace tracklab::cli

@@ -55,6 +55,16 @@ std::optional<FileFormat> readFormat(te::Engine& engine, const juce::File& file)
                       static_cast<int>(reader->bitsPerSample), reader->lengthInSamples};
 }
 
+/** The meter reports digital silence as te::LoudnessMeter::silenceFloorDb (-100), not as -infinity. A value at or
+    below that floor is "no measurement", not a level of -100 dB: JSON null. (nlohmann also writes NaN and infinity as
+    null.) */
+Json reading(float value)
+{
+    if (!(value > te::LoudnessMeter::silenceFloorDb))  // also true for NaN
+        return nullptr;
+    return static_cast<double>(value);
+}
+
 }  // namespace
 
 Json renderProject(te::Engine& engine, te::Edit& edit, const juce::File& destination)
@@ -72,10 +82,17 @@ Json renderProject(te::Engine& engine, te::Edit& edit, const juce::File& destina
 
     te::RenderSpecification spec;
     // The documented "empty list = whole Edit" does not hold in this Tracktion version (createRenderJob then has nothing
-    // to render), so every top-level audio and folder track is listed; a folder (submix) brings its children along.
-    for (auto* track : te::getTopLevelTracks(edit))
-        if (dynamic_cast<te::AudioTrack*>(track) != nullptr || dynamic_cast<te::FolderTrack*>(track) != nullptr)
+    // to render), so the tracks are listed: every audio track at any depth (also in a plain folder, which brings no
+    // children along) and every submix folder. What lies inside a submix is not listed itself: the submix renders its
+    // children through its own plugin chain, and a second entry would play them twice.
+    for (auto* track : te::getAllTracks(edit))
+    {
+        if (track->isPartOfSubmix())
+            continue;
+        const auto* folder = dynamic_cast<te::FolderTrack*>(track);
+        if (dynamic_cast<te::AudioTrack*>(track) != nullptr || (folder != nullptr && folder->isSubmixFolder()))
             spec.tracks.add(track->itemID);
+    }
     spec.time = te::TimeRange(te::TimePosition(), *end);
     spec.includeTails = false;  // exactly as long as the clips, no reverb/delay tail
     spec.destination = temporary.getFile();
@@ -141,14 +158,13 @@ Json measureLoudness(te::Engine& engine, const juce::File& file, const Measureme
     meter.flush();
 
     const auto readings = meter.getReadings();
-    // nlohmann writes NaN and +-infinity (silence) as null.
     Json result = Json::object();
     if (wanted.loudness)
-        result["integrated_lufs"] = static_cast<double>(readings.integratedLufs);
+        result["integrated_lufs"] = reading(readings.integratedLufs);
     if (wanted.truePeak)
-        result["true_peak_dbtp"] = static_cast<double>(readings.truePeakDb);
+        result["true_peak_dbtp"] = reading(readings.truePeakDb);
     if (wanted.lra)
-        result["lra"] = static_cast<double>(readings.loudnessRangeLu);
+        result["lra"] = reading(readings.loudnessRangeLu);
     return result;
 }
 
