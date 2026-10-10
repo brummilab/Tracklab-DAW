@@ -77,7 +77,9 @@ Meilenstein **M1 (Fundament)** läuft.
 - **Projektformat fertig:** Projekte anlegen, öffnen, speichern und „speichern unter“ (`.tracklab` plus Ordner
   `Audio/`, `Renders/`, `Backups/`, `Peaks/`). Speichern ist atomar, alte Formatversionen werden beim Öffnen
   übernommen, Pfade sind relativ – der Projektordner lässt sich verschieben.
-- **Als Nächstes:** automatisches Speichern und Backups, Kommandozeile und das erste Programmfenster.
+- **Kommandozeile fertig:** `tracklab-cli render` (Projekt als WAV), `analyze` (LUFS, True Peak, LRA),
+  `run-commands` (Befehlsliste als ein Undo-Schritt), `export-tools` (Befehlsliste für Claude/MCP).
+- **Als Nächstes:** automatisches Speichern und Backups, Audio-Geräte per Kommandozeile testen, erstes Programmfenster.
 
 Arbeitsstand im Detail: [`team/RESUME.md`](team/RESUME.md) · Plan: [`team/plan/PLAN.md`](team/plan/PLAN.md).
 

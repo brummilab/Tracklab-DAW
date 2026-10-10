@@ -180,6 +180,12 @@ stage_build() {
     ok "build $p"
     timed "ctest $p" ctest --test-dir "$bd" --output-on-failure --output-junit "$bd/junit.xml" \
       && ok "ctest $p" || bad "ctest $p (Bericht: $bd/junit.xml)"
+    # tools.json and docs/commands.md have to be what the registry exports now (M1-07). --check never writes into the
+    # working tree; the engine's private folders go into the build directory, not into the user's folders.
+    timed "export-tools --check $p" "$bd/src/cli/tracklab-cli" --engine-temp-dir "$bd/cli-temp" export-tools --check \
+        --out tools.json --docs docs/commands.md \
+      && ok "tools.json / docs/commands.md aktuell ($p)" \
+      || bad "tools.json / docs/commands.md veraltet ($p): neu erzeugen mit tracklab-cli export-tools --out tools.json --docs docs/commands.md"
   done
 }
 

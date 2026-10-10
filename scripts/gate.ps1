@@ -149,6 +149,12 @@ function Invoke-StageBuild {
     if (Invoke-Timed "ctest $p" 'ctest' @('--test-dir', $bd, '--output-on-failure', '--output-junit', (Join-Path $bd 'junit.xml'))) {
       Ok "ctest $p"
     } else { Bad "ctest $p (Bericht: $(Join-Path $bd 'junit.xml'))" }
+    # tools.json and docs/commands.md have to be what the registry exports now (M1-07). --check never writes into the
+    # working tree; the engine's private folders go into the build directory, not into the user's folders.
+    $cli = Join-Path $bd 'src/cli/tracklab-cli.exe'
+    if (Invoke-Timed "export-tools --check $p" $cli @('--engine-temp-dir', (Join-Path $bd 'cli-temp'), 'export-tools', '--check', '--out', 'tools.json', '--docs', 'docs/commands.md')) {
+      Ok "tools.json / docs/commands.md aktuell ($p)"
+    } else { Bad "tools.json / docs/commands.md veraltet ($p): neu erzeugen mit tracklab-cli export-tools --out tools.json --docs docs/commands.md" }
   }
 }
 

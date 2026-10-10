@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 09.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01/02/03/06, O-04/08/09/11, M1-04 erledigt – M1-04 Projektformat erledigt – **M1-05 Autosave/Backups und M1-07 CLI im Review**
+**Stand:** 09.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01/02/03/06, O-04/08/09/11, M1-04, M1-07 erledigt – M1-04 Projektformat erledigt – M1-07 CLI erledigt – **M1-05 im Review (CI ausstehend), danach O-14 (`tracklab-cli io` für Handtest V1)**
 
 > **Angehalten 08.10.2026:** Beide Implementer auf Wunsch des PO gestoppt, ungeprüft, nichts gemerged.
 > Stand: `m1-03-impl` @ `99c56ca` (Umsetzung committet, Build/Format-Lauf unterbrochen),
@@ -27,11 +27,15 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 ## PO-Wunsch: Bescheid geben, sobald testbar (09.10.2026)
 David will informiert werden, sobald er selbst testen kann – im Chat **und** per Push-Benachrichtigung, mit
 kopierbaren Schritten und Download-Link. Stufen:
-1. **Nach M1-07 (CLI):** Handtest V1 Audio-Geräte nach `docs/testing/manual/M1.md` (Windows + Linux).
+1. **Nach O-14 (`tracklab-cli io`, statt nach M1-07):** Handtest V1 Audio-Geräte nach `docs/testing/manual/M1.md` (Windows + Linux).
 2. **Nach M1-08/M1-09:** erstes Programmfenster + Test-Builds als Download (Actions-Artefakt, Link in RESUME).
 3. **Ende M2:** erster echter Arbeitsablauf A (Mitschnitt importieren, schneiden, normalisieren, exportieren).
 
 ## Zuletzt erledigt
+
+- **M1-07** gemerged (10.10.2026): `tracklab-cli` – `render`, `analyze`, `run-commands` (eine Transaktion „CLI: run-commands“,
+  nur undoable/readOnly), `export-tools` (+ Gate-Schritt `--check`), `--version`; Golden-Null-Test `m1-mini`. Review 2 Runden,
+  CI grün. Handtest V1 braucht noch O-14.
 
 - **M1-04** gemerged (09.10.2026): Projektformat `.tracklab` – `project.new/open/save/save_as/close/get_info`, atomares
   Speichern, Formatversion + Migrationsrahmen, relative Pfade, keine Personendaten, Namensprüfung nach Windows-Regeln.
@@ -82,10 +86,10 @@ kopierbaren Schritten und Download-Link. Stufen:
 
 | Spalte | Karten |
 |---|---|
-| in Arbeit | – |
-| Review | M1-05 · M1-07 (Reviewer + CI) |
+| in Arbeit | O-14 (test-writer) |
+| Review | M1-05 (Review OK, CI ausstehend) |
 | Backlog | O-13 · O-12 (CI-Flakes) · O-10 · M1-08 · M1-09 · O-05 · O-06 · O-07 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
-| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 · M1-02 · M1-03 · M1-04 · M1-06 · O-04 · O-08 · O-09 · O-11 |
+| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 · M1-02 · M1-03 · M1-04 · M1-06 · M1-07 · O-04 · O-08 · O-09 · O-11 |
 
 ## Builds
 
