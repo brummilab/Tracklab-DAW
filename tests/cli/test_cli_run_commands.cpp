@@ -197,22 +197,29 @@ TEST_SUITE("cli")
         CHECK(readText(fs::path(path(project))) == before);
     }
 
-    TEST_CASE("run-commands: a step that fails at run time (project.open of a missing file) reports index and code")
+    TEST_CASE("run-commands: a step that fails at run time (test.fail) reports index and code, rolls back")
     {
+        // Was project.open of a missing file; project.* commands are not allowed in a batch any more (only undoable or
+        // readOnly commands are), so the run-time failure comes from the undoable test command of the hook.
         ScopedTempDir dir;
         const auto project = makeEmptyProject(dir.dir(), "Muster");
+        const auto before = readText(fs::path(path(project)));
         const auto out = saveAsFolder(dir, "Kopie");
         const auto commands = writeCommands(
-            dir.dir(),
-            Json::array({step("project.get_info"),
-                         step("project.open", {{"path", path(dir.dir().getChildFile("Nope/Nope.tracklab"))}})}));
+            dir.dir(), Json::array({step("project.get_info"), step("test.note", {{"value", 1}}), step("test.fail")}));
+        Observed observed;
 
-        const auto run = runCli({"run-commands", path(project), path(commands), "--save-as", path(out)});
+        const auto run = runCli({"run-commands", path(project), path(commands), "--save-as", path(out)},
+                                hooksWithTestCommands(observed));
 
         CHECK(run.exitCode == 1);
-        CHECK(run.errorCode() == "project_not_found");
-        CHECK(run.integer("failed_index") == 1);
+        CHECK(run.errorCode() == "test_failed");
+        CHECK(run.integer("failed_index") == 2);
+        REQUIRE(observed.called);
+        CHECK(observed.undoSteps == 0);
+        CHECK_FALSE(observed.hasNote);
         CHECK_FALSE(out.exists());
+        CHECK(readText(fs::path(path(project))) == before);
     }
 
     TEST_CASE("run-commands: an unknown command is refused up front (exit 1, unknown_command, index of the step)")
