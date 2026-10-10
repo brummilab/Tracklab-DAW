@@ -93,6 +93,28 @@ void requireParentFolder(const juce::File& folder)
              "The folder " + quoted(folder) + " does not exist; it is not created automatically");
 }
 
+/** Length in UTF-16 code units, which is what Windows' MAX_PATH counts (a character outside the BMP is two). */
+std::size_t utf16Length(const juce::String& text)
+{
+    std::size_t length = 0;
+    for (const auto character : text)
+        length += character > 0xFFFF ? 2 : 1;
+    return length;
+}
+
+/** Windows opens paths of at most 259 characters (long path support is off by default), and the same project has to
+    work there, so every platform refuses what would not: the longest file that belongs to the project (a backup with
+    counter and temporary suffix, see longestDerivedPathLength) has to fit. Checked before anything is created. */
+void requirePathLength(const juce::File& parentFolder, const juce::String& name)
+{
+    const auto length = longestDerivedPathLength(utf16Length(parentFolder.getFullPathName()), utf16Length(name));
+    if (length > static_cast<std::size_t>(maxPathLength))
+        fail(error_code::pathTooLong, "The project would need paths of up to " + std::to_string(length) +
+                                          " characters, more than the " + std::to_string(maxPathLength) +
+                                          " that Windows opens; use a shorter project name or a shorter folder (" +
+                                          quoted(parentFolder) + ")");
+}
+
 juce::File projectFileIn(const juce::File& projectFolder, const juce::String& name)
 {
     return projectFolder.getChildFile(name + fileExtension);
@@ -108,56 +130,114 @@ juce::File backupsFolderOf(const juce::File& projectFile)
     return projectFile.getParentDirectory().getChildFile("Backups");
 }
 
-/** `<name>.<YYYYMMDD-HHMMSS>.tracklab`, the stamp in local time of the session's clock. */
-juce::String backupFileName(const juce::String& projectName, const juce::Time& time)
+/** The stamp of a backup name, `<YYYYMMDD-HHMMSS>` in local time of the session's clock. */
+juce::String backupStamp(const juce::Time& time)
 {
-    return projectName + "." + time.formatted("%Y%m%d-%H%M%S") + fileExtension;
+    return time.formatted("%Y%m%d-%H%M%S");
 }
 
-/** The time in the name of a backup of project `projectName`; empty if `fileName` is not such a name (other projects'
+/** What a backup file name says: the time and the counter (1 = no suffix). */
+struct BackupName
+{
+    juce::Time time;
+    int counter = 1;
+};
+
+/** The parts of the name of a backup of project `projectName`; empty if `fileName` is not such a name (other projects'
     backups and foreign files in Backups/ are none of our business: they are neither listed, counted nor deleted). */
-std::optional<juce::Time> backupTimeOf(const juce::String& projectName, const juce::String& fileName)
+std::optional<BackupName> parseBackupName(const juce::String& projectName, const juce::String& fileName)
 {
     const auto prefix = projectName + ".";
     const juce::String suffix(fileExtension);
-    if (!fileName.startsWith(prefix) || !fileName.endsWith(suffix))
+    if (!fileName.startsWith(prefix) || !fileName.endsWith(suffix) ||
+        fileName.length() < prefix.length() + 15 + suffix.length())
         return std::nullopt;
-    const auto stamp = fileName.substring(prefix.length(), fileName.length() - suffix.length());
+    const auto middle = fileName.substring(prefix.length(), fileName.length() - suffix.length());
+    const auto stamp = middle.substring(0, 15);
+    const auto counterText = middle.substring(15);
     if (stamp.length() != 15 || stamp[8] != '-')
         return std::nullopt;
     for (int i = 0; i < 15; ++i)
         if (i != 8 && !juce::CharacterFunctions::isDigit(stamp[i]))
             return std::nullopt;
-    return juce::Time(stamp.substring(0, 4).getIntValue(), stamp.substring(4, 6).getIntValue() - 1,
-                      stamp.substring(6, 8).getIntValue(), stamp.substring(9, 11).getIntValue(),
-                      stamp.substring(11, 13).getIntValue(), stamp.substring(13, 15).getIntValue(), 0, true);
+
+    int counter = 1;
+    if (counterText.isNotEmpty())
+    {
+        if (!counterText.startsWithChar('-') || counterText.length() < 2 || counterText.length() > 3 ||
+            !counterText.substring(1).containsOnly("0123456789"))
+            return std::nullopt;
+        counter = counterText.substring(1).getIntValue();
+        if (counter < 2)
+            return std::nullopt;
+    }
+    return BackupName{juce::Time(stamp.substring(0, 4).getIntValue(), stamp.substring(4, 6).getIntValue() - 1,
+                                 stamp.substring(6, 8).getIntValue(), stamp.substring(9, 11).getIntValue(),
+                                 stamp.substring(11, 13).getIntValue(), stamp.substring(13, 15).getIntValue(), 0, true),
+                      counter};
 }
 
-/** The backups of the project in `backupsFolder`, newest first (by the time in the name). */
+/** A backup file of project `projectName` for `time` that is newer than every backup that exists: `<name>.<stamp>.tracklab`,
+    and for further backups in the same second `<name>.<stamp>-2.tracklab`, `-3`, ... (one more than the highest counter
+    of that second, so that the order stays right when the rotation has removed the lower ones). Never an overwrite: a
+    backup is a version somebody may want. At maxBackupCounter the last name is reused. */
+juce::File newBackupFile(const juce::File& backupsFolder, const juce::String& projectName, const juce::Time& time)
+{
+    const auto base = projectName + "." + backupStamp(time);
+    int highest = 0;
+    for (const auto& file : backupsFolder.findChildFiles(juce::File::findFiles, false))
+        if (file.getFileName().startsWith(base))
+            if (const auto parsed = parseBackupName(projectName, file.getFileName()))
+                highest = std::max(highest, parsed->counter);
+    if (highest == 0)
+        return backupsFolder.getChildFile(base + fileExtension);
+    return backupsFolder.getChildFile(base + "-" + juce::String(std::min(highest + 1, maxBackupCounter)) +
+                                      fileExtension);
+}
+
+/** The backups of the project in `backupsFolder`, newest first (by the time in the name, then the counter). */
 std::vector<BackupInfo> collectBackups(const juce::File& backupsFolder, const juce::String& projectName)
 {
-    std::vector<BackupInfo> backups;
+    struct Entry
+    {
+        BackupInfo info;
+        int counter = 1;
+    };
+    std::vector<Entry> entries;
     for (const auto& file : backupsFolder.findChildFiles(juce::File::findFiles, false))
-        if (const auto time = backupTimeOf(projectName, file.getFileName()))
-            backups.push_back(BackupInfo{file.getFileName(), *time, file.getSize()});
-    std::sort(backups.begin(), backups.end(),
-              [](const BackupInfo& a, const BackupInfo& b)
+        if (const auto parsed = parseBackupName(projectName, file.getFileName()))
+            entries.push_back({BackupInfo{file.getFileName(), parsed->time, file.getSize()}, parsed->counter});
+    std::sort(entries.begin(), entries.end(),
+              [](const Entry& a, const Entry& b)
               {
-                  if (a.time != b.time)
-                      return a.time > b.time;
-                  return a.name > b.name;
+                  if (a.info.time != b.info.time)
+                      return a.info.time > b.info.time;
+                  return a.counter > b.counter;
               });
+    std::vector<BackupInfo> backups;
+    backups.reserve(entries.size());
+    for (const auto& entry : entries)
+        backups.push_back(entry.info);
     return backups;
 }
 
-/** Deletes the oldest backups of the project beyond `keep`. A count <= 0 means "backups are off": nothing is deleted. */
-void rotateBackups(const juce::File& backupsFolder, const juce::String& projectName, int keep)
+/** Deletes the oldest backups of the project beyond `keep`, but never `protectedName` (the backup that was just chosen
+    for a restore: it has to survive the safety backup that is made first). A count <= 0 means "backups are off":
+    nothing is deleted. */
+void rotateBackups(const juce::File& backupsFolder, const juce::String& projectName, int keep,
+                   const juce::String& protectedName = {})
 {
     if (keep <= 0)
         return;
     const auto backups = collectBackups(backupsFolder, projectName);
-    for (size_t i = static_cast<size_t>(keep); i < backups.size(); ++i)
-        backupsFolder.getChildFile(backups[i].name).deleteFile();
+    auto remaining = backups.size();
+    for (auto it = backups.rbegin(); it != backups.rend() && remaining > static_cast<size_t>(keep); ++it)
+    {
+        if (it->name == protectedName)
+            continue;
+        backupsFolder.getChildFile(it->name).deleteFile();
+        --remaining;
+    }
 }
 
 /** Makes a rename durable: the directory entry is flushed (POSIX; Windows' ReplaceFileW is durable by itself). */
@@ -197,6 +277,22 @@ void removeInterruptedWrites(const juce::File& projectFile)
         const auto fileName = file.getFileName();
         if (isLeftover(fileName, projectFile.getFileNameWithoutExtension(), fileExtension) ||
             isLeftover(fileName, projectFile.getFileName(), autosaveExtension))
+            file.deleteFile();
+    }
+
+    // The same in Backups/: the safety backup of a restore is written like a project file, so its temporary file is
+    // `<name>.<stamp>[-N]_temp<hex>.tracklab`. Only that shape is removed: the part before `_temp` has to be the name of
+    // a backup of this project, so that nothing else in that folder is ever touched.
+    const auto name = projectFile.getFileNameWithoutExtension();
+    const juce::String extension(fileExtension);
+    for (const auto& file : backupsFolderOf(projectFile).findChildFiles(juce::File::findFiles, false))
+    {
+        const auto fileName = file.getFileName();
+        const auto marker = fileName.lastIndexOf("_temp");
+        if (marker < 0 || !fileName.endsWith(extension))
+            continue;
+        const auto hex = fileName.substring(marker + 5, fileName.length() - extension.length());
+        if (isHex(hex) && parseBackupName(name, fileName.substring(0, marker) + extension).has_value())
             file.deleteFile();
     }
 }
@@ -680,7 +776,7 @@ struct ProjectSession::Impl
     {
         if (maxBackups <= 0)
             return {};
-        return BackupCopy{*fileRef, backupsFolderOf(*fileRef).getChildFile(backupFileName(projectName(), now()))};
+        return BackupCopy{*fileRef, newBackupFile(backupsFolderOf(*fileRef), projectName(), now())};
     }
 
     void rotate() const { rotateBackups(backupsFolderOf(*fileRef), projectName(), maxBackups); }
@@ -735,6 +831,7 @@ ProjectInfo ProjectSession::createProject(const juce::File& parentFolder, const 
     impl->requireNoUnsavedChanges("create a new project");
     requirePlainName(name);
     requireParentFolder(parentFolder);
+    requirePathLength(parentFolder, name);
 
     const auto folder = parentFolder.getChildFile(name);
     const auto file = projectFileIn(folder, name);
@@ -826,6 +923,7 @@ ProjectInfo ProjectSession::saveAs(const juce::File& parentFolder, const juce::S
     auto& edit = impl->requireEdit();
     requirePlainName(name);
     requireParentFolder(parentFolder);
+    requirePathLength(parentFolder, name);
 
     const auto folder = parentFolder.getChildFile(name);
     const auto file = projectFileIn(folder, name);
@@ -977,13 +1075,14 @@ ProjectInfo ProjectSession::restoreBackup(const juce::String& name)
 
     // The current state, unsaved changes included, becomes a backup of its own, so that restoring loses nothing. Same
     // atomic write as a save; without the test hook, which is about the project file and the autosave. If it shares its
-    // name with the chosen backup (same second) it replaces it: the chosen state is already loaded.
-    const auto safety = backupsFolderOf(*impl->fileRef).getChildFile(backupFileName(impl->projectName(), impl->now()));
-    if (const auto result = safety.getParentDirectory().createDirectory(); result.failed())
-        fail(error_code::saveFailed, "Cannot create the folder " + quoted(safety.getParentDirectory()) + ": " +
-                                         result.getErrorMessage().toStdString());
-    writeProjectFile(edit, safety, {});
-    impl->rotate();
+    // name with the chosen backup (same second) it gets a counter suffix, and the rotation that follows never removes the
+    // chosen backup: it stays, however old it is.
+    const auto backupsFolder = backupsFolderOf(*impl->fileRef);
+    if (const auto result = backupsFolder.createDirectory(); result.failed())
+        fail(error_code::saveFailed,
+             "Cannot create the folder " + quoted(backupsFolder) + ": " + result.getErrorMessage().toStdString());
+    writeProjectFile(edit, newBackupFile(backupsFolder, impl->projectName(), impl->now()), {});
+    rotateBackups(backupsFolder, impl->projectName(), impl->maxBackups, name);
 
     Impl::startClean(*restored);
     impl->install(std::move(restored), impl->fileRef, true);

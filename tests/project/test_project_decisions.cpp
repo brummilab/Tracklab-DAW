@@ -1,7 +1,8 @@
 // M1-05, decisions of the lead after the first test round: the name limit at its boundary, what closing and saving do
 // to the autosave, the error codes of the backup / autosave commands, and the temporary files of an interrupted autosave.
-#include "project/project_fixture.h"
+#include "project/path_length_helper.h"
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -23,14 +24,9 @@ std::string umlauts(int count)
 
 TEST_SUITE("project")
 {
-    TEST_CASE("a project name of exactly 120 bytes is valid, one byte more is invalid_project_name")
+    TEST_CASE("a project name of 121 bytes is invalid_project_name, whatever the path (see test_project_path_length)")
     {
         ProjectFixture f;
-
-        CHECK(f.tryRun("project.new", Json{{"folder", utf8(f.root())}, {"name", std::string(120, 'a')}}).ok);
-        f.run("project.close");
-        CHECK(f.tryRun("project.new", Json{{"folder", utf8(f.root())}, {"name", umlauts(60)}}).ok);
-        f.run("project.close");
 
         CHECK(f.errorOf("project.new", Json{{"folder", utf8(f.root())}, {"name", std::string(121, 'b')}}) ==
               "invalid_project_name");
@@ -39,11 +35,11 @@ TEST_SUITE("project")
         CHECK(f.projectFolder(std::string(121, 'b')).exists() == false);
     }
 
-    TEST_CASE("the longest name still has working backup, autosave and temporary file names")
+    TEST_CASE("the longest name that fits the path still has working backup, autosave and temporary file names")
     {
         ProjectFixture f;
         f.useInjectedClock();
-        const auto file = f.newProject(std::string(120, 'z'));
+        const auto file = f.newProject(std::string(std::min<size_t>(120, longestNameFitting(f.root())), 'z'));
         f.addSampleTracks();
         f.saveAt(0);
         f.renameFirstTrack("Neu");

@@ -1,8 +1,9 @@
 // Housekeeping of the project folder (M1-05, hints of review M1-04): temporary files of an interrupted save are removed
 // when a project is opened, and a project name that is too long for the derived file names (backup, autosave, temporary
 // file) is invalid_project_name instead of a save_failed later.
-#include "project/project_fixture.h"
+#include "project/path_length_helper.h"
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -80,8 +81,12 @@ TEST_SUITE("project")
     TEST_CASE("a project with a 100 byte name works completely: save, backup, autosave, recovery file, reopen")
     {
         ProjectFixture f;
-        f.useInjectedClock();  // two saves within a second would share one backup name
-        const std::string name(100, 'n');
+        f.useInjectedClock();
+        // At most 100 bytes, and at most what the path allows: the folder of the test is long on Windows (MAX_PATH),
+        // see test_project_path_length.cpp for the boundary itself.
+        const auto fitting = longestNameFitting(f.root());
+        REQUIRE(fitting >= 20);
+        const std::string name(std::min<size_t>(100, fitting), 'n');
         const auto file = f.newProject(name);
         f.addSampleTracks();
         f.saveAt(0);
@@ -98,7 +103,7 @@ TEST_SUITE("project")
         // the same with 50 umlauts: 100 bytes
         f.run("project.close");
         std::string umlauts;
-        for (int i = 0; i < 50; ++i)
+        for (size_t i = 0; i < std::min<size_t>(50, fitting); ++i)
             umlauts += "\xC3\xA4";
         const auto second = f.newProject(umlauts);
         f.addSampleTracks();

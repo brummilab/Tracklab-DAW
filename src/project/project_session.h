@@ -123,8 +123,10 @@ public:
     void discardAutosave();
 
     /** Makes a backup of the current state first, then loads backup `name` (a file name from listBackups) as the state
-        of the open project (project file on disk not touched, modified = true, undo history empty). Errors: no_edit,
-        backup_not_found (also for a name that is not a plain file name of the Backups folder). */
+        of the open project (project file on disk not touched, modified = true, undo history empty). The rotation that
+        follows the safety backup never deletes the chosen backup. Errors: no_edit, invalid_params (`name` is empty,
+        has a path separator or "..", or is absolute), backup_not_found (no such backup of this project),
+        corrupt_project (the backup cannot be read; nothing is changed and no safety backup is made). */
     ProjectInfo restoreBackup(const juce::String& name);
 
     //==========================================================================
@@ -140,6 +142,9 @@ public:
           dot at the end, or a reserved Windows device name (CON, PRN, AUX, NUL, COM1-9, LPT1-9, any case, also with
           an extension) -> invalid_project_name (nothing is created); `#@,;&` and umlauts are fine;
         - `parentFolder` is not an existing folder -> folder_not_found (it is never created);
+        - the longest path that belongs to the project (a backup's temporary file, longestDerivedPathLength) would have
+          more than maxPathLength UTF-16 characters -> path_too_long (nothing is created; on all platforms, because
+          Windows does not open longer paths by default);
         - `<name>.tracklab` exists in the target folder -> project_exists (never overwritten). */
     ProjectInfo createProject(const juce::File& parentFolder, const juce::String& name);
 
@@ -170,8 +175,8 @@ public:
 
     /** Writes the open project as a new project `<parentFolder>/<name>/<name>.tracklab` (same rules for the name and the
         folders as createProject; atomically like save) and makes it the open project's file. The previous project file
-        is not touched. Errors: no_edit, invalid_project_name, folder_not_found, project_exists, save_inhibited,
-        save_failed.
+        is not touched. Errors: no_edit, invalid_project_name, folder_not_found, path_too_long, project_exists,
+        save_inhibited, save_failed.
 
         Media are not copied. Every stored media path (clip sources) is re-written relative to the new project file, so
         that media outside the new project folder keep being found; nothing of this goes through the undo manager. A

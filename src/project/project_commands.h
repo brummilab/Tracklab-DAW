@@ -19,13 +19,14 @@ namespace tracklab::project
     project.new       flags: none     params {"folder": string, "name": string, "template"?: "empty"}
                       `folder` is the PARENT folder; the project lives in `<folder>/<name>/<name>.tracklab`.
                       Result Info of the new project (modified false). Errors: unsaved_changes, invalid_project_name,
-                      folder_not_found, project_exists.
+                      folder_not_found, path_too_long, project_exists.
     project.open      flags: none     params {"path": string}  (the .tracklab file) -> Info.
                       Errors: unsaved_changes, project_not_found, corrupt_project, project_too_new, migration_failed.
                       No `discard` parameter: dropping unsaved changes is only possible through project.close.
     project.save      flags: none     params {} -> Info (modified false). Errors: no_edit, save_inhibited, save_failed.
     project.save_as   flags: none     params {"folder": string, "name": string} -> Info of the new file. Errors: no_edit,
-                      invalid_project_name, folder_not_found, project_exists, save_inhibited, save_failed.
+                      invalid_project_name, folder_not_found, path_too_long, project_exists, save_inhibited,
+                      save_failed.
     project.close     flags: destructive  params {"discard"?: boolean (default false)} -> {"closed": true}.
                       Error unsaved_changes if there are unsaved changes and discard is not true.
     project.get_info  flags: readOnly     params {} -> Info. Error no_edit if no project is open.

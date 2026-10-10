@@ -114,7 +114,9 @@ core::RegisterResult registerProjectCommands(core::CommandRegistry& registry, Pr
     create.titleDe = "Neues Projekt";
     create.descriptionEn =
         "Creates a new project <folder>/<name>/<name>.tracklab with the sub folders Audio, Renders, Backups and Peaks "
-        "and opens it. Fails with unsaved_changes if the open project has unsaved changes.";
+        "and opens it. Fails with unsaved_changes if the open project has unsaved changes, with invalid_project_name "
+        "(at most 120 bytes) or with path_too_long if the paths of the project would exceed 259 characters (use a "
+        "shorter name or folder).";
     create.paramsSchema = Json::parse(std::string(R"({
         "type": "object",
         "properties": {
@@ -184,7 +186,8 @@ core::RegisterResult registerProjectCommands(core::CommandRegistry& registry, Pr
     saveAs.titleDe = "Projekt speichern unter";
     saveAs.descriptionEn =
         "Saves the open project as a new project <folder>/<name>/<name>.tracklab and continues in it. Media files "
-        "are not copied. Never overwrites an existing project.";
+        "are not copied. Never overwrites an existing project. Fails with path_too_long if the paths of the new "
+        "project would exceed 259 characters.";
     saveAs.paramsSchema = Json::parse(std::string(R"({
         "type": "object",
         "properties": {
@@ -274,8 +277,9 @@ core::RegisterResult registerProjectCommands(core::CommandRegistry& registry, Pr
     restoreBackup.titleDe = "Backup wiederherstellen";
     restoreBackup.descriptionEn =
         "Loads a backup of the open project as its current state, replacing the state in memory including unsaved "
-        "changes. Makes a backup of the current state first. The project file is only replaced by the next save. Fails "
-        "with backup_not_found, no_edit or invalid_params (name is not a plain file name).";
+        "changes. Makes a backup of the current state first (the chosen backup is never rotated away). The project "
+        "file is only replaced by the next save. Fails with no_edit, invalid_params (name is not a plain file name), "
+        "backup_not_found, or corrupt_project (the backup cannot be read; nothing changes).";
     restoreBackup.paramsSchema = Json::parse(R"({
         "type": "object",
         "properties": {"name": {"type": "string", "description": "Backup file name from project.list_backups."}},
