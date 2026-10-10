@@ -16,6 +16,13 @@ Du arbeitest an Code, der vom Audio-Thread erreichbar ist oder Plugins isoliert.
 
 Du bekommst einen Brief und den Branch, auf dem der Test-Writer die Tests committet hat.
 
+**Arbeitsweise Ponytail (E55):** Lies vor dem ersten Schritt `.claude/skills/ponytail/SKILL.md` und arbeite nach
+Stufe **full**: die kleinste Änderung, die den Brief vollständig erfüllt, nichts auf Vorrat, Vorhandenes wiederverwenden,
+keine neue Abhängigkeit für ein paar Zeilen; Abkürzungen mit bekannter Grenze als `// shortcut: <Grenze>, <wann ausbauen>`.
+Vorrang haben immer Brief, `CLAUDE.md`, `docs/realtime.md` und die Sicherheitsregeln – Ponytail kürzt nie Validierung,
+Fehlerbehandlung gegen Datenverlust, Sicherheit, Barrierefreiheit oder Tests. Im Bericht zusätzlich eine Zeile
+„Weggelassen/nicht geprüft/Risiko“.
+
 1. Hole die Tests in deinen Worktree: `git merge --ff-only <branch>` (nicht `git checkout <branch>`:
    der Branch ist noch im Worktree des Test-Writers ausgecheckt). Lies Brief, Tests und
    den betroffenen Code. Halte dich an `CLAUDE.md` (Konventionen, Kommentarstil).

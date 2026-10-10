@@ -89,6 +89,7 @@ M8 Mastering & Export inkl. M/S · M9 = 1.0 Interop & Politur inkl. Handy-Fernbe
 - Reaper-Preset (M0-08) nach F11; Risiko Mint 23 / libstdc++ 15 (O-03).
 
 ## Entscheidungen
+- E55 (10.10.2026): Implementer arbeiten nach dem Ponytail-Skill (kleinste vollständige Änderung, MIT, `.claude/skills/ponytail/`).
 - E54 (09.10.2026): Auftrag ergänzt (Stille-Erkennung, Setlist-Import, BWF-Zeitstempel, Cue-Mixe v1, M/S v1,
   Handy-Fernbedienung v1, Stem-Separation v2); Workflow A als M2 mit Mojo-Club-Abnahme; Claude-Integration bleibt M3.
 - E53 (09.10.2026): Vision bestätigt – Funktionsumfang der großen DAWs schrittweise, Nicht-Ziele bleiben;
