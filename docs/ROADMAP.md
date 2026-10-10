@@ -27,7 +27,7 @@ flowchart LR
 | | Meilenstein | Inhalt | Abnahme |
 |---|---|---|---|
 | ✅ | **M0** Start & Spike | Team-Prozess, Gate, Recherche, Tech-Stack (ADR-001), Engine-Spike JUCE 9 + Tracktion | Spike baut in der CI unter Windows und Linux |
-| 🔄 | **M1** Fundament | Engine, Befehlsliste, Undo/Redo, Audio-Geräte, Projektformat `.tracklab`, Kommandozeile (`render`, `analyze`) ✅ · Autosave/Backups 🔄, Audio-Geräte per CLI, erstes Fenster mit „Über Tracklab“, Test-Builds ⏳ | Projekt anlegen, speichern, öffnen; Test-Builds zum Herunterladen |
+| 🔄 | **M1** Fundament | Engine, Befehlsliste, Undo/Redo, Audio-Geräte, Projektformat `.tracklab`, Kommandozeile (`render`, `analyze`), Autosave/Backups ✅ · Audio-Geräte per CLI, erstes Fenster mit „Über Tracklab“, Test-Builds ⏳ | Projekt anlegen, speichern, öffnen; Test-Builds zum Herunterladen |
 | ⏳ | **M2** Live-Mitschnitt (Workflow A) | Import Stereo und Mehrspur, Stille-Erkennung, Setlist-Import, Fades, LUFS/True-Peak-Meter, Normalisierung pro Song, Export WAV 48/24 + MP3 mit BWF-Zeitstempel | Mojo-Club-Mitschnitt wird in Songs zerlegt; Resolve übernimmt die Dateien ohne Nacharbeit |
 | ⏳ | **M3** Claude + MCP | Claude-Panel (Plan-Vorschau, Undo pro Auftrag, Kosten), Songgrenzen per Claude, MCP-Server für Claude Code/Desktop | Workflow A per Claude-Befehl, dieselben Befehle über MCP |
 | ⏳ | **M4** Spuren & Aufnahme | Spurtypen, Ordner, Busse, 12-Kanal-Aufnahme, Monitoring, Metronom, Punch, Loop-Takes, Latenzmessung | 12 Kanäle aufgenommen (Testprotokoll) |

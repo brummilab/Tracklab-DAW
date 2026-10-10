@@ -28,6 +28,11 @@ const std::map<std::string, CommandFlags>& expectedCommands()
         {"project.save_as", CommandFlags{}},
         {"project.close", CommandFlags{.destructive = true}},
         {"project.get_info", CommandFlags{.readOnly = true}},
+        // M1-05: dropping the in-memory state or the recoverable autosave needs a confirmation in every mode.
+        {"project.list_backups", CommandFlags{.readOnly = true}},
+        {"project.restore_backup", CommandFlags{.destructive = true}},
+        {"project.restore_autosave", CommandFlags{.destructive = true}},
+        {"project.discard_autosave", CommandFlags{.destructive = true}},
     };
     return commands;
 }
@@ -44,7 +49,7 @@ std::string readTextFile(const std::filesystem::path& path)
 
 TEST_SUITE("project")
 {
-    TEST_CASE("registerProjectCommands registers exactly the six project commands with their flags")
+    TEST_CASE("registerProjectCommands registers exactly the ten project commands with their flags")
     {
         ProjectFixture f;
 
@@ -65,7 +70,7 @@ TEST_SUITE("project")
         CHECK(projectCommands == static_cast<int>(expectedCommands().size()));
     }
 
-    TEST_CASE("only project.close is destructive and none of the project commands is undoable")
+    TEST_CASE("project.close, restore_backup, restore_autosave and discard_autosave are destructive; none is undoable")
     {
         ProjectFixture f;
 
@@ -77,14 +82,14 @@ TEST_SUITE("project")
             ++seen;
             INFO("command " << command->id);
             CHECK_FALSE(command->flags.undoable);
-            CHECK(command->flags.destructive == (command->id == "project.close"));
-            CHECK(command->flags.readOnly == (command->id == "project.get_info"));
+            CHECK(command->flags.destructive == expectedCommands().at(command->id).destructive);
+            CHECK(command->flags.readOnly ==
+                  (command->id == "project.get_info" || command->id == "project.list_backups"));
         }
-        CHECK(seen == 6);  // the loop is not vacuous
+        CHECK(seen == 10);  // the loop is not vacuous
     }
 
-    TEST_CASE(
-        "the tool names are project_new, project_open, project_save, project_save_as, project_close, project_get_info")
+    TEST_CASE("the tool names are the command ids with an underscore for the dot")
     {
         ProjectFixture f;
 
@@ -95,6 +100,11 @@ TEST_SUITE("project")
         CHECK(f.registry.toolNameForId("project.close") == "project_close");
         CHECK(f.registry.toolNameForId("project.get_info") == "project_get_info");
         CHECK(f.registry.idForToolName("project_save_as") == "project.save_as");
+        CHECK(f.registry.toolNameForId("project.list_backups") == "project_list_backups");
+        CHECK(f.registry.toolNameForId("project.restore_backup") == "project_restore_backup");
+        CHECK(f.registry.toolNameForId("project.restore_autosave") == "project_restore_autosave");
+        CHECK(f.registry.toolNameForId("project.discard_autosave") == "project_discard_autosave");
+        CHECK(f.registry.idForToolName("project_restore_backup") == "project.restore_backup");
     }
 
     TEST_CASE("registering the project commands twice on one registry fails with duplicate_id")

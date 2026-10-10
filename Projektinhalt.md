@@ -81,6 +81,7 @@ M8 Mastering & Export inkl. M/S · M9 = 1.0 Interop & Politur inkl. Handy-Fernbe
   relative Pfade, keine Personendaten); O-09 JUCE-Undo-Patch erledigt. Roadmap-Übersicht `docs/ROADMAP.md`.
 - 10.10.2026: M1-07 `tracklab-cli` gemerged (render, analyze, run-commands, export-tools; Golden-Test). Handtest
   Audio-Geräte braucht noch Karte O-14 (`tracklab-cli io`).
+- 10.10.2026: M1-05 Autosave, rotierende Backups und Crash-Recovery gemerged (Pfadgrenze 259 Zeichen für Windows).
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
@@ -88,6 +89,7 @@ M8 Mastering & Export inkl. M/S · M9 = 1.0 Interop & Politur inkl. Handy-Fernbe
 - Reaper-Preset (M0-08) nach F11; Risiko Mint 23 / libstdc++ 15 (O-03).
 
 ## Entscheidungen
+- E55 (10.10.2026): Implementer arbeiten nach dem Ponytail-Skill (kleinste vollständige Änderung, MIT, `.claude/skills/ponytail/`).
 - E54 (09.10.2026): Auftrag ergänzt (Stille-Erkennung, Setlist-Import, BWF-Zeitstempel, Cue-Mixe v1, M/S v1,
   Handy-Fernbedienung v1, Stem-Separation v2); Workflow A als M2 mit Mojo-Club-Abnahme; Claude-Integration bleibt M3.
 - E53 (09.10.2026): Vision bestätigt – Funktionsumfang der großen DAWs schrittweise, Nicht-Ziele bleiben;

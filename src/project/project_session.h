@@ -15,9 +15,13 @@
 #include <juce_core/juce_core.h>
 #include <tracktion_engine/tracktion_engine.h>
 
+#include <chrono>
+#include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace tracklab::project
 {
@@ -33,6 +37,33 @@ struct ProjectInfo
     std::string name;       ///< `<name>`: the project file's name without the extension
     int formatVersion = 0;  ///< format version of the state in memory (always currentFormatVersion once opened)
     bool modified = false;  ///< Edit::hasChangedSinceSaved(): changes since the last save / since opening
+};
+
+/** What one autosave attempt did (M1-05). */
+enum class AutosaveResult : std::uint8_t
+{
+    written,          ///< `<project>.tracklab.autosave` was (re)written
+    notModified,      ///< nothing changed since the last save / autosave: nothing was written
+    noProject,        ///< no project is open
+    saveInhibited,    ///< Edit::isSaveInhibited(): nothing was written, the next attempt tries again
+    recoveryPending,  ///< the project was opened with an offered recovery that is not decided yet: the old autosave file
+                      ///< is not overwritten
+    failed            ///< writing failed (the previous autosave file is intact); never throws
+};
+
+/** One file of `<project folder>/Backups/` that belongs to the open project: `<name>.<YYYYMMDD-HHMMSS>.tracklab`. */
+struct BackupInfo
+{
+    juce::String name;  ///< the file name, e.g. "Muster.20261009-123456.tracklab"
+    juce::Time time;    ///< the time in the name (local time of the clock the backup was made with)
+    juce::int64 sizeBytes = 0;
+};
+
+/** The autosave file is newer than the project file of the project that was just opened. */
+struct RecoveryInfo
+{
+    juce::Time projectTime;   ///< modification time of the project file
+    juce::Time autosaveTime;  ///< modification time of the autosave file
 };
 
 class ProjectSession
@@ -58,6 +89,47 @@ public:
     void setBeforeReplaceHook(BeforeReplaceHook hook);
 
     //==========================================================================
+    // M1-05: autosave, rotating backups, recovery (members, see below the operations).
+
+    /** Where "now" comes from for the names of the backups (default: juce::Time::getCurrentTime()). Tests inject it. */
+    using Clock = std::function<juce::Time()>;
+    void setClock(Clock clock);
+
+    /** Autosave interval (default defaultAutosaveIntervalMs); a message-thread timer calls autosaveNow() that often
+        while a project is open. <= 0 switches the timer off. Changing it restarts the timer. */
+    void setAutosaveInterval(std::chrono::milliseconds interval);
+    std::chrono::milliseconds autosaveInterval() const;
+
+    /** How many backups of the open project are kept (default defaultMaxBackups); older ones are deleted by the next
+        save. */
+    void setMaxBackups(int count);
+    int maxBackups() const;
+
+    /** What the autosave timer does every interval; public so that tests do not have to wait. Never throws. */
+    AutosaveResult autosaveNow();
+
+    /** The backups of the open project, newest first (empty if none is open). */
+    std::vector<BackupInfo> listBackups() const;
+
+    /** Set by openProject when the autosave was newer than the project file; cleared by restoreAutosave,
+        discardAutosave and closing / opening another project. */
+    std::optional<RecoveryInfo> pendingRecovery() const;
+
+    /** Loads the autosave file as the state of the open project (the project file on disk is not touched, the autosave
+        file stays until the next save; modified = true; undo history empty). no_autosave if there is none. */
+    ProjectInfo restoreAutosave();
+
+    /** Deletes the autosave file of the open project; the project in memory is not changed. */
+    void discardAutosave();
+
+    /** Makes a backup of the current state first, then loads backup `name` (a file name from listBackups) as the state
+        of the open project (project file on disk not touched, modified = true, undo history empty). The rotation that
+        follows the safety backup never deletes the chosen backup. Errors: no_edit, invalid_params (`name` is empty,
+        has a path separator or "..", or is absolute), backup_not_found (no such backup of this project),
+        corrupt_project (the backup cannot be read; nothing is changed and no safety backup is made). */
+    ProjectInfo restoreBackup(const juce::String& name);
+
+    //==========================================================================
     // Operations behind the project.* commands (see project_commands.h for the command side).
 
     /** New empty project (template "empty": Edit::createEdit with an empty state: no audio track, master at 0 dB;
@@ -66,10 +138,13 @@ public:
         `<name>.tracklab` right away (so the project is a valid file from the start; modified = false, empty undo
         history). The new project replaces the open one.
         - a project is open and modified -> unsaved_changes (nothing is created);
-        - `name` empty, ".", "..", containing one of `<>:"/\|?*` or a control character, with blanks at the ends or a
+        - `name` longer than 120 bytes (UTF-8), empty, ".", "..", containing one of `<>:"/\|?*` or a control character, with blanks at the ends or a
           dot at the end, or a reserved Windows device name (CON, PRN, AUX, NUL, COM1-9, LPT1-9, any case, also with
           an extension) -> invalid_project_name (nothing is created); `#@,;&` and umlauts are fine;
         - `parentFolder` is not an existing folder -> folder_not_found (it is never created);
+        - the longest path that belongs to the project (a backup's temporary file, longestDerivedPathLength) would have
+          more than maxPathLength UTF-16 characters -> path_too_long (nothing is created; on all platforms, because
+          Windows does not open longer paths by default);
         - `<name>.tracklab` exists in the target folder -> project_exists (never overwritten). */
     ProjectInfo createProject(const juce::File& parentFolder, const juce::String& name);
 
@@ -92,13 +167,16 @@ public:
         - none open -> no_edit;
         - Edit::isSaveInhibited() -> save_inhibited, nothing is written;
         - writing, flushing or replacing fails, or the BeforeReplaceHook refuses -> save_failed, the project file is
-          byte-identical to before, no temporary file stays behind, modified is unchanged. */
+          byte-identical to before, no temporary file stays behind, modified is unchanged.
+        M1-05: right before the replace, the project file as it was is copied to
+        `Backups/<name>.<YYYYMMDD-HHMMSS>.tracklab` (a failed save leaves no backup) and the backups beyond maxBackups
+        are deleted afterwards; a successful save deletes the autosave file and ends an offered recovery. */
     ProjectInfo save();
 
     /** Writes the open project as a new project `<parentFolder>/<name>/<name>.tracklab` (same rules for the name and the
         folders as createProject; atomically like save) and makes it the open project's file. The previous project file
-        is not touched. Errors: no_edit, invalid_project_name, folder_not_found, project_exists, save_inhibited,
-        save_failed.
+        is not touched. Errors: no_edit, invalid_project_name, folder_not_found, path_too_long, project_exists,
+        save_inhibited, save_failed.
 
         Media are not copied. Every stored media path (clip sources) is re-written relative to the new project file, so
         that media outside the new project folder keep being found; nothing of this goes through the undo manager. A
@@ -107,7 +185,8 @@ public:
 
     /** Closes the open project (the context's Edit becomes nullptr). With `discard` = false and unsaved changes:
         unsaved_changes (the project stays open). With `discard` = true the changes are dropped, nothing is written.
-        Closing when none is open is allowed and does nothing. */
+        Closing when none is open is allowed and does nothing. M1-05: a close that happens deletes the autosave file,
+        except while an offered recovery is undecided (it is offered again at the next open). */
     void closeProject(bool discard);
 
     /** Info of the open project; no_edit if none is open. */

@@ -22,7 +22,8 @@ Du bekommst: Karten-ID, Brief, Branch. Vorgehen:
 3. Jeden Punkt der **Bewertung** im Brief einzeln prüfen: erfüllt / nicht erfüllt, mit Beleg.
 4. Zusätzlich suchen: Änderungen außerhalb der „Eigenen Dateien“, geänderte oder abgeschwächte
    Tests, Sicherheitsprobleme (Rechte, Login-Schutz, sensible Daten, Secrets im Code),
-   Verhalten, das das Design nicht vorsieht.
+   Verhalten, das das Design nicht vorsieht, und **Überbau** nach Ponytail (`.claude/skills/ponytail/SKILL.md`, E55):
+   Abstraktionen, Optionen, Konfiguration oder Code „für später“, die der Brief nicht verlangt (als Hinweis melden).
 5. **Pflichtfragen Tracklab** – jede im Bericht mit Beleg beantworten:
    1. Ist der Code vom Audio-Thread erreichbar? Wenn ja: keine Allokation, keine Locks, kein IO, keine Exceptions
       (`docs/realtime.md`)? RTSan-Lauf ohne Befund?

@@ -137,3 +137,9 @@ Bei Prozessfragen gilt die Vorlage, bei Produkt- und Technikfragen der Auftrag
   `CLAUDE.md`-Dateien fremder Projekte (z. B. Tracktion) gelten für Tracklab nicht. Änderungen an Fremdcode nur als
   eigener Patch/Workaround in Tracklab-Dateien oder upstream.
 - **Agent Teams (experimentell):** nicht verwenden, außer der PO entscheidet es.
+
+### Arbeitsweise Ponytail (E55)
+`implementer`, `implementer-rt` und `cleanup` lesen `.claude/skills/ponytail/SKILL.md` (MIT, Quelle
+`github.com/DietrichGebert/ponytail`) und arbeiten nach Stufe full: kleinste Änderung, die den Brief vollständig erfüllt.
+Brief, `CLAUDE.md`, `docs/realtime.md` und Sicherheitsregeln haben Vorrang; Tests, Validierung und Fehlerbehandlung werden
+nie gekürzt. Der Reviewer meldet Überbau als Hinweis.
