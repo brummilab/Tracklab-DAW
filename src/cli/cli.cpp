@@ -1,4 +1,5 @@
-// tracklab-cli (M1-07): argument parsing, the four subcommands and the one-JSON-line output. The contract is in cli.h.
+// tracklab-cli (M1-07, O-14): argument parsing, the five subcommands and the one-JSON-line output. The contract is in
+// cli.h.
 // Everything that changes a project goes through the command registry (project.open, project.save(_as), executeBatch);
 // there is no second code path next to the commands. Render and analyze are not commands yet (they read a project but
 // change nothing), so they use the engine directly.
@@ -9,6 +10,7 @@
 #include "cli/cli_error.h"
 #include "core/command_export.h"
 #include "engine/engine_factory.h"
+#include "io/audio_devices.h"
 #include "project/project_session.h"
 
 #include <algorithm>
@@ -118,15 +120,42 @@ bool isProjectArg(const std::string& arg)
 //==============================================================================
 // Workspace: the engine, the open project and the registry of the app, as the commands see them
 
+/** What the engine of a call is built for. The default is the headless CLI: no audio device, in-memory settings,
+    private cache. `io` is the only caller that wants devices and the settings on disk. */
+struct WorkspaceOptions
+{
+    std::string engineTempDir;  ///< the only member the headless callers set
+    bool realDevices = false;   ///< io: audio devices and settings.xml (in `settingsDir`, or the user folder if empty)
+    std::string settingsDir = {};
+    const CliHooks* hooks = nullptr;
+};
+
 class Workspace
 {
 public:
-    explicit Workspace(const std::string& engineTempDir)
+    explicit Workspace(const WorkspaceOptions& workspaceOptions)
     {
-        engine::EngineOptions options;  // headless, in-memory settings, private cache (the CLI never needs a device)
-        if (!engineTempDir.empty())
-            options.tempDirectory = fileFromArg(engineTempDir);
+        engine::EngineOptions options;
+        if (!workspaceOptions.engineTempDir.empty())
+            options.tempDirectory = fileFromArg(workspaceOptions.engineTempDir);
+        const bool fakeDevices = workspaceOptions.realDevices && workspaceOptions.hooks != nullptr &&
+                                 static_cast<bool>(workspaceOptions.hooks->addAudioDeviceTypes);
+        if (workspaceOptions.realDevices)
+        {
+            options.storage = engine::SettingsStorage::file;
+            if (!workspaceOptions.settingsDir.empty())
+                options.settingsDirectory = fileFromArg(workspaceOptions.settingsDir);
+            // The test seam replaces the machine's device types; the engine then scans nothing on its own.
+            options.devices = fakeDevices ? engine::DeviceMode::none : engine::DeviceMode::automatic;
+        }
         engine = engine::createEngine(options);
+        if (fakeDevices)
+        {
+            workspaceOptions.hooks->addAudioDeviceTypes(io::audioDeviceManager(*engine));
+            // What DeviceMode::automatic does on creation: open the stored setup. An error is not fatal here, the
+            // command that follows reports the state it finds.
+            io::restoreAudioDeviceSetup(*engine);
+        }
         session = std::make_unique<project::ProjectSession>(*engine, context);
         registry.setEditContext(&context);
         const auto registered = registerBuiltInCommands(registry, *engine, context, *session, TRACKLAB_VERSION_STRING);
@@ -209,6 +238,12 @@ Json commandAnalyze(Workspace& workspace, const ParsedArgs& args, const std::str
     }
     result["source"] = source;
     return result;
+}
+
+/** The one io.* command of `io`, through the registry like every other caller. */
+Json commandIo(Workspace& workspace, const std::string& id, const Json& params)
+{
+    return Json{{"result", workspace.run(id, params)}};
 }
 
 /** commands.json: an array of {"id": string, "params"?: object}. */
@@ -392,7 +427,7 @@ void printFailure(std::ostream& out, std::ostream& err, const CliFailure& failur
 }
 
 constexpr const char* generalUsage =
-    "usage: tracklab-cli [--engine-temp-dir <dir>] render | analyze | run-commands | export-tools ...  "
+    "usage: tracklab-cli [--engine-temp-dir <dir>] render | analyze | run-commands | export-tools | io ...  "
     "(tracklab-cli --version)";
 
 Json dispatch(const std::vector<std::string>& args, const CliHooks& hooks)
@@ -424,7 +459,7 @@ Json dispatch(const std::vector<std::string>& args, const CliHooks& hooks)
                                                "usage: tracklab-cli render <project> --out <file> [--format wav24]"));
         if (parsed.value("--out") == nullptr)
             throw usageError("render needs --out <file>");
-        Workspace workspace(engineTempDir);
+        Workspace workspace(WorkspaceOptions{engineTempDir});
         return commandRender(workspace, parsed);
     }
     if (command == "analyze")
@@ -433,7 +468,7 @@ Json dispatch(const std::vector<std::string>& args, const CliHooks& hooks)
             args, next + 1,
             makeSpec({"--loudness", "--truepeak", "--lra", "--json"}, {}, 1, 1,
                      "usage: tracklab-cli analyze <file|project> [--loudness] [--truepeak] [--lra] [--json]"));
-        Workspace workspace(engineTempDir);
+        Workspace workspace(WorkspaceOptions{engineTempDir});
         return commandAnalyze(workspace, parsed, engineTempDir);
     }
     if (command == "run-commands")
@@ -442,7 +477,7 @@ Json dispatch(const std::vector<std::string>& args, const CliHooks& hooks)
             parseArgs(args, next + 1,
                       makeSpec({}, {"--save-as"}, 2, 2,
                                "usage: tracklab-cli run-commands <project> <commands.json> [--save-as <out>]"));
-        Workspace workspace(engineTempDir);
+        Workspace workspace(WorkspaceOptions{engineTempDir});
         return commandRunCommands(workspace, parsed, hooks);
     }
     if (command == "export-tools")
@@ -453,8 +488,38 @@ Json dispatch(const std::vector<std::string>& args, const CliHooks& hooks)
                      "usage: tracklab-cli export-tools [--check] [--out <tools.json>] [--docs <commands.md>]"));
         if (parsed.value("--out") == nullptr && parsed.value("--docs") == nullptr)
             throw usageError("export-tools needs --out <tools.json> and/or --docs <commands.md>");
-        Workspace workspace(engineTempDir);
+        Workspace workspace(WorkspaceOptions{engineTempDir});
         return commandExportTools(workspace, parsed);
+    }
+    if (command == "io")
+    {
+        const auto parsed = parseArgs(args, next + 1,
+                                      makeSpec({}, {"--settings-dir"}, 1, 2,
+                                               "usage: tracklab-cli io <command-id> [<params-json>] "
+                                               "[--settings-dir <dir>]"));
+        const auto& id = parsed.positionals[0];
+        // Only device commands: the hand test path must not open a back door to project.* or app.* commands.
+        if (id.rfind("io.", 0) != 0)
+            throw usageError("\"" + id +
+                             "\" is not an io.* command; io runs io.list_device_types, io.list_devices, "
+                             "io.get_device or io.set_device");
+        Json params = Json::object();
+        if (parsed.positionals.size() > 1)
+        {
+            // A broken params argument is a mistake of the call, found before the engine is even created.
+            params = Json::parse(parsed.positionals[1], nullptr, /*allow_exceptions*/ false);
+            if (params.is_discarded())
+                throw usageError("the params are not valid JSON: " + parsed.positionals[1]);
+            if (!params.is_object())
+                throw usageError("the params have to be a JSON object, e.g. {\"buffer_size\":256}");
+        }
+        WorkspaceOptions options{engineTempDir};
+        options.realDevices = true;
+        options.hooks = &hooks;
+        if (const auto* settingsDir = parsed.value("--settings-dir"))
+            options.settingsDir = *settingsDir;
+        Workspace workspace(options);
+        return commandIo(workspace, id, params);
     }
     throw usageError("unknown command \"" + command + "\". " + generalUsage);
 }

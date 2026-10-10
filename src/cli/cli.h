@@ -1,4 +1,4 @@
-// Command line front end of Tracklab (M1-07): `tracklab-cli render | analyze | run-commands | export-tools`.
+// Command line front end of Tracklab (M1-07, O-14): `tracklab-cli render | analyze | run-commands | export-tools | io`.
 // All logic lives in the library tracklab_cli (runCli); src/cli/main.cpp is a thin main() around it, so that tests can
 // call runCli in-process (fast, with hooks) and a few tests start the real executable (exit codes, stdout purity).
 //
@@ -41,6 +41,25 @@
 //     the export; exit 1 if one is stale or missing, the message names it. Success: {"ok":true,"commands":N,
 //     "tools":"<path>"?,"docs":"<path>"?} (only the files that were given), with --check {"ok":true,"up_to_date":true}.
 //
+//   io <command-id> [<params-json>] [--settings-dir <dir>]                                                  (O-14)
+//     Runs exactly ONE io.* command of the registry (io.list_device_types, io.list_devices, io.get_device,
+//     io.set_device) without a project, on the real audio devices of the machine: the engine is created with
+//     DeviceMode::automatic. This is the hand test path of M1 (docs/testing/manual/M1.md); run-commands cannot be used
+//     for it (needs a project, refuses io.set_device because it is not undoable). Same registry, same code path as
+//     every other caller: no second implementation of the commands.
+//     <command-id> must start with "io.": anything else (app.version, project.new, ...) is a usage error, exit 2, code
+//     "usage", and is NOT executed. An id with the prefix that the registry does not know: exit 1, "unknown_command".
+//     <params-json> is a JSON object as one argument (default {}). Text that is not valid JSON or not an object fails
+//     (nothing is executed); parameters that violate the command's schema: exit 1, "invalid_params" with the
+//     "pointer" of the offending field (e.g. "/sample_rate"). A command that fails (e.g. a device that does not exist):
+//     exit 1, the code and message of the registry (e.g. "handler_failed").
+//     Success: {"ok":true,"result":<result of the command>}.
+//     --settings-dir <dir>: folder of settings.xml (EngineOptions::settingsDirectory with SettingsStorage::file;
+//     created if missing), so that a hand test does not overwrite the real settings. Without it the normal user folder
+//     (defaultSettingsDirectory()). The settings are written before runCli returns (the engine is destroyed first), and
+//     the next `io` call on the same folder starts with the stored device setup open (restored).
+//     Wrong number of arguments, missing option value, unknown option: exit 2.
+//
 // Output: exactly ONE JSON object, terminated by '\n', on `out` (also on failure); diagnostics only on `err`.
 // Failure: {"ok":false,"error":{"code":<string>,"message":<string>[,"pointer":<string>]}}. Error codes of the
 // registry and of the project session are passed on 1:1 (unknown_command, invalid_params, project_not_found,
@@ -76,6 +95,11 @@ struct CliHooks
     /** run-commands: called with the open Edit after the batch ran (also after a failed, rolled back one), before
         anything is saved. */
     std::function<void(tracktion::Edit&)> afterCommands;
+    /** io: the test seam for audio hardware. If set, the engine of `io` is created with DeviceMode::none (no system
+        device types, nothing of the real machine is scanned or opened), this function adds the (fake) device types to
+        the engine's AudioDeviceManager, and then the stored setup is restored (io::restoreAudioDeviceSetup), exactly
+        as a start of the app does with the system types. Never set by main(). */
+    std::function<void(juce::AudioDeviceManager&)> addAudioDeviceTypes;
 };
 
 /** Runs the CLI. `args` excludes the program name. Has to be called on the JUCE message thread (main() sets that up). */
