@@ -124,9 +124,9 @@ bool isProjectArg(const std::string& arg)
     private cache. `io` is the only caller that wants devices and the settings on disk. */
 struct WorkspaceOptions
 {
-    std::string engineTempDir;
-    bool realDevices = false;  ///< io: audio devices and settings.xml (in `settingsDir`, or the user folder if empty)
-    std::string settingsDir;
+    std::string engineTempDir;  ///< the only member the headless callers set
+    bool realDevices = false;   ///< io: audio devices and settings.xml (in `settingsDir`, or the user folder if empty)
+    std::string settingsDir = {};
     const CliHooks* hooks = nullptr;
 };
 
@@ -459,7 +459,7 @@ Json dispatch(const std::vector<std::string>& args, const CliHooks& hooks)
                                                "usage: tracklab-cli render <project> --out <file> [--format wav24]"));
         if (parsed.value("--out") == nullptr)
             throw usageError("render needs --out <file>");
-        Workspace workspace(WorkspaceOptions{engineTempDir, false, {}, nullptr});
+        Workspace workspace(WorkspaceOptions{engineTempDir});
         return commandRender(workspace, parsed);
     }
     if (command == "analyze")
@@ -468,7 +468,7 @@ Json dispatch(const std::vector<std::string>& args, const CliHooks& hooks)
             args, next + 1,
             makeSpec({"--loudness", "--truepeak", "--lra", "--json"}, {}, 1, 1,
                      "usage: tracklab-cli analyze <file|project> [--loudness] [--truepeak] [--lra] [--json]"));
-        Workspace workspace(WorkspaceOptions{engineTempDir, false, {}, nullptr});
+        Workspace workspace(WorkspaceOptions{engineTempDir});
         return commandAnalyze(workspace, parsed, engineTempDir);
     }
     if (command == "run-commands")
@@ -477,7 +477,7 @@ Json dispatch(const std::vector<std::string>& args, const CliHooks& hooks)
             parseArgs(args, next + 1,
                       makeSpec({}, {"--save-as"}, 2, 2,
                                "usage: tracklab-cli run-commands <project> <commands.json> [--save-as <out>]"));
-        Workspace workspace(WorkspaceOptions{engineTempDir, false, {}, nullptr});
+        Workspace workspace(WorkspaceOptions{engineTempDir});
         return commandRunCommands(workspace, parsed, hooks);
     }
     if (command == "export-tools")
@@ -488,7 +488,7 @@ Json dispatch(const std::vector<std::string>& args, const CliHooks& hooks)
                      "usage: tracklab-cli export-tools [--check] [--out <tools.json>] [--docs <commands.md>]"));
         if (parsed.value("--out") == nullptr && parsed.value("--docs") == nullptr)
             throw usageError("export-tools needs --out <tools.json> and/or --docs <commands.md>");
-        Workspace workspace(WorkspaceOptions{engineTempDir, false, {}, nullptr});
+        Workspace workspace(WorkspaceOptions{engineTempDir});
         return commandExportTools(workspace, parsed);
     }
     if (command == "io")
@@ -513,9 +513,12 @@ Json dispatch(const std::vector<std::string>& args, const CliHooks& hooks)
             if (!params.is_object())
                 throw usageError("the params have to be a JSON object, e.g. {\"buffer_size\":256}");
         }
-        const auto* settingsDir = parsed.value("--settings-dir");
-        Workspace workspace(
-            WorkspaceOptions{engineTempDir, true, settingsDir != nullptr ? *settingsDir : std::string(), &hooks});
+        WorkspaceOptions options{engineTempDir};
+        options.realDevices = true;
+        options.hooks = &hooks;
+        if (const auto* settingsDir = parsed.value("--settings-dir"))
+            options.settingsDir = *settingsDir;
+        Workspace workspace(options);
         return commandIo(workspace, id, params);
     }
     throw usageError("unknown command \"" + command + "\". " + generalUsage);

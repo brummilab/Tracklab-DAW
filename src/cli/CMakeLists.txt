@@ -12,3 +12,6 @@ target_link_libraries(tracklab_cli
 
 add_executable(tracklab-cli main.cpp)
 target_link_libraries(tracklab-cli PRIVATE tracklab_cli tracklab_warnings tracklab_config_flags)
+if(WIN32)
+  target_link_libraries(tracklab-cli PRIVATE shell32)  # CommandLineToArgvW (UTF-8 arguments, main.cpp)
+endif()

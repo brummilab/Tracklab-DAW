@@ -273,11 +273,11 @@ TEST_SUITE("cli")
             CAPTURE(text);
             const auto run = runIo({"io.set_device", text}, settings.dir()).run;
 
-            // Exit 1 (a failed operation) or 2 (usage): the lead decides, see the report of the test writer.
-            CHECK((run.exitCode == 1 || run.exitCode == 2));
+            // A broken params argument is a mistake of the call (lead decision 2): exit 2, usage.
+            CHECK(run.exitCode == 2);
             CHECK(isSingleJsonLine(run));
             CHECK_FALSE(run.ok());
-            CHECK_FALSE(run.errorCode().empty());
+            CHECK(run.errorCode() == "usage");
         }
         const auto after = runIo({"io.get_device"}, settings.dir()).run;
         REQUIRE_MESSAGE(after.ok(), after.out);
@@ -444,6 +444,22 @@ TEST_SUITE("cli")
         CHECK(isSingleJsonLine(run));
         CHECK(run.errorCode() == "handler_failed");
         CHECK(io_helpers::contains(run.errorMessage(), "Muster-Treiber"));
+    }
+
+    TEST_CASE("process: a device name with an umlaut reaches the command as UTF-8 and comes back as UTF-8")
+    {
+        // Escapes, not a literal: the test does not depend on the encoding of the source file. On Windows the
+        // executable has to read its arguments from the wide command line (src/cli/main.cpp), argv is ANSI there.
+        const std::string name = "Muster-Ger\xC3\xA4"
+                                 "t";
+        ScopedTempDir settings;
+
+        const auto run = runCliProcess(
+            {"io", "io.set_device", Json{{"output_device", name}}.dump(), "--settings-dir", path(settings.dir())});
+
+        CHECK(run.exitCode == 1);
+        CHECK(run.errorCode() == "handler_failed");
+        CHECK(io_helpers::contains(run.errorMessage(), name));
     }
 
 #if JUCE_LINUX
