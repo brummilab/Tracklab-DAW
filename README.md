@@ -81,7 +81,9 @@ Meilenstein **M1 (Fundament)** läuft.
   `run-commands` (Befehlsliste als ein Undo-Schritt), `export-tools` (Befehlsliste für Claude/MCP).
 - **Automatisches Speichern fertig:** alle 2 Minuten eine Sicherungsdatei, 10 rotierende Backups beim Speichern,
   Wiederherstellen nach einem Absturz oder aus einem Backup.
-- **Als Nächstes:** Audio-Geräte per Kommandozeile testen, erstes Programmfenster.
+- **Audio-Geräte per Kommandozeile:** `tracklab-cli io …` – Handtest-Anleitung in
+  [`docs/testing/manual/M1.md`](docs/testing/manual/M1.md).
+- **Als Nächstes:** erstes Programmfenster mit „Über Tracklab“, dann Test-Builds zum Herunterladen.
 
 Arbeitsstand im Detail: [`team/RESUME.md`](team/RESUME.md) · Plan: [`team/plan/PLAN.md`](team/plan/PLAN.md).
 
@@ -126,7 +128,8 @@ cmake --build --preset linux-gcc-debug
 - Windows: Visual Studio 2022 mit „Desktopentwicklung mit C++“.
 - Prüfungen (Format, Build, Tests, Echtzeit): `./scripts/gate.sh all` bzw. `scripts\gate.ps1`.
 
-**Test-Builds:** Jeder Code-Push auf `main` erzeugt Builds als Download in den GitHub-Actions-Läufen (Workflow `gate`).
+**Test-Builds:** Bisher lädt die CI nur die Spike-Programme hoch (Workflow `gate`, Push auf `main`); Downloads von
+Tracklab selbst kommen mit Karte M1-09. Bis dahin: selbst bauen wie oben.
 
 ## Repo-Struktur
 

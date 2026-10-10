@@ -48,4 +48,10 @@ Nutzungsbedingungen des „EBU Loudness Test Set“ lokal ablegen (nicht ins Rep
 ---
 
 ## Prüfaufgaben (V)
-– noch keine
+
+### V1 – Handtest Audio-Geräte (Linux und Windows)
+Anleitung: `docs/testing/manual/M1.md` (Aufruf `tl io.…` über `tracklab-cli io`, eigener Einstellungsordner
+`tracklab-v1`, deine echten Einstellungen bleiben unberührt). Je Abschnitt (ALSA, JACK, WASAPI, ASIO):
+bestanden / nicht bestanden / nicht prüfbar, Datum, eine Zeile Bemerkung. Schritte „ab M1-08“ überspringen.
+Windows-Pfad zur `.exe` und PowerShell-Funktion sind noch `[VERIFIZIEREN]` – bitte melden, ob sie so funktionieren.
+- **Ergebnis:**

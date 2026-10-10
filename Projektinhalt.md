@@ -82,8 +82,10 @@ M8 Mastering & Export inkl. M/S · M9 = 1.0 Interop & Politur inkl. Handy-Fernbe
 - 10.10.2026: M1-07 `tracklab-cli` gemerged (render, analyze, run-commands, export-tools; Golden-Test). Handtest
   Audio-Geräte braucht noch Karte O-14 (`tracklab-cli io`).
 - 10.10.2026: M1-05 Autosave, rotierende Backups und Crash-Recovery gemerged (Pfadgrenze 259 Zeichen für Windows).
+- 10.10.2026: O-14 `tracklab-cli io` gemerged – Handtest Audio-Geräte (V1) jetzt möglich.
 
 ## Offene Punkte
+- [ ] V1 Handtest Audio-Geräte (Linux + Windows) durch David, Anleitung `docs/testing/manual/M1.md`.
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
 - [ ] Stem-Separation (v2): Library und Lizenz klären (eigenes ADR).
 - Reaper-Preset (M0-08) nach F11; Risiko Mint 23 / libstdc++ 15 (O-03).

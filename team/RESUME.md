@@ -2,7 +2,7 @@
 
 Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitsschritts aktualisieren.
 
-**Stand:** 09.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01/02/03/06, O-04/08/09/11, M1-04, M1-05, M1-07 erledigt – M1-04 Projektformat erledigt – M1-05 und M1-07 erledigt – **O-14 (`tracklab-cli io` für Handtest V1) im Review**, danach M1-08 App-Shell
+**Stand:** 09.10.2026 · **Meilenstein:** M1 (Fundament) · **Status:** M1-01/02/03/06, O-04/08/09/11, M1-04, M1-05, M1-07, O-14 erledigt – M1-04 Projektformat erledigt – M1-05 und M1-07 erledigt – O-14 erledigt – **V1 Handtest beim PO**; nächster Schritt **M1-08 App-Shell**, dann M1-09
 
 > **Angehalten 08.10.2026:** Beide Implementer auf Wunsch des PO gestoppt, ungeprüft, nichts gemerged.
 > Stand: `m1-03-impl` @ `99c56ca` (Umsetzung committet, Build/Format-Lauf unterbrochen),
@@ -27,11 +27,14 @@ Diese Datei liest der Team-Lead bei „weiter“ zuerst. Am Ende jedes Arbeitssc
 ## PO-Wunsch: Bescheid geben, sobald testbar (09.10.2026)
 David will informiert werden, sobald er selbst testen kann – im Chat **und** per Push-Benachrichtigung, mit
 kopierbaren Schritten und Download-Link. Stufen:
-1. **Nach O-14 (`tracklab-cli io`, statt nach M1-07):** Handtest V1 Audio-Geräte nach `docs/testing/manual/M1.md` (Windows + Linux).
+1. **Jetzt (O-14 erledigt, 10.10.2026):** Handtest V1 Audio-Geräte nach `docs/testing/manual/M1.md` (Windows + Linux).
 2. **Nach M1-08/M1-09:** erstes Programmfenster + Test-Builds als Download (Actions-Artefakt, Link in RESUME).
 3. **Ende M2:** erster echter Arbeitsablauf A (Mitschnitt importieren, schneiden, normalisieren, exportieren).
 
 ## Zuletzt erledigt
+
+- **O-14** gemerged (10.10.2026): `tracklab-cli io <id> [json] [--settings-dir]` für Handtest V1, UTF-8-Argumente unter
+  Windows, `M1.md` mit kopierbaren Aufrufen. Review 2 Runden, CI grün. V1 an den PO.
 
 - **M1-05** gemerged (10.10.2026): Autosave alle 2 min (atomar, nur bei Änderung), 10 rotierende Backups (Zählersuffix,
   gewähltes Backup nie wegrotiert), Recovery beim Öffnen (`recovery_available`, `restore_autosave`/`discard_autosave`),
@@ -91,9 +94,9 @@ kopierbaren Schritten und Download-Link. Stufen:
 | Spalte | Karten |
 |---|---|
 | in Arbeit | – |
-| Review | O-14 (Reviewer + CI) |
+| Review | – |
 | Backlog | O-13 · O-12 (CI-Flakes) · O-10 · M1-08 · M1-09 · O-05 · O-06 · O-07 · M0-08 Rest-Recherche (daw-features) · M2-01 · M4-01 · O-01 · O-02 · O-03 |
-| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 · M1-02 · M1-03 · M1-04 · M1-05 · M1-06 · M1-07 · O-04 · O-08 · O-09 · O-11 |
+| Erledigt | M0-01 · M0-02 · M0-03 · M0-04 · M0-05 · M0-06 · M0-07 · M1-01 · M1-02 · M1-03 · M1-04 · M1-05 · M1-06 · M1-07 · O-14 · O-04 · O-08 · O-09 · O-11 |
 
 ## Builds
 
