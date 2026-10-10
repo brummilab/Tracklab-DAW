@@ -81,6 +81,7 @@ M8 Mastering & Export inkl. M/S · M9 = 1.0 Interop & Politur inkl. Handy-Fernbe
   relative Pfade, keine Personendaten); O-09 JUCE-Undo-Patch erledigt. Roadmap-Übersicht `docs/ROADMAP.md`.
 - 10.10.2026: M1-07 `tracklab-cli` gemerged (render, analyze, run-commands, export-tools; Golden-Test). Handtest
   Audio-Geräte braucht noch Karte O-14 (`tracklab-cli io`).
+- 10.10.2026: M1-05 Autosave, rotierende Backups und Crash-Recovery gemerged (Pfadgrenze 259 Zeichen für Windows).
 
 ## Offene Punkte
 - Infos ohne Default: F9 Audio-Interface, F10 Reaper-MCP, F11 `reaper-kb.ini`, F12 lokal/Cloud, F22 Test-API-Key.
