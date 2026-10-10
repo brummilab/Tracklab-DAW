@@ -10,6 +10,7 @@
 #include <juce_data_structures/juce_data_structures.h>
 
 #include <array>
+#include <cstddef>
 #include <functional>
 #include <string>
 #include <string_view>
@@ -26,6 +27,32 @@ inline constexpr const char* formatVersionProperty = "tracklabFormatVersion";
 
 /** Extension of the project file, with the dot. */
 inline constexpr const char* fileExtension = ".tracklab";
+
+/** M1-05 defaults (E41): autosave every 2 minutes, 10 rotating backups. */
+inline constexpr int defaultAutosaveIntervalMs = 120000;
+inline constexpr int defaultMaxBackups = 10;
+
+/** Longest path (in UTF-16 code units, what MAX_PATH counts without the terminating NUL) that a project may need. */
+inline constexpr int maxPathLength = 259;
+
+/** Highest counter of a backup name that was made in the same second as another: `<name>.<stamp>-99.tracklab`. */
+inline constexpr int maxBackupCounter = 99;
+
+/** The longest path of any file that belongs to a project `<parent>/<name>/` (all lengths in UTF-16 code units): the
+    temporary file of a backup with the highest counter,
+    `<parent>/<name>/Backups/<name>.<YYYYMMDD-HHMMSS>-99_temp<8 hex>.tracklab`. The project file, the autosave and their
+    temporary files are all shorter. */
+inline constexpr std::size_t longestDerivedPathLength(std::size_t parentLength, std::size_t nameLength)
+{
+    constexpr std::size_t separators = 1 + 1 + 1;  // before <name>, before Backups, before the backup
+    constexpr std::size_t backups = 7;             // "Backups"
+    constexpr std::size_t dotAndStamp = 1 + 15;    // ".YYYYMMDD-HHMMSS"
+    constexpr std::size_t counter = 3;             // "-99"
+    constexpr std::size_t tempSuffix = 5 + 8;      // "_temp" + 8 hex digits
+    constexpr std::size_t extension = 9;           // ".tracklab"
+    return parentLength + separators + nameLength + backups + nameLength + dotAndStamp + counter + tempSuffix +
+           extension;
+}
 
 /** Sub folders of a project folder, created by project.new / project.save_as. */
 inline constexpr std::array<const char*, 4> subFolderNames = {"Audio", "Renders", "Backups", "Peaks"};
@@ -47,6 +74,12 @@ inline constexpr std::string_view folderNotFound =
 inline constexpr std::string_view saveFailed = "save_failed";  ///< writing the project file failed, old file intact
 inline constexpr std::string_view saveInhibited = "save_inhibited";  ///< Edit::isSaveInhibited(): nothing was written
 inline constexpr std::string_view migrationFailed = "migration_failed";  ///< a migration step failed
+inline constexpr std::string_view pathTooLong =
+    "path_too_long";  ///< new/save_as: a file of the project would not fit into Windows' 259 character paths
+inline constexpr std::string_view backupNotFound =
+    "backup_not_found";  ///< project.restore_backup: no backup of that name in Backups/
+inline constexpr std::string_view noAutosave =
+    "no_autosave";  ///< project.restore_autosave: there is no autosave file of the open project
 }  // namespace error_code
 
 //==============================================================================

@@ -125,6 +125,15 @@
     "name": "project_close"
   },
   {
+    "description": "Deletes the autosave file of the open project and ends an offered recovery; the project in memory stays as it is. Fails with no_autosave or no_edit.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "name": "project_discard_autosave"
+  },
+  {
     "description": "Returns path, name, format version and whether there are unsaved changes of the open project. Fails with no_edit if no project is open.",
     "input_schema": {
       "additionalProperties": false,
@@ -134,7 +143,16 @@
     "name": "project_get_info"
   },
   {
-    "description": "Creates a new project <folder>/<name>/<name>.tracklab with the sub folders Audio, Renders, Backups and Peaks and opens it. Fails with unsaved_changes if the open project has unsaved changes.",
+    "description": "Lists the rotating backups of the open project (one per save, the oldest are deleted), newest first. Fails with no_edit if no project is open.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "name": "project_list_backups"
+  },
+  {
+    "description": "Creates a new project <folder>/<name>/<name>.tracklab with the sub folders Audio, Renders, Backups and Peaks and opens it. Fails with unsaved_changes if the open project has unsaved changes, with invalid_project_name (at most 120 bytes) or with path_too_long if the paths of the project would exceed 259 characters (use a shorter name or folder).",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -163,7 +181,7 @@
     "name": "project_new"
   },
   {
-    "description": "Opens a .tracklab project file. Fails with unsaved_changes if the open project has unsaved changes, with project_not_found, corrupt_project or project_too_new if the file cannot be opened.",
+    "description": "Opens a .tracklab project file. Fails with unsaved_changes if the open project has unsaved changes, with project_not_found, corrupt_project (the message names the newest backup or autosave) or project_too_new if the file cannot be opened. If an autosave newer than the project file exists the result has recovery_available with both times: the project is opened as the file has it, decide with project.restore_autosave or project.discard_autosave.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -180,6 +198,32 @@
     "name": "project_open"
   },
   {
+    "description": "Loads the autosave file of the open project as its current state (recovery after a crash), replacing the state in memory. The project file is only replaced by the next save, which also deletes the autosave. Fails with no_autosave or no_edit.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "name": "project_restore_autosave"
+  },
+  {
+    "description": "Loads a backup of the open project as its current state, replacing the state in memory including unsaved changes. Makes a backup of the current state first (the chosen backup is never rotated away). The project file is only replaced by the next save. Fails with no_edit, invalid_params (name is not a plain file name), backup_not_found, or corrupt_project (the backup cannot be read; nothing changes).",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "description": "Backup file name from project.list_backups.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "name": "project_restore_backup"
+  },
+  {
     "description": "Saves the open project to its file (atomically: the old file stays intact if saving fails). Fails with no_edit if no project is open.",
     "input_schema": {
       "additionalProperties": false,
@@ -189,7 +233,7 @@
     "name": "project_save"
   },
   {
-    "description": "Saves the open project as a new project <folder>/<name>/<name>.tracklab and continues in it. Media files are not copied. Never overwrites an existing project.",
+    "description": "Saves the open project as a new project <folder>/<name>/<name>.tracklab and continues in it. Media files are not copied. Never overwrites an existing project. Fails with path_too_long if the paths of the new project would exceed 259 characters.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {

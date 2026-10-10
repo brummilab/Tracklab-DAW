@@ -121,6 +121,65 @@ inline void writeSineWav(const juce::File& file, double seconds = 0.5, double sa
 }
 
 //==============================================================================
+// Helpers of the autosave / backup / recovery tests (M1-05)
+
+/** `<project file>.autosave`, spelled out here on purpose (the name is part of the format, E41). */
+inline juce::File autosaveFileOf(const juce::File& projectFile)
+{
+    return projectFile.getSiblingFile(projectFile.getFileName() + ".autosave");
+}
+
+inline juce::File backupsFolderOf(const juce::File& projectFile)
+{
+    return projectFile.getParentDirectory().getChildFile("Backups");
+}
+
+/** The file names in Backups/ of a project, sorted. */
+inline std::vector<std::string> backupNamesOf(const juce::File& projectFile)
+{
+    return fileNamesIn(backupsFolderOf(projectFile));
+}
+
+/** The `name` attributes of the TRACK elements of a project / autosave / backup file, in file order. */
+inline std::vector<std::string> trackNamesOfFile(const juce::File& file)
+{
+    std::vector<std::string> names;
+    const auto xml = parseXml(file);
+    REQUIRE(xml != nullptr);
+    for (const auto* track : xml->getChildWithTagNameIterator("TRACK"))
+        names.push_back(track->getStringAttribute("name").toStdString());
+    return names;
+}
+
+/** The injected clock of the tests: 9 October 2026, 12:34:56 + `seconds`, local time (the month argument of juce::Time
+    is zero based). Backups are named after it. */
+inline juce::Time clockTime(int seconds = 0)
+{
+    return juce::Time(2026, 9, 9, 12, 34, 56, 0, true) + juce::RelativeTime::seconds(seconds);
+}
+
+/** Backup file name of project `name` for the clock time `seconds` seconds after clockTime(). */
+inline std::string backupNameAt(const std::string& name, int seconds = 0)
+{
+    return name + "." + clockTime(seconds).formatted("%Y%m%d-%H%M%S").toStdString() + ".tracklab";
+}
+
+struct ProjectFixture;
+
+/** The writes of the atomic save as the BeforeReplaceHook sees them: how often a file named `<target>` was about to be
+    replaced. Never refuses a write unless `refuse` is set for it. */
+struct WriteCounter
+{
+    explicit WriteCounter(ProjectFixture& fixture);
+
+    int autosaveWrites = 0;  ///< targets that end in ".autosave"
+    int projectWrites = 0;   ///< all others
+    bool refuseAutosave = false;
+    juce::File lastTemporary;
+    juce::File lastTarget;
+};
+
+//==============================================================================
 /** Engine + context + registry + session. Member order = construction order; the session (and with it the Edit) dies
     first, the engine last. */
 struct ProjectFixture
@@ -237,6 +296,21 @@ struct ProjectFixture
         letPluginTimersRunOut(e);
     }
 
+    /** Like addSampleContent() (the same three named tracks), but without waiting for Tracktion's plugin timers: the
+        autosave / backup tests save right after it, and a save decides "modified" by the content for the 650 ms after
+        it (ProjectSession), so the late timers cannot make the project look changed. Saves a second per test. */
+    void addSampleTracks()
+    {
+        auto& e = edit();
+        e.ensureNumberOfAudioTracks(3);
+        const char* names[] = {"Gitarre", "Bass", "Gesang"};
+        auto tracks = te::getAudioTracks(e);
+        REQUIRE(tracks.size() >= 3);
+        for (int i = 0; i < 3; ++i)
+            tracks[i]->setName(names[i]);
+        settle(e);
+    }
+
     /** A wave clip of a generated sine file on the first audio track (the Tracktion API, as the import will do). */
     te::WaveAudioClip::Ptr addClip(const juce::File& audioFile, const juce::String& name = "Take 1")
     {
@@ -254,12 +328,97 @@ struct ProjectFixture
         return clip;
     }
 
+    /** Renames the first audio track (an undoable change, like any command makes it): the project turns "modified". */
+    void renameFirstTrack(const juce::String& newName)
+    {
+        auto& e = edit();
+        pumpMessageLoop(30);
+        auto tracks = te::getAudioTracks(e);
+        REQUIRE_FALSE(tracks.isEmpty());
+        tracks[0]->setName(newName);
+        settle(e);
+        REQUIRE(e.hasChangedSinceSaved());
+    }
+
+    /** project.save with the clock `seconds` after clockTime(): the backup of that save is named after it. */
+    void saveAt(int seconds)
+    {
+        clockNow = clockTime(seconds);
+        run("project.save");
+    }
+
+    /** Injects the clock of the session: it reads `clockNow`. */
+    void useInjectedClock()
+    {
+        clockNow = clockTime(0);
+        session->setClock([this] { return clockNow; });
+    }
+
     ScopedTempDir temp;
+    juce::Time clockNow = clockTime(0);
     std::unique_ptr<te::Engine> engine;
     EditContext context;
     tracklab::core::CommandRegistry registry;
     std::unique_ptr<tracklab::project::ProjectSession> session;
     int counter = 0;
 };
+
+inline WriteCounter::WriteCounter(ProjectFixture& fixture)
+{
+    fixture.session->setBeforeReplaceHook(
+        [this](const juce::File& temporary, const juce::File& target)
+        {
+            lastTemporary = temporary;
+            lastTarget = target;
+            if (target.getFileName().endsWith(".autosave"))
+            {
+                ++autosaveWrites;
+                return !refuseAutosave;
+            }
+            ++projectWrites;
+            return true;
+        });
+}
+
+//==============================================================================
+/** A project as it is on disk after a crash: saved with the track names Gitarre / Bass / Gesang, then the first track
+    renamed to "Neu" (unsaved), autosaved, and the whole project folder copied (while it was open) to
+    `<root>/Absturz/<name>/`. The original is closed (discarded). The copy's project file has the modification time
+    `projectTime`, its autosave file `autosaveTime` (set explicitly: no waiting for the file system's resolution). */
+struct CrashedProject
+{
+    juce::File file;      ///< the copy's project file
+    juce::File autosave;  ///< the copy's autosave file
+    juce::Time projectTime;
+    juce::Time autosaveTime;
+};
+
+inline CrashedProject crashedProject(ProjectFixture& f, const std::string& name = "Muster",
+                                     const juce::Time& projectTime = juce::Time(2026, 9, 9, 10, 0, 0, 0, true),
+                                     const juce::Time& autosaveTime = juce::Time(2026, 9, 9, 10, 5, 0, 0, true))
+{
+    const auto original = f.newProject(name);
+    f.addSampleTracks();
+    f.run("project.save");
+    f.settleEdit();
+    f.renameFirstTrack("Neu");
+    REQUIRE(f.session->autosaveNow() == tracklab::project::AutosaveResult::written);
+    REQUIRE(autosaveFileOf(original).existsAsFile());
+
+    const auto copyFolder = f.root().getChildFile("Absturz").getChildFile(juce::String::fromUTF8(name.c_str()));
+    REQUIRE(f.projectFolder(name).copyDirectoryTo(copyFolder));
+    f.run("project.close", Json{{"discard", true}});
+
+    CrashedProject crashed;
+    crashed.file = copyFolder.getChildFile(original.getFileName());
+    crashed.autosave = autosaveFileOf(crashed.file);
+    crashed.projectTime = projectTime;
+    crashed.autosaveTime = autosaveTime;
+    REQUIRE(crashed.file.existsAsFile());
+    REQUIRE(crashed.autosave.existsAsFile());
+    REQUIRE(crashed.file.setLastModificationTime(projectTime));
+    REQUIRE(crashed.autosave.setLastModificationTime(autosaveTime));
+    return crashed;
+}
 
 }  // namespace tracklab_test::project
